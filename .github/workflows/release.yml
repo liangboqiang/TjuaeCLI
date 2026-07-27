@@ -1,16 +1,13 @@
 name: 发布
 
 on:
-  workflow_call:
-    inputs:
-      tag_name:
-        description: "要构建和发布的标签（例如 v0.2.0）"
-        required: true
-        type: string
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "要构建和发布的标签（例如 v0.2.0）"
+        description: "要构建和发布的标签（例如 v0.3.0）"
         required: true
         type: string
 
@@ -22,6 +19,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_HTTP_TIMEOUT: "600"
   CARGO_NET_RETRY: "10"
+  RELEASE_TAG: ${{ inputs.tag_name || github.ref_name }}
 
 jobs:
   prepare-release:
@@ -32,13 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ inputs.tag_name }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: 从标签提取版本
         id: metadata
         shell: bash
-        env:
-          RELEASE_TAG: ${{ inputs.tag_name }}
         run: |
           version="${RELEASE_TAG#v}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
@@ -74,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ inputs.tag_name }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: 设置 vx（从 vx.toml 安装 Rust）
         uses: loonghao/vx@v0.9.26
@@ -160,7 +156,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ inputs.tag_name }}
           REPOSITORY: ${{ github.repository }}
         run: |
           release_url="https://github.com/${REPOSITORY}/releases/tag/${RELEASE_TAG}"

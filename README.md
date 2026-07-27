@@ -145,6 +145,20 @@ api_path = "/v1/chat/completions"            # 自定义 chat completions 端点
 提供商默认行为：**Anthropic/Vertex**——消息交替、合并、自动工具 ID；
 **Bedrock**——前述行为加 schema 清理；**OpenAI**——合并 assistant 消息、清理孤立工具调用、结果去重。
 
+## 发布流程
+
+TjuaeCLI 使用可审计的标签发布流程，不依赖自动发布 PR：
+
+1. 同步更新 `Cargo.toml`、`Cargo.lock` 和 `CHANGELOG.md` 中的版本。
+2. 运行 `just verify`，通过格式、Clippy、测试、Hakari 和安全审计门禁。
+3. 提交版本变更并用 `just push origin main` 更新主分支。
+4. 创建并推送 `v<版本>` 标签。
+5. `release.yml` 自动为 Linux、macOS、Windows 的 x64/arm64 目标构建六份归档，
+   生成 `tjuae-cli-checksums.txt`，并发布到对应的 GitHub Release。
+
+工作流也支持手动输入已有标签重新构建，用于恢复失败的发布；它不会修改版本或创建
+额外分支。
+
 ## 许可证
 
 Apache-2.0
