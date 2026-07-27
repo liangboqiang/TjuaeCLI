@@ -1,5 +1,6 @@
-# TjuaeCLI justfile——使用 `vx just <recipe>` 运行任务
-# 所有命令在 `vx` 可用时都通过它执行，以确保使用正确的工具版本。
+# TjuaeCLI justfile——使用 `just <recipe>` 运行任务
+# 通过 `vx just <recipe>` 调用时，vx 会按 vx.toml 固定工具版本；recipe 本身使用
+# 标准 cargo 命令，因此也能在普通 Rust 环境中直接运行。
 # 此处所有内容均支持跨平台：recipe 主体避免依赖 shell 内置命令和外部 Unix 工具，
 # 改用 just 自身的函数，使同一份 justfile 可用于 macOS、Linux 和 Windows。
 
@@ -7,17 +8,8 @@
 set shell := ["sh", "-cu"]
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
 
-# 下方使用 `which()` 探测 `vx`；这是 just 的不稳定功能。
-set unstable
-set lists
-
-# 加载时使用 just 自带的跨平台 `which` 探测一次 `vx`，不依赖 shell 内置命令。
-# 如果存在，命令会通过它运行以固定工具版本；否则变量展开为空，直接运行命令。
-vx := if which("vx") == "" { "" } else { "vx" }
-
-# `vx` 可用时让 cargo 通过它运行，相当于仅在此 justfile 中设置
-# `alias cargo = vx cargo`。recipe 只需写 `{{ cargo }} ...`。
-cargo := trim(vx + " cargo")
+# CI、vx 环境和普通 Rust 开发环境都应在 PATH 中提供 cargo。
+cargo := "cargo"
 
 # Unix `_run` 彩色命令回显使用的粗体青色与重置 ANSI 代码。
 # just 的 `style("command")` 只会加粗而不着色，因此在此显式定义。
@@ -26,7 +18,7 @@ NORMAL := "\u{1b}[0m"
 
 # 默认操作：列出全部 recipe
 default:
-    @{{ vx }} just --list
+    @just --list
 
 # 先以粗体青色回显命令，再运行命令。所有操作 recipe 都通过这里执行，以集中处理颜色。
 # 命令作为一个带引号的完整字符串传入，保留其中的引号（例如 -E 'test(...)'）。
