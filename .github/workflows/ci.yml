@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -67,14 +66,6 @@ jobs:
       - name: 安全审计
         run: vx cargo audit
 
-      - name: 上传 nextest JUnit 报告
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: nextest-junit-${{ matrix.os }}
-          path: target/nextest/ci/junit.xml
-          if-no-files-found: error
-
   # ── 跨平台构建检查（仅编译，不运行）────────────────────────────────────
   # 验证工作区可针对每个发布目标完成编译。
   # 矩阵与 release.yml 保持一致，使 CI 能在回归进入发布工作流前发现编译问题。
@@ -127,29 +118,3 @@ jobs:
             vx cargo build --release --target ${{ matrix.target }} -p tjuae-cli
           fi
 
-  # ── 使用测试结果标注 PR 或提交 ─────────────────────────────────────────
-  report:
-    needs: ci
-    if: always()
-    runs-on: ubuntu-latest
-    permissions:
-      checks: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: 下载 nextest JUnit 产物
-        uses: actions/download-artifact@v8
-        with:
-          pattern: nextest-junit-*
-          merge-multiple: true
-          path: junit-reports
-
-      - name: 发布测试报告
-        uses: dorny/test-reporter@v3
-        if: hashFiles('junit-reports/**/*.xml') != ''
-        with:
-          name: 单元测试与集成测试
-          path: junit-reports/**/*.xml
-          reporter: java-junit
-          fail-on-error: true
