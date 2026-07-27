@@ -1,0 +1,32 @@
+[package]
+name = "tjuae-cli"
+description = "CLI binary for TjuaeCLI — a multi-provider AI agent with tool orchestration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords = ["ai", "agent", "cli", "llm", "anthropic"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "tjuae-cli"
+path = "src/main.rs"
+
+[dependencies]
+tjuae-agent.workspace    = true
+tjuae-compact.workspace  = true
+tjuae-config.workspace   = true
+tjuae-memory.workspace   = true
+tjuae-providers.workspace = true
+tjuae-tools.workspace    = true
+tjuae-mcp.workspace      = true
+tjuae-protocol.workspace = true
+tjuae-skills.workspace   = true
+tjuae-types.workspace    = true
+
+tokio.workspace              = true
+anyhow.workspace             = true
+clap.workspace               = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true
+workspace-hack.workspace = true

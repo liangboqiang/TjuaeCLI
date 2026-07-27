@@ -7,19 +7,19 @@
 cargo build --release
 
 # Binary location
-./target/release/aionrs
+./target/release/tjuae-cli
 ```
 
 ## Command Format
 
 ```
-aionrs [OPTIONS] [PROMPT]...
+tjuae-cli [OPTIONS] [PROMPT]...
 ```
 
 - With `PROMPT`: single-shot mode — completes the task and exits
 - Without `PROMPT`: enters interactive REPL mode
 
-> For the full list of CLI parameters, run `aionrs --help`.
+> For the full list of CLI parameters, run `tjuae-cli --help`.
 
 ### Subcommands
 
@@ -28,12 +28,12 @@ subcommand runs its action and exits — it does not start the agent main flow.
 
 | Subcommand | Description |
 |------------|--------------|
-| `aionrs config init` | Generate a default global config file |
-| `aionrs config path` | Print the global config file path |
-| `aionrs auth login` | Login with Anthropic account (OAuth device flow) |
-| `aionrs auth logout` | Logout (remove saved OAuth credentials) |
-| `aionrs session list` | List saved sessions |
-| `aionrs skills path` | Print skill directory paths |
+| `tjuae-cli config init` | Generate a default global config file |
+| `tjuae-cli config path` | Print the global config file path |
+| `tjuae-cli auth login` | Login with Anthropic account (OAuth device flow) |
+| `tjuae-cli auth logout` | Logout (remove saved OAuth credentials) |
+| `tjuae-cli session list` | List saved sessions |
+| `tjuae-cli skills path` | Print skill directory paths |
 
 ### Key Parameters
 
@@ -51,7 +51,7 @@ subcommand runs its action and exits — it does not start the agent main flow.
 | `--json-stream` | JSON Lines mode for host integration |
 | `--resume <id>` | Resume a previous session |
 | `--log-dir <path>` | Enable file logging to the given directory |
-| `--log-level <filter>` | Log level filter (e.g. `debug`, `info`, `aion_providers=debug`) |
+| `--log-level <filter>` | Log level filter (e.g. `debug`, `info`, `tjuae_providers=debug`) |
 
 ---
 
@@ -60,9 +60,9 @@ subcommand runs its action and exits — it does not start the agent main flow.
 ### Three-Level Cascading
 
 ```
-<global config>                   (global, user-level; run `aionrs config path` to find)
+<global config>                   (global, user-level; run `tjuae-cli config path` to find)
     ↓ overridden by
-./.aionrs.toml                  (project-level, working directory)
+./.tjuae.toml                  (project-level, working directory)
     ↓ overridden by
 CLI parameters / env vars        (highest priority)
 ```
@@ -70,14 +70,14 @@ CLI parameters / env vars        (highest priority)
 ### Generate Default Config
 
 ```bash
-aionrs config init
-# Creates the global config file (run `aionrs config path` to see the location)
+tjuae-cli config init
+# Creates the global config file (run `tjuae-cli config path` to see the location)
 ```
 
 ### Config File Format
 
 ```toml
-# Global config file (path varies by OS, use `aionrs config path` to find)
+# Global config file (path varies by OS, use `tjuae-cli config path` to find)
 
 [default]
 provider = "anthropic"
@@ -140,7 +140,7 @@ allow_list = ["Read", "Grep", "Glob"]
 
 [session]
 enabled = true
-directory = ".aionrs/sessions"
+directory = ".tjuae/sessions"
 max_sessions = 20
 
 [compact]
@@ -154,7 +154,7 @@ max_entries = 100
 
 [plan]
 enabled = true
-plan_directory = ".aionrs/plans"
+plan_directory = ".tjuae/plans"
 
 # [logging]
 # enabled = true              # enable file logging (default: false)
@@ -193,7 +193,7 @@ Precedence is `CLI > profile > project config > global config > built-in default
 2. Config file `providers.<name>.api_key`
 3. Env var `API_KEY`
 4. Env var `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` (depends on provider)
-5. OAuth credentials (via `aionrs auth login`)
+5. OAuth credentials (via `tjuae-cli auth login`)
 
 > **Note**: `bedrock` and `vertex` providers use their own cloud credentials and do not require a traditional API key. See [Providers & Auth](providers.md).
 
@@ -223,24 +223,24 @@ base_url = "https://my-service.example.com/api/openai"
 ### 1. Initialize and Configure
 
 ```bash
-aionrs config init
-# Edit the config file (run `aionrs config path` to find it), add your API key
+tjuae-cli config init
+# Edit the config file (run `tjuae-cli config path` to find it), add your API key
 ```
 
 ### 2. Single-Shot Mode
 
 ```bash
-aionrs "Read and explain crates/aion-agent/src/engine.rs"
+tjuae-cli "Read and explain crates/tjuae-agent/src/engine.rs"
 ```
 
 ### 3. Interactive REPL
 
 ```
-$ aionrs
+$ tjuae-cli
 
 > Read the file Cargo.toml
      1  [package]
-     2  name = "aionrs"
+     2  name = "tjuae-cli"
      ...
 [turns: 1 | tokens: 1234 in / 567 out]
 
@@ -258,15 +258,15 @@ REPL commands: `/quit`, `/exit`, or empty line to exit.
 ### 4. Switching Profiles
 
 ```bash
-aionrs --profile deepseek "Fix the bug in main.rs"
-aionrs --profile ollama "Analyze code quality"
+tjuae-cli --profile deepseek "Fix the bug in main.rs"
+tjuae-cli --profile ollama "Analyze code quality"
 ```
 
 ### 5. Environment Variables
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-xxx
-aionrs "List all Rust files in this project"
+tjuae-cli "List all Rust files in this project"
 ```
 
 ---
@@ -295,20 +295,20 @@ Allow? [y]es / [n]o / [a]lways / [q]uit > y
 
 ## Session Management
 
-Sessions auto-save to `.aionrs/sessions/`.
+Sessions auto-save to `.tjuae/sessions/`.
 
 ```bash
 # List saved sessions
-aionrs session list
+tjuae-cli session list
 
 # Resume the latest session
-aionrs --resume latest
+tjuae-cli --resume latest
 
 # Resume a specific session
-aionrs --resume a1b2c3
+tjuae-cli --resume a1b2c3
 
 # Create a session with a custom ID
-aionrs --session-id my-conv-123
+tjuae-cli --session-id my-conv-123
 ```
 
 - `--session-id` and `--resume` are mutually exclusive

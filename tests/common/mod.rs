@@ -7,16 +7,16 @@ use async_trait::async_trait;
 use serde_json::{Value, json};
 use tokio::sync::mpsc;
 
-use aionrs::confirm::ToolConfirmer;
-use aionrs::protocol::events::ToolCategory;
-use aionrs::config::{Config, ProviderType, ToolsConfig, SessionConfig};
-use aionrs::hooks::HooksConfig;
-use aionrs::mcp::config::McpConfig;
-use aionrs::provider::{LlmProvider, ProviderError};
-use aionrs::tools::Tool;
-use aionrs::types::llm::{LlmEvent, LlmRequest};
-use aionrs::types::message::{StopReason, TokenUsage};
-use aionrs::types::tool::ToolResult;
+use tjuae_cli::confirm::ToolConfirmer;
+use tjuae_cli::protocol::events::ToolCategory;
+use tjuae_cli::config::{Config, ProviderType, ToolsConfig, SessionConfig};
+use tjuae_cli::hooks::HooksConfig;
+use tjuae_cli::mcp::config::McpConfig;
+use tjuae_cli::provider::{LlmProvider, ProviderError};
+use tjuae_cli::tools::Tool;
+use tjuae_cli::types::llm::{LlmEvent, LlmRequest};
+use tjuae_cli::types::message::{StopReason, TokenUsage};
+use tjuae_cli::types::tool::ToolResult;
 
 // ---------------------------------------------------------------------------
 // MockLlmProvider — deterministic LLM for engine / spawn tests
@@ -247,19 +247,19 @@ pub fn test_config() -> Config {
         system_prompt: Some("You are a test assistant.".to_string()),
         thinking: None,
         prompt_caching: false,
-        compat: aionrs::provider::compat::ProviderCompat::anthropic_defaults(),
+        compat: tjuae_cli::provider::compat::ProviderCompat::anthropic_defaults(),
         tools: ToolsConfig {
             auto_approve: true,
             allow_list: vec![],
-            skills: aionrs::config::SkillsPermissionConfig::default(),
+            skills: tjuae_cli::config::SkillsPermissionConfig::default(),
         },
         session: SessionConfig {
             enabled: false,
-            directory: "/tmp/aionrs-test-sessions".to_string(),
+            directory: "/tmp/tjuae-cli-test-sessions".to_string(),
             max_sessions: 5,
         },
-        compact: aionrs::config::CompactConfig::default(),
-        plan: aionrs::config::PlanConfig::default(),
+        compact: tjuae_cli::config::CompactConfig::default(),
+        plan: tjuae_cli::config::PlanConfig::default(),
         hooks: HooksConfig::default(),
         bedrock: None,
         vertex: None,

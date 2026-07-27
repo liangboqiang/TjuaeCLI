@@ -2,13 +2,13 @@ mod common;
 
 use std::sync::Arc;
 
-use aionrs::engine::{AgentEngine, AgentError};
-use aionrs::output::terminal::TerminalSink;
-use aionrs::output::OutputSink;
-use aionrs::session::SessionManager;
-use aionrs::tools::registry::ToolRegistry;
-use aionrs::types::llm::LlmEvent;
-use aionrs::types::message::{StopReason, TokenUsage};
+use tjuae_cli::engine::{AgentEngine, AgentError};
+use tjuae_cli::output::terminal::TerminalSink;
+use tjuae_cli::output::OutputSink;
+use tjuae_cli::session::SessionManager;
+use tjuae_cli::tools::registry::ToolRegistry;
+use tjuae_cli::types::llm::LlmEvent;
+use tjuae_cli::types::message::{StopReason, TokenUsage};
 use serde_json::json;
 use tempfile::tempdir;
 

@@ -1,7 +1,7 @@
 //! End-to-end skill tests using real files on disk.
 //!
 //! Each test creates skill files in a temporary directory that mirrors the
-//! `.aionrs/skills/` and `.aionrs/commands/` layout, then exercises the full
+//! `.tjuae/skills/` layout, then exercises the full
 //! pipeline: discovery -> loading -> system prompt injection -> SkillTool execution.
 //!
 //! Tests use `load_all_skills` with `add_dirs` or a temp cwd to avoid depending
@@ -11,12 +11,12 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use aionrs::context::{SystemPromptCache, build_system_prompt};
-use aionrs::skills::loader::load_all_skills;
-use aionrs::skills::permissions::SkillPermissionChecker;
-use aionrs::skills::types::SkillMetadata;
-use aionrs::tools::skill::SkillTool;
-use aionrs::tools::Tool;
+use tjuae_cli::context::{SystemPromptCache, build_system_prompt};
+use tjuae_cli::skills::loader::load_all_skills;
+use tjuae_cli::skills::permissions::SkillPermissionChecker;
+use tjuae_cli::skills::types::SkillMetadata;
+use tjuae_cli::tools::skill::SkillTool;
+use tjuae_cli::tools::Tool;
 use serde_json::json;
 use tempfile::TempDir;
 
@@ -28,7 +28,7 @@ fn find_skill<'a>(skills: &'a [SkillMetadata], name: &str) -> Option<&'a SkillMe
     skills.iter().find(|s| s.name == name)
 }
 
-/// Create a project-like temp directory with `.git` marker and `.aionrs/skills/` + `.aionrs/commands/`.
+/// Create a project-like temp directory with a `.git` marker and `.tjuae/skills/`.
 /// Returns (TempDir guard, root path).
 fn make_project() -> (TempDir, PathBuf) {
     let tmp = TempDir::new().unwrap();
@@ -38,12 +38,8 @@ fn make_project() -> (TempDir, PathBuf) {
     fs::create_dir(root.join(".git")).unwrap();
 
     // Skills directory
-    let skills_dir = root.join(".aionrs").join("skills");
+    let skills_dir = root.join(".tjuae").join("skills");
     fs::create_dir_all(&skills_dir).unwrap();
-
-    // Commands directory (legacy)
-    let commands_dir = root.join(".aionrs").join("commands");
-    fs::create_dir_all(&commands_dir).unwrap();
 
     // --- greet skill ---
     let greet_dir = skills_dir.join("greet");
@@ -58,7 +54,7 @@ fn make_project() -> (TempDir, PathBuf) {
     fs::create_dir_all(&migrate_dir).unwrap();
     fs::write(
         migrate_dir.join("SKILL.md"),
-        "---\nname: db:migrate\ndescription: Run database migrations\n---\n\nRunning migrations for: $ARGUMENTS\nSkill directory: ${AIONRS_SKILL_DIR}\n",
+        "---\nname: db:migrate\ndescription: Run database migrations\n---\n\nRunning migrations for: $ARGUMENTS\nSkill directory: ${TJUAE_SKILL_DIR}\n",
     ).unwrap();
 
     // --- rust-review (conditional paths) ---
@@ -75,12 +71,6 @@ fn make_project() -> (TempDir, PathBuf) {
     fs::write(
         shell_dir.join("SKILL.md"),
         "---\nname: shell-demo\ndescription: Demonstrate shell command expansion\n---\n\nCurrent date: !`date +%Y-%m-%d`\n",
-    ).unwrap();
-
-    // --- legacy command (flat .md in commands/) ---
-    fs::write(
-        commands_dir.join("legacy-cmd.md"),
-        "---\nname: legacy-cmd\ndescription: A legacy command for backward compatibility testing\n---\n\nThis is a legacy command loaded from .aionrs/commands/\nArguments: $ARGUMENTS\n",
     ).unwrap();
 
     (tmp, root)
@@ -107,20 +97,6 @@ async fn e1_project_skill_discovered() {
     assert!(greet.is_some(), "E1 FAIL: 'greet' skill not discovered");
     assert_eq!(greet.unwrap().description, "Greet a user by name");
     println!("E1 PASS: project-level skill 'greet' discovered with correct description");
-}
-
-// ---------------------------------------------------------------------------
-// E2: Legacy commands discovery
-// ---------------------------------------------------------------------------
-
-#[tokio::test]
-async fn e2_legacy_commands_discovered() {
-    let (_guard, root) = make_project();
-    let skills = load_all_skills(&root, &[], false, None).await;
-
-    let legacy = find_skill(&skills, "legacy-cmd");
-    assert!(legacy.is_some(), "E2 FAIL: 'legacy-cmd' not discovered");
-    println!("E2 PASS: legacy command 'legacy-cmd' discovered from .aionrs/commands/");
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +194,7 @@ async fn e7_system_prompt_injection() {
 }
 
 // ---------------------------------------------------------------------------
-// E8: Full SkillTool execution (db:migrate with $ARGUMENTS + ${AIONRS_SKILL_DIR})
+// E8: Full SkillTool execution (db:migrate with $ARGUMENTS + ${TJUAE_SKILL_DIR})
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
@@ -236,11 +212,11 @@ async fn e8_full_execution() {
         result.content
     );
     assert!(
-        !result.content.contains("${AIONRS_SKILL_DIR}"),
-        "E8 FAIL: ${{AIONRS_SKILL_DIR}} not expanded. Got: {}",
+        !result.content.contains("${TJUAE_SKILL_DIR}"),
+        "E8 FAIL: ${{TJUAE_SKILL_DIR}} not expanded. Got: {}",
         result.content
     );
-    println!("E8 PASS: full execution with $ARGUMENTS and ${{AIONRS_SKILL_DIR}} substitution");
+    println!("E8 PASS: full execution with $ARGUMENTS and ${{TJUAE_SKILL_DIR}} substitution");
 }
 
 // ---------------------------------------------------------------------------
@@ -277,23 +253,5 @@ async fn e10_skill_not_found() {
     assert!(result.is_error, "E10 FAIL: should return error");
     assert!(result.content.contains("not found"), "E10 FAIL: got: {}", result.content);
     println!("E10 PASS: nonexistent skill returns clear error message");
-}
-
-// ---------------------------------------------------------------------------
-// E11: Legacy command execution
-// ---------------------------------------------------------------------------
-
-#[tokio::test]
-async fn e11_legacy_command_execution() {
-    let (_guard, root) = make_project();
-    let cwd = root.to_string_lossy().to_string();
-    let skills = load_all_skills(&root, &[], false, None).await;
-    let tool = make_tool(skills, &cwd);
-
-    let result = tool.execute(json!({"skill": "legacy-cmd", "args": "test-arg"})).await;
-    assert!(!result.is_error, "E11 FAIL: error: {}", result.content);
-    assert!(result.content.contains("legacy command"), "E11 FAIL: got: {}", result.content);
-    assert!(result.content.contains("test-arg"), "E11 FAIL: $ARGUMENTS not substituted. Got: {}", result.content);
-    println!("E11 PASS: legacy command executed with variable substitution");
 }
 

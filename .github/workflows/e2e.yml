@@ -18,20 +18,20 @@ on:
   push:
     branches: [main]
     paths:
-      - "crates/aion-providers/**"
-      - "crates/aion-agent/**"
-      - "crates/aion-config/**"
-      - "crates/aion-types/**"
-      - "crates/aion-skills/**"
+      - "crates/tjuae-providers/**"
+      - "crates/tjuae-agent/**"
+      - "crates/tjuae-config/**"
+      - "crates/tjuae-types/**"
+      - "crates/tjuae-skills/**"
       - ".github/workflows/e2e.yml"
   pull_request:
     branches: [main]
     paths:
-      - "crates/aion-providers/**"
-      - "crates/aion-agent/**"
-      - "crates/aion-config/**"
-      - "crates/aion-types/**"
-      - "crates/aion-skills/**"
+      - "crates/tjuae-providers/**"
+      - "crates/tjuae-agent/**"
+      - "crates/tjuae-config/**"
+      - "crates/tjuae-types/**"
+      - "crates/tjuae-skills/**"
       - ".github/workflows/e2e.yml"
 
 permissions:
@@ -104,7 +104,7 @@ jobs:
           OPENAI_API_KEY:    ${{ matrix.provider == 'openai'    && secrets.OPENAI_API_KEY    || '' }}
         run: |
           vx cargo nextest run \
-            -p aion-agent \
+            -p tjuae-agent \
             --profile e2e \
             --test e2e \
             -E '${{ matrix.filter }}' \
@@ -116,7 +116,7 @@ jobs:
         with:
           name: e2e-junit-${{ matrix.provider }}
           path: target/nextest/e2e/junit.xml
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   report:
     needs: e2e
@@ -134,7 +134,6 @@ jobs:
           pattern: e2e-junit-*
           merge-multiple: true
           path: e2e-reports
-        continue-on-error: true
 
       - name: Publish E2E test report
         uses: dorny/test-reporter@v3
@@ -143,4 +142,4 @@ jobs:
           name: E2E Tests
           path: e2e-reports/**/*.xml
           reporter: java-junit
-          fail-on-error: false
+          fail-on-error: true

@@ -1,18 +1,18 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/aion-types",
-    "crates/aion-protocol",
-    "crates/aion-compact",
-    "crates/aion-process",
-    "crates/aion-config",
-    "crates/aion-providers",
-    "crates/aion-tools",
-    "crates/aion-mcp",
-    "crates/aion-skills",
-    "crates/aion-memory",
-    "crates/aion-agent",
-    "crates/aion-cli",
+    "crates/tjuae-types",
+    "crates/tjuae-protocol",
+    "crates/tjuae-compact",
+    "crates/tjuae-process",
+    "crates/tjuae-config",
+    "crates/tjuae-providers",
+    "crates/tjuae-tools",
+    "crates/tjuae-mcp",
+    "crates/tjuae-skills",
+    "crates/tjuae-memory",
+    "crates/tjuae-agent",
+    "crates/tjuae-cli",
     "workspace-hack",
 ]
 
@@ -20,21 +20,21 @@ members = [
 version = "0.2.8"
 edition = "2024"
 license = "Apache-2.0"
-repository = "https://github.com/iOfficeAI/aionrs"
+repository = "https://github.com/liangboqiang/TjuaeCLI"
 
 [workspace.dependencies]
 # Internal crates
-aion-types     = { path = "crates/aion-types" }
-aion-protocol  = { path = "crates/aion-protocol" }
-aion-compact   = { path = "crates/aion-compact" }
-aion-process   = { path = "crates/aion-process" }
-aion-config    = { path = "crates/aion-config" }
-aion-providers = { path = "crates/aion-providers" }
-aion-tools     = { path = "crates/aion-tools" }
-aion-mcp       = { path = "crates/aion-mcp" }
-aion-skills    = { path = "crates/aion-skills" }
-aion-memory    = { path = "crates/aion-memory" }
-aion-agent     = { path = "crates/aion-agent" }
+tjuae-types     = { path = "crates/tjuae-types" }
+tjuae-protocol  = { path = "crates/tjuae-protocol" }
+tjuae-compact   = { path = "crates/tjuae-compact" }
+tjuae-process   = { path = "crates/tjuae-process" }
+tjuae-config    = { path = "crates/tjuae-config" }
+tjuae-providers = { path = "crates/tjuae-providers" }
+tjuae-tools     = { path = "crates/tjuae-tools" }
+tjuae-mcp       = { path = "crates/tjuae-mcp" }
+tjuae-skills    = { path = "crates/tjuae-skills" }
+tjuae-memory    = { path = "crates/tjuae-memory" }
+tjuae-agent     = { path = "crates/tjuae-agent" }
 
 # Async runtime
 tokio   = { version = "1", features = ["full"] }

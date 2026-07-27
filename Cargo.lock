@@ -12,257 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aion-agent"
-version = "0.2.8"
-dependencies = [
- "aion-compact",
- "aion-config",
- "aion-mcp",
- "aion-memory",
- "aion-protocol",
- "aion-providers",
- "aion-skills",
- "aion-tools",
- "aion-types",
- "anyhow",
- "async-trait",
- "base64",
- "chrono",
- "crossterm",
- "dirs",
- "futures",
- "glob",
- "is-terminal",
- "mockall",
- "rstest",
- "serde",
- "serde_json",
- "serial_test",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-test",
- "tracing",
- "uuid",
- "wiremock",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-cli"
-version = "0.2.8"
-dependencies = [
- "aion-agent",
- "aion-compact",
- "aion-config",
- "aion-mcp",
- "aion-memory",
- "aion-protocol",
- "aion-providers",
- "aion-skills",
- "aion-tools",
- "aion-types",
- "anyhow",
- "clap",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-compact"
-version = "0.2.8"
-dependencies = [
- "regex",
- "serde",
- "serde_json",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-config"
-version = "0.2.8"
-dependencies = [
- "aion-compact",
- "aion-process",
- "aion-types",
- "anyhow",
- "chrono",
- "dirs",
- "glob",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-test",
- "toml",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "which",
- "wiremock",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-mcp"
-version = "0.2.8"
-dependencies = [
- "aion-config",
- "aion-protocol",
- "aion-tools",
- "aion-types",
- "anyhow",
- "async-trait",
- "futures",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-memory"
-version = "0.2.8"
-dependencies = [
- "aion-config",
- "chrono",
- "rstest",
- "serde",
- "serde_yaml",
- "serial_test",
- "tempfile",
- "thiserror",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-process"
-version = "0.2.8"
-dependencies = [
- "libc",
- "tokio",
- "windows-sys 0.61.2",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-protocol"
-version = "0.2.8"
-dependencies = [
- "aion-types",
- "rstest",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-providers"
-version = "0.2.8"
-dependencies = [
- "aion-config",
- "aion-types",
- "anyhow",
- "async-trait",
- "aws-config",
- "aws-credential-types",
- "aws-sdk-sts",
- "aws-sigv4",
- "base64",
- "chrono",
- "dirs",
- "futures",
- "http 1.4.0",
- "insta",
- "jsonwebtoken",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tokio-test",
- "tracing",
- "tracing-subscriber",
- "url",
- "wiremock",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-skills"
-version = "0.2.8"
-dependencies = [
- "aion-config",
- "aion-mcp",
- "aion-process",
- "aion-types",
- "anyhow",
- "async-trait",
- "dirs",
- "futures",
- "glob",
- "libc",
- "notify",
- "regex",
- "rstest",
- "serde",
- "serde_json",
- "serde_yaml",
- "serial_test",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "unicode-width",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-tools"
-version = "0.2.8"
-dependencies = [
- "aion-config",
- "aion-process",
- "aion-protocol",
- "aion-types",
- "anyhow",
- "async-trait",
- "base64",
- "futures",
- "glob",
- "lru",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "aion-types"
-version = "0.2.8"
-dependencies = [
- "async-trait",
- "base64",
- "chrono",
- "serde",
- "serde_json",
- "workspace-hack",
-]
-
-[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2457,9 +2206,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-proto"
-version = "0.11.14"
+version = "0.11.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "434b42fec591c96ef50e21e886936e66d3cc3f737104fdb9b737c40ffb94c098"
+checksum = "4fcb935c5bec503c2f0e306bdd3e58bb9029dcb14fa8d9ac76e3a5256ac0763e"
 dependencies = [
  "bytes",
  "getrandom 0.3.4",
@@ -3163,7 +2912,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.2",
  "once_cell",
  "rustix",
  "windows-sys 0.60.2",
@@ -3258,6 +3007,257 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "tjuae-agent"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "chrono",
+ "crossterm",
+ "dirs",
+ "futures",
+ "glob",
+ "is-terminal",
+ "mockall",
+ "rstest",
+ "serde",
+ "serde_json",
+ "serial_test",
+ "tempfile",
+ "thiserror",
+ "tjuae-compact",
+ "tjuae-config",
+ "tjuae-mcp",
+ "tjuae-memory",
+ "tjuae-protocol",
+ "tjuae-providers",
+ "tjuae-skills",
+ "tjuae-tools",
+ "tjuae-types",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
+ "wiremock",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-cli"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "clap",
+ "tjuae-agent",
+ "tjuae-compact",
+ "tjuae-config",
+ "tjuae-mcp",
+ "tjuae-memory",
+ "tjuae-protocol",
+ "tjuae-providers",
+ "tjuae-skills",
+ "tjuae-tools",
+ "tjuae-types",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-compact"
+version = "0.2.8"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-config"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dirs",
+ "glob",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tjuae-compact",
+ "tjuae-process",
+ "tjuae-types",
+ "tokio",
+ "tokio-test",
+ "toml",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "which",
+ "wiremock",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-mcp"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tjuae-config",
+ "tjuae-protocol",
+ "tjuae-tools",
+ "tjuae-types",
+ "tokio",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-memory"
+version = "0.2.8"
+dependencies = [
+ "chrono",
+ "rstest",
+ "serde",
+ "serde_yaml",
+ "serial_test",
+ "tempfile",
+ "thiserror",
+ "tjuae-config",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-process"
+version = "0.2.8"
+dependencies = [
+ "libc",
+ "tokio",
+ "windows-sys 0.61.2",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-protocol"
+version = "0.2.8"
+dependencies = [
+ "rstest",
+ "serde",
+ "serde_json",
+ "tjuae-types",
+ "tokio",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-providers"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "aws-config",
+ "aws-credential-types",
+ "aws-sdk-sts",
+ "aws-sigv4",
+ "base64",
+ "chrono",
+ "dirs",
+ "futures",
+ "http 1.4.0",
+ "insta",
+ "jsonwebtoken",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tjuae-config",
+ "tjuae-types",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "wiremock",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-skills"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "dirs",
+ "futures",
+ "glob",
+ "libc",
+ "notify",
+ "regex",
+ "rstest",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "serial_test",
+ "tempfile",
+ "thiserror",
+ "tjuae-config",
+ "tjuae-mcp",
+ "tjuae-process",
+ "tjuae-types",
+ "tokio",
+ "tracing",
+ "unicode-width",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-tools"
+version = "0.2.8"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "futures",
+ "glob",
+ "lru",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tjuae-config",
+ "tjuae-process",
+ "tjuae-protocol",
+ "tjuae-types",
+ "tokio",
+ "tracing",
+ "workspace-hack",
+]
+
+[[package]]
+name = "tjuae-types"
+version = "0.2.8"
+dependencies = [
+ "async-trait",
+ "base64",
+ "chrono",
+ "serde",
+ "serde_json",
+ "workspace-hack",
+]
 
 [[package]]
 name = "tokio"
@@ -4183,7 +4183,6 @@ dependencies = [
  "futures-task",
  "futures-util",
  "getrandom 0.2.17",
- "getrandom 0.3.4",
  "hyper",
  "hyper-rustls",
  "hyper-util",

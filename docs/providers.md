@@ -76,9 +76,9 @@ max_tool_call_failure_turns = 2
 ### Usage
 
 ```bash
-aionrs --profile claude-fast "Quick question"
-aionrs --profile claude-deep "Deep security audit"
-aionrs --profile dev "Create a GitHub issue"
+tjuae-cli --profile claude-fast "Quick question"
+tjuae-cli --profile claude-deep "Deep security audit"
+tjuae-cli --profile dev "Create a GitHub issue"
 ```
 
 - Supports multi-level inheritance chains
@@ -135,13 +135,13 @@ Then enable thinking from the host protocol with `set_config`, or force it for
 one startup:
 
 ```bash
-aionrs --profile deepseek-v4-pro --thinking enabled
+tjuae-cli --profile deepseek-v4-pro --thinking enabled
 ```
 
 For one-off OpenAI-compatible launches without a profile, the equivalent is:
 
 ```bash
-aionrs --json-stream \
+tjuae-cli --json-stream \
   --provider openai \
   --model deepseek-v4-pro \
   --base-url https://api.deepseek.com/v1 \
@@ -235,26 +235,37 @@ Use your Claude.ai subscription (Pro/Team/Enterprise) directly — no API key ne
 
 ### Login
 
+Register an OAuth client with the provider, then add its client ID to the
+global configuration file. TjuaeCLI does not bundle or guess a client ID:
+
+```toml
+[auth]
+client_id = "your-registered-client-id"
+```
+
 ```bash
-aionrs auth login
+tjuae-cli auth login
 ```
 
 1. Displays an authorization URL and code
 2. Open the URL in your browser and enter the code
-3. Credentials are saved alongside the global config (run `aionrs config path` to find the directory)
+3. Credentials are saved alongside the global config (run `tjuae-cli config path` to find the directory)
 4. Subsequent runs auto-load saved credentials (with auto-refresh)
 
 ### Logout
 
 ```bash
-aionrs auth logout
+tjuae-cli auth logout
 ```
 
 ### Configuring OAuth Endpoints
+
+The endpoint defaults target Claude.ai. Override them only when your registered
+client uses different endpoints:
 
 ```toml
 [auth]
 auth_url = "https://claude.ai/oauth"
 token_url = "https://claude.ai/oauth/token"
-client_id = "aionrs"
+client_id = "your-registered-client-id"
 ```

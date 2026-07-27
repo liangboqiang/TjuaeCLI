@@ -2,9 +2,9 @@ mod common;
 
 use std::sync::Arc;
 
-use aionrs::agent::spawner::{AgentSpawner, SubAgentConfig};
-use aionrs::types::llm::LlmEvent;
-use aionrs::types::message::{StopReason, TokenUsage};
+use tjuae_cli::agent::spawner::{AgentSpawner, SubAgentConfig};
+use tjuae_cli::types::llm::LlmEvent;
+use tjuae_cli::types::message::{StopReason, TokenUsage};
 use common::{MockLlmProvider, test_config};
 
 // ---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ async fn test_spawn_shares_provider() {
     ]));
 
     // Both sub-agents share the same underlying provider via Arc.
-    let provider_dyn: Arc<dyn aionrs::provider::LlmProvider> = provider;
+    let provider_dyn: Arc<dyn tjuae_cli::provider::LlmProvider> = provider;
     let spawner = AgentSpawner::new(Arc::clone(&provider_dyn), test_config());
 
     let result1 = spawner.spawn_one(make_sub_config("seq-1")).await;

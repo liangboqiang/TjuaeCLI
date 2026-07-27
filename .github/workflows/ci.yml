@@ -26,6 +26,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Verify Tjuae identity
+        shell: bash
+        run: |
+          if git grep -n -I -i -E '[a]ion|[i]officeai' -- . \
+            ':(exclude)LICENSE' ':(exclude)UPSTREAM.md'; then
+            echo "Old identity found outside legal attribution files."
+            exit 1
+          fi
+          if git ls-files | grep -E -i '[a]ion|[i]officeai'; then
+            echo "Old identity found in a tracked path."
+            exit 1
+          fi
+
       - name: Setup vx (installs Rust + just from vx.toml)
         uses: loonghao/vx@v0.9.26
         with:
@@ -53,7 +66,6 @@ jobs:
 
       - name: Security audit
         run: vx cargo audit
-        continue-on-error: true
 
       - name: Upload nextest JUnit report
         if: always()
@@ -61,7 +73,7 @@ jobs:
         with:
           name: nextest-junit-${{ matrix.os }}
           path: target/nextest/ci/junit.xml
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   # ── Cross-platform build check (compile only, no run) ─────────────────
   # Verifies that the workspace compiles for every release target.
@@ -111,9 +123,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.use_cross }}" == "true" ]]; then
-            cross build --release --target ${{ matrix.target }} -p aion-cli
+            cross build --release --target ${{ matrix.target }} -p tjuae-cli
           else
-            vx cargo build --release --target ${{ matrix.target }} -p aion-cli
+            vx cargo build --release --target ${{ matrix.target }} -p tjuae-cli
           fi
 
   # ── Annotate PR / commit with test results ────────────────────────────
@@ -133,7 +145,6 @@ jobs:
           pattern: nextest-junit-*
           merge-multiple: true
           path: junit-reports
-        continue-on-error: true
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
@@ -142,4 +153,4 @@ jobs:
           name: Unit & Integration Tests
           path: junit-reports/**/*.xml
           reporter: java-junit
-          fail-on-error: false
+          fail-on-error: true

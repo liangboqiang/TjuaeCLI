@@ -3,12 +3,12 @@
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-use aionrs::provider::anthropic::AnthropicProvider;
-use aionrs::provider::compat::ProviderCompat;
-use aionrs::provider::debug::DebugConfig;
-use aionrs::provider::{LlmProvider, ProviderError};
-use aionrs::types::llm::{LlmEvent, LlmRequest, ThinkingConfig};
-use aionrs::types::message::{ContentBlock, Message, Role, StopReason};
+use tjuae_cli::provider::anthropic::AnthropicProvider;
+use tjuae_cli::provider::compat::ProviderCompat;
+use tjuae_cli::provider::debug::DebugConfig;
+use tjuae_cli::provider::{LlmProvider, ProviderError};
+use tjuae_cli::types::llm::{LlmEvent, LlmRequest, ThinkingConfig};
+use tjuae_cli::types::message::{ContentBlock, Message, Role, StopReason};
 
 // ---------------------------------------------------------------------------
 // Helpers

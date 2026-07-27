@@ -1,9 +1,9 @@
 mod common;
 
-use aionrs::hooks::{HookDef, HookEngine, HooksConfig};
-use aionrs::tools::orchestration::execute_tool_calls;
-use aionrs::tools::registry::ToolRegistry;
-use aionrs::types::message::ContentBlock;
+use tjuae_cli::hooks::{HookDef, HookEngine, HooksConfig};
+use tjuae_cli::tools::orchestration::execute_tool_calls;
+use tjuae_cli::tools::registry::ToolRegistry;
+use tjuae_cli::types::message::ContentBlock;
 use common::{auto_approve_confirmer, MockTool};
 use serde_json::json;
 

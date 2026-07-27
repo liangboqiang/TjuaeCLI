@@ -1,14 +1,14 @@
 # AGENTS.md
 
-Rules and conventions for AI assistants and contributors working on aionrs.
+Rules and conventions for AI assistants and contributors working on TjuaeCLI.
 
 ## Overview
 
-aionrs is a **multi-provider AI agent CLI** written in Rust. It connects to
+TjuaeCLI is a **multi-provider AI agent CLI** written in Rust. It connects to
 LLM providers (Anthropic, OpenAI, AWS Bedrock, Google Vertex AI), orchestrates
 built-in tools (Read, Write, Edit, Bash, Grep, Glob, Spawn), supports MCP
 servers, skills, hooks, and long-term memory. It also exposes a JSON stream
-protocol for host integration (e.g. Electron-based AionUI).
+protocol for host integration (e.g. Electron-based TjuaeUI).
 
 Tech stack: Rust 2021 edition, stable toolchain, Cargo workspace under `crates/`.
 
@@ -18,17 +18,17 @@ Dependencies flow **downward** — never introduce circular or upward references
 
 | Layer | Crate | Responsibility |
 |-------|-------|----------------|
-| Bottom | `aion-types` | Shared provider-neutral data types (LLM, message, tool) — zero internal deps |
-| Bottom | `aion-compact` | Context compression algorithms (folding, sanitization, tokenization) |
-| Mid | `aion-config` | Configuration, ProviderCompat, auth, hooks, logging (`create_file_layer`), **cross-platform shell helpers** |
-| Mid | `aion-protocol` | JSON stream protocol (events, commands, approval manager) for host integration |
-| Mid | `aion-providers` | LLM provider implementations (Anthropic, OpenAI, Bedrock, Vertex) |
-| Mid | `aion-tools` | Built-in agent tools (Read, Write, Edit, Bash, Grep, Glob, Spawn) |
-| Mid | `aion-mcp` | MCP (Model Context Protocol) client |
-| Mid | `aion-skills` | Skills system (prompt snippets, hooks, permissions, shell expansion) |
-| Mid | `aion-memory` | Long-term cross-session memory (user prefs, feedback, project context) |
-| Top | `aion-agent` | Agent engine, session management, orchestration |
-| Top | `aion-cli` | CLI binary entry point |
+| Bottom | `tjuae-types` | Shared provider-neutral data types (LLM, message, tool) — zero internal deps |
+| Bottom | `tjuae-compact` | Context compression algorithms (folding, sanitization, tokenization) |
+| Mid | `tjuae-config` | Configuration, ProviderCompat, auth, hooks, logging (`create_file_layer`), **cross-platform shell helpers** |
+| Mid | `tjuae-protocol` | JSON stream protocol (events, commands, approval manager) for host integration |
+| Mid | `tjuae-providers` | LLM provider implementations (Anthropic, OpenAI, Bedrock, Vertex) |
+| Mid | `tjuae-tools` | Built-in agent tools (Read, Write, Edit, Bash, Grep, Glob, Spawn) |
+| Mid | `tjuae-mcp` | MCP (Model Context Protocol) client |
+| Mid | `tjuae-skills` | Skills system (prompt snippets, hooks, permissions, shell expansion) |
+| Mid | `tjuae-memory` | Long-term cross-session memory (user prefs, feedback, project context) |
+| Top | `tjuae-agent` | Agent engine, session management, orchestration |
+| Top | `tjuae-cli` | CLI binary entry point |
 
 When adding new functionality, place it in the **lowest crate where it
 semantically belongs**. Don't create a new crate just for one shared function.
@@ -101,8 +101,8 @@ against this section. Do not rely on tests or review to catch style drift.
 
 ### Agent Integration
 
-- AionCLI is the built-in SDK/library integration path. Do not model it as an
-  external agent subprocess when changing Aion host integration code.
+- TjuaeCLI is the built-in SDK/library integration path. Do not model it as an
+  external agent subprocess when changing Tjuae host integration code.
 - For Claude Code, Codex, or other external agent integrations, first review
   the ACP protocol, subprocess lifecycle, logging, and security boundaries.
 
@@ -191,7 +191,7 @@ verified by CI alone.
 
 ### Shell Execution
 
-- All shell invocations must go through `aion_config::shell` module
+- All shell invocations must go through `tjuae_config::shell` module
   (`shell_command()` or `shell_command_builder()`).
 - Never call `Command::new("sh")`, `Command::new("bash")`, or
   `Command::new("cmd")` directly — these are platform-specific.
@@ -226,5 +226,5 @@ Key references in `docs/` (don't duplicate their content here):
 | [skills.md](docs/skills.md) | Writing skills, front matter, shell expansion, conditional activation |
 | [mcp.md](docs/mcp.md) | MCP server integration, transport types, deferred loading |
 | [advanced.md](docs/advanced.md) | Sub-agents, hooks, logging, memory, plan mode, context compression |
-| [json-stream-protocol.md](docs/json-stream-protocol.md) | JSON Lines protocol spec for host integration (e.g. AionUI) |
+| [json-stream-protocol.md](docs/json-stream-protocol.md) | JSON Lines protocol spec for host integration (e.g. TjuaeUI) |
 | [troubleshooting.md](docs/troubleshooting.md) | Common errors and solutions |

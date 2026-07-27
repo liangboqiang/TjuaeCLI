@@ -28,8 +28,8 @@
 worktree/
 worktrees/
 
-# aionrs session data
-.aionrs/
+# TjuaeCLI session data
+.tjuae/
 
 # Debug artifacts
 *.pdb

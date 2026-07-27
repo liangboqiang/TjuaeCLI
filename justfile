@@ -1,4 +1,4 @@
-# aionrs justfile — run tasks with `vx just <recipe>`
+# TjuaeCLI justfile — run tasks with `vx just <recipe>`
 # All commands route through `vx` (when available) so the correct tool
 # versions are used. Everything here is cross-platform: recipe bodies avoid
 # shell builtins and external Unix tools (no printf/sed), relying on just's
@@ -76,22 +76,22 @@ test-e2e:
     @just _run "{{ cargo }} nextest run --workspace --profile e2e --test e2e"
 
 test-e2e-anthropic:
-    @just _run "{{ cargo }} nextest run -p aion-agent --profile e2e --test e2e -E 'test(anthropic)'"
+    @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test e2e -E 'test(anthropic)'"
 
 test-e2e-openai:
-    @just _run "{{ cargo }} nextest run -p aion-agent --profile e2e --test e2e -E 'test(openai)'"
+    @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test e2e -E 'test(openai)'"
 
 # ── Acceptance Tests (evolution feature validation) ───────────────────────
 # Requires env vars: OPENAI_API_KEY and/or AWS_PROFILE + CLAUDE_CODE_USE_BEDROCK=1
 # Reuses the e2e nextest profile (sequential, long timeout, no retry)
 test-acceptance:
-    @just _run "{{ cargo }} nextest run -p aion-agent --profile e2e --test acceptance"
+    @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test acceptance"
 
 test-acceptance-memory:
-    @just _run "{{ cargo }} nextest run -p aion-agent --profile e2e --test acceptance -E 'test(memory)'"
+    @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test acceptance -E 'test(memory)'"
 
 test-acceptance-compact:
-    @just _run "{{ cargo }} nextest run -p aion-agent --profile e2e --test acceptance -E 'test(compact)'"
+    @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test acceptance -E 'test(compact)'"
 
 # ── Lint / Format ─────────────────────────────────────────────────────────
 lint:
@@ -130,11 +130,11 @@ coverage:
 # the `#`. No `sed` (absent on Windows) — use each shell's native facility.
 [unix]
 version:
-    @{{ cargo }} pkgid -p aion-cli | sed 's/.*#//'
+    @{{ cargo }} pkgid -p tjuae-cli | sed 's/.*#//'
 
 [windows]
 version:
-    @({{ cargo }} pkgid -p aion-cli) -replace '.*#'
+    @({{ cargo }} pkgid -p tjuae-cli) -replace '.*#'
 
 # ── Clean ─────────────────────────────────────────────────────────────────
 clean:
@@ -158,3 +158,6 @@ _auto-commit-fixes:
 
 # ── All checks (mirrors CI exactly) ───────────────────────────────────────
 check-all: fmt-check lint test-ci hakari-verify audit
+
+# Canonical local/CI verification gate.
+verify: check-all

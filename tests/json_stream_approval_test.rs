@@ -4,14 +4,14 @@ use std::sync::Arc;
 
 use serde_json::json;
 
-use aionrs::engine::AgentEngine;
-use aionrs::output::OutputSink;
-use aionrs::output::terminal::TerminalSink;
-use aionrs::protocol::{ToolApprovalManager, ToolApprovalResult};
-use aionrs::protocol::writer::ProtocolWriter;
-use aionrs::tools::registry::ToolRegistry;
-use aionrs::types::llm::LlmEvent;
-use aionrs::types::message::{StopReason, TokenUsage};
+use tjuae_cli::engine::AgentEngine;
+use tjuae_cli::output::OutputSink;
+use tjuae_cli::output::terminal::TerminalSink;
+use tjuae_cli::protocol::{ToolApprovalManager, ToolApprovalResult};
+use tjuae_cli::protocol::writer::ProtocolWriter;
+use tjuae_cli::tools::registry::ToolRegistry;
+use tjuae_cli::types::llm::LlmEvent;
+use tjuae_cli::types::message::{StopReason, TokenUsage};
 
 use common::{ExecMockTool, MockLlmProvider, test_config};
 
