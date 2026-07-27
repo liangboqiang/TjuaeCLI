@@ -460,7 +460,7 @@ fn resolve_cli_thinking(
             budget_tokens: thinking_budget.unwrap_or(DEFAULT_THINKING_BUDGET),
         })),
         Some("disabled") => Ok(Some(ThinkingConfig::Disabled)),
-        Some(other) => anyhow::bail!("Invalid --thinking value: {other}. Expected 'enabled' or 'disabled'."),
+        Some(other) => anyhow::bail!("无效的 --thinking 值：{other}。应为 'enabled' 或 'disabled'。"),
         None => Ok(None),
     }
 }
@@ -518,8 +518,8 @@ fn resolve_provider_alias(
 
     let alias_config = providers.get(requested).cloned().ok_or_else(|| {
         anyhow::anyhow!(
-            "Unknown provider: '{}'. Expected a built-in provider (anthropic, openai, bedrock, vertex) \
-             or a custom alias defined in [providers.{}].",
+            "未知提供商：'{}'。应使用内置提供商（anthropic、openai、bedrock、vertex），\
+             或在 [providers.{}] 中定义的自定义别名。",
             requested,
             requested
         )
@@ -527,8 +527,8 @@ fn resolve_provider_alias(
 
     let underlying = alias_config.provider.clone().ok_or_else(|| {
         anyhow::anyhow!(
-            "Provider alias '{}' requires a 'provider' field in [providers.{}] \
-             that maps to a built-in type (anthropic, openai, bedrock, vertex).",
+            "提供商别名 '{}' 必须在 [providers.{}] 中设置 'provider' 字段，\
+             并映射到内置类型（anthropic、openai、bedrock、vertex）。",
             requested,
             requested
         )
@@ -536,8 +536,8 @@ fn resolve_provider_alias(
 
     let provider_type = parse_builtin_provider(&underlying).ok_or_else(|| {
         anyhow::anyhow!(
-            "Provider alias '{}' maps to '{}', which is not a built-in provider. \
-             Use one of: anthropic, openai, bedrock, vertex.",
+            "提供商别名 '{}' 映射到 '{}'，但它不是内置提供商。\
+             请使用以下值之一：anthropic、openai、bedrock、vertex。",
             requested,
             underlying
         )
@@ -595,7 +595,7 @@ fn resolve_api_key(
         auth_config
             .ok_or_else(|| {
                 anyhow::anyhow!(
-                    "OAuth credentials exist, but OAuth is not configured. Set `client_id` in the `[auth]` section of {}.",
+                    "OAuth 凭据已存在，但尚未配置 OAuth。请在 {} 的 `[auth]` 节中设置 `client_id`。",
                     global_config_path().display()
                 )
             })?
@@ -604,8 +604,9 @@ fn resolve_api_key(
     }
 
     anyhow::bail!(
-        "No API key found. Provide via --api-key, config file, environment variable \
-         (API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY), or run 'tjuae-cli auth login'."
+        "未找到 API 密钥。请通过 --api-key、配置文件或环境变量 \
+         （API_KEY、ANTHROPIC_API_KEY 或 OPENAI_API_KEY）提供，\
+         或运行 'tjuae-cli auth login'。"
     )
 }
 
@@ -633,7 +634,7 @@ pub fn load_global_auth_config() -> anyhow::Result<AuthConfig> {
     let path = global_config_path();
     load_config_file(&path).auth.ok_or_else(|| {
         anyhow::anyhow!(
-            "OAuth is not configured. Add an `[auth]` section with `client_id` to {}.",
+            "尚未配置 OAuth。请在 {} 中添加包含 `client_id` 的 `[auth]` 节。",
             path.display()
         )
     })
@@ -646,7 +647,7 @@ fn project_config_path() -> PathBuf {
 fn load_config_file(path: &Path) -> ConfigFile {
     match std::fs::read_to_string(path) {
         Ok(content) => toml::from_str(&content).unwrap_or_else(|e| {
-            tracing::warn!(target: "tjuae_config", path = %path.display(), error = %e, "failed to parse config file");
+            tracing::warn!(target: "tjuae_config", path = %path.display(), error = %e, "解析配置文件失败");
             ConfigFile::default()
         }),
         Err(_) => ConfigFile::default(),
@@ -806,17 +807,13 @@ fn resolve_profile(
     visited: &mut Vec<String>,
 ) -> anyhow::Result<ProfileConfig> {
     if visited.contains(&name.to_string()) {
-        anyhow::bail!(
-            "Circular profile inheritance detected: {} -> {}",
-            visited.join(" -> "),
-            name
-        );
+        anyhow::bail!("检测到配置档循环继承：{} -> {}", visited.join(" -> "), name);
     }
     visited.push(name.to_string());
 
     let profile = profiles
         .get(name)
-        .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found in config", name))?
+        .ok_or_else(|| anyhow::anyhow!("配置中未找到配置档 '{}'", name))?
         .clone();
 
     if let Some(parent_name) = &profile.extends {
@@ -902,79 +899,79 @@ fn apply_profile(mut config: ConfigFile, profile_name: &str) -> anyhow::Result<C
 pub fn init_config() -> anyhow::Result<()> {
     let path = global_config_path();
     if path.exists() {
-        tracing::info!(target: "tjuae_config", path = %path.display(), "config file already exists");
+        tracing::info!(target: "tjuae_config", path = %path.display(), "配置文件已存在");
         return Ok(());
     }
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(&path, DEFAULT_CONFIG_TEMPLATE)?;
-    tracing::info!(target: "tjuae_config", path = %path.display(), "config file created");
+    tracing::info!(target: "tjuae_config", path = %path.display(), "配置文件已创建");
     Ok(())
 }
 
-const DEFAULT_CONFIG_TEMPLATE: &str = r#"# TjuaeCLI configuration
+const DEFAULT_CONFIG_TEMPLATE: &str = r#"# TjuaeCLI 配置
 
-# Default provider settings
+# 默认提供商设置
 [default]
-provider = "anthropic"            # built-in provider or custom alias from [providers.<name>]
+provider = "anthropic"            # 内置提供商或 [providers.<name>] 中的自定义别名
 # model = "claude-sonnet-4-20250514"
-# max_tokens = 8192                  # optional per-response output cap; omit to use provider/model defaults
-# max_turns = 20                  # optional max model turns per run; omit or set 0 to disable
-# max_tool_call_malformed_turns = 3  # 0 disables the tool-call-malformed round breaker
-# max_tool_call_failure_turns = 3    # 0 disables the tool-call-failure round breaker
-# system_prompt = "..."          # optional custom system prompt
+# max_tokens = 8192               # 可选的每次响应输出上限；省略时使用提供商或模型默认值
+# max_turns = 20                  # 可选的每次运行最大模型轮次；省略或设为 0 表示不限制
+# max_tool_call_malformed_turns = 3  # 设为 0 可禁用工具调用格式错误轮次熔断器
+# max_tool_call_failure_turns = 3    # 设为 0 可禁用工具调用失败轮次熔断器
+# system_prompt = "..."           # 可选的自定义系统提示词
 
-# Shell execution settings
+# Shell 执行设置
 [shell]
-default = "auto"                 # auto, powershell, pwsh, cmd, bash, zsh, sh, or executable path
+default = "auto"                 # auto、powershell、pwsh、cmd、bash、zsh、sh 或可执行文件路径
 
-# Provider-specific API settings
+# 提供商专用 API 设置
 [providers.anthropic]
-# api_key = "sk-ant-xxx"         # can also use env: API_KEY or ANTHROPIC_API_KEY
+# api_key = "sk-ant-xxx"         # 也可使用环境变量 API_KEY 或 ANTHROPIC_API_KEY
 # base_url = "https://api.anthropic.com"
 
 [providers.openai]
-# api_key = "sk-xxx"             # can also use env: OPENAI_API_KEY
+# api_key = "sk-xxx"             # 也可使用环境变量 OPENAI_API_KEY
 # base_url = "https://api.openai.com/v1"
 
-# Custom provider alias (maps to a built-in provider type)
+# 自定义提供商别名（映射到内置提供商类型）
 # [providers.my-service]
 # provider = "openai"
 # model = "custom-model-v1"
 # api_key = "sk-xxx"
 # base_url = "https://my-service.example.com/api/openai"
 
-# Provider compatibility overrides (usually not needed — defaults work)
+# 提供商兼容性覆盖（通常无需设置，默认值即可工作）
 # [providers.openai.compat]
-# openai_api_mode = "responses"               # default: "chat_completions"
-# max_tokens_field = "max_completion_tokens"  # for OpenAI official models
+# openai_api_mode = "responses"               # 默认："chat_completions"
+# max_tokens_field = "max_completion_tokens"  # 用于 OpenAI 官方模型
 # merge_assistant_messages = true
 # clean_orphan_tool_calls = true
 # dedup_tool_results = true
 # strip_patterns = ["__OPENROUTER_REASONING_DETAILS__"]
 
-# AWS Bedrock configuration (uses AWS SigV4 auth, no API key needed)
+# AWS Bedrock 配置（使用 AWS SigV4 认证，无需 API 密钥）
 # [bedrock]
 # region = "us-east-1"
 # access_key_id = "AKIA..."
 # secret_access_key = "..."
 # session_token = "..."
-# profile = "my-profile"        # or use AWS profile
+# profile = "my-profile"        # 也可使用 AWS profile
 
-# Google Vertex AI configuration (uses GCP OAuth2 auth, no API key needed)
+# Google Vertex AI 配置（使用 GCP OAuth2 认证，无需 API 密钥）
 # [vertex]
 # project_id = "my-gcp-project"
 # region = "us-central1"
-# credentials_file = "/path/to/service-account.json"  # or use ADC
+# credentials_file = "/path/to/service-account.json"  # 也可使用 ADC
 
-# OAuth settings (for `tjuae-cli auth login` with Claude.ai account)
+# OAuth 设置（通过 `tjuae-cli auth login` 使用 Claude.ai 账户）
 # [auth]
 # auth_url = "https://claude.ai/oauth"
 # token_url = "https://claude.ai/oauth/token"
-# client_id = "replace-with-your-registered-client-id"  # required; no client ID is bundled
+# client_id = "replace-with-your-registered-client-id"  # 必填；程序不内置 client ID
 
-# Named profiles for quick switching (--profile <name>)
+# 用于快速切换的命名配置档（--profile <name>）
 # [profiles.deepseek]
 # provider = "openai"
 # model = "deepseek-chat"
@@ -1008,37 +1005,37 @@ default = "auto"                 # auto, powershell, pwsh, cmd, bash, zsh, sh, o
 # provider = "vertex"
 # model = "claude-sonnet-4@20250514"
 
-# Tool confirmation settings
+# 工具确认设置
 [tools]
-auto_approve = false             # --auto-approve overrides
-# Tools that skip confirmation even when auto_approve = false
+auto_approve = false             # --auto-approve 可覆盖此值
+# 即使 auto_approve = false 也跳过确认的工具
 allow_list = ["Read", "Grep", "Glob"]
 
-# Context compaction settings
+# 上下文压缩设置
 # [compact]
-# context_window = 200000        # context window size in tokens
-# output_reserve = 20000         # tokens reserved for output
-# autocompact_buffer = 13000     # buffer below effective window for autocompact trigger
-# emergency_buffer = 3000        # tokens from limit for emergency block
-# max_failures = 3               # consecutive failures before circuit-breaker trips
-# micro_keep_recent = 5          # keep N most recent tool results
-# micro_gap_seconds = 3600       # gap threshold for time-based microcompact
+# context_window = 200000        # 上下文窗口大小（token）
+# output_reserve = 20000         # 为输出预留的 token
+# autocompact_buffer = 13000     # 触发自动压缩时，距有效窗口上限的缓冲量
+# emergency_buffer = 3000        # 触发紧急阻断时，距上限的 token 数
+# max_failures = 3               # 触发熔断器前允许的连续失败次数
+# micro_keep_recent = 5          # 保留最近 N 个工具结果
+# micro_gap_seconds = 3600       # 按时间触发微压缩的间隔阈值
 # compactable_tools = ["Read", "ExecCommand", "Grep", "Glob", "Write", "Edit"]
 # enabled = true
 
-# File state cache (dedup repeated reads, staleness detection)
+# 文件状态缓存（去除重复读取、检测过期内容）
 # [file_cache]
-# max_entries = 100            # max cached file entries
-# max_size_bytes = 26214400    # 25 MB total cache size
+# max_entries = 100            # 缓存文件条目的最大数量
+# max_size_bytes = 26214400    # 缓存总大小为 25 MB
 # enabled = true
 
-# Session settings
+# 会话设置
 [session]
 enabled = true
-directory = ".tjuae/sessions"  # relative to project root
-max_sessions = 20                # auto-cleanup oldest
+directory = ".tjuae/sessions"  # 相对于项目根目录
+max_sessions = 20              # 自动清理最旧会话
 
-# Hook system: run shell commands at tool lifecycle events
+# 钩子系统：在工具生命周期事件中运行 shell 命令
 # [[hooks.post_tool_use]]
 # name = "rustfmt"
 # tool_match = ["Write", "Edit"]
@@ -1055,13 +1052,13 @@ max_sessions = 20                # auto-cleanup oldest
 # name = "final-lint"
 # command = "cargo clippy --quiet 2>&1 | tail -5"
 
-# Logging configuration
+# 日志配置
 # [logging]
-# enabled = true                   # enable file logging (default: false)
-# level = "info"                   # log level filter (default: "info")
-# dir = "~/Library/Logs/tjuae"        # log directory (default: platform-specific)
+# enabled = true                   # 启用文件日志（默认：false）
+# level = "info"                   # 日志级别过滤器（默认："info"）
+# dir = "~/Library/Logs/tjuae"     # 日志目录（默认值取决于平台）
 
-# MCP (Model Context Protocol) servers
+# MCP（模型上下文协议）服务器
 # [mcp.servers.filesystem]
 # transport = "stdio"
 # command = "npx"

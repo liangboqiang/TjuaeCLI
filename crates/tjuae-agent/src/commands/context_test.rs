@@ -35,19 +35,19 @@ mod tests {
     fn compact_view_contains_authoritative_usage_and_counts() {
         let output = format_snapshot(&snapshot(), false);
 
-        assert!(output.contains("89.6k/200k tokens (44.8%)"));
-        assert!(output.contains("Source: provider exact"));
-        assert!(output.contains("2 compact, 5 microcompact"));
-        assert!(output.contains("/context all to expand"));
+        assert!(output.contains("89.6k/200k token（44.8%）"));
+        assert!(output.contains("来源：提供商精确值"));
+        assert!(output.contains("压缩次数：2 次 compact，5 次 microcompact"));
+        assert!(output.contains("使用 /context all 展开详情"));
     }
 
     #[test]
     fn expanded_view_lists_categories_and_details() {
         let output = format_snapshot(&snapshot(), true);
 
-        assert!(output.contains("Estimated usage by category"));
-        assert!(output.contains("Skills · 1"));
+        assert!(output.contains("按类别估算的用量"));
+        assert!(output.contains("技能 · 1"));
         assert!(output.contains("- review"));
-        assert!(!output.contains("/context all to expand"));
+        assert!(!output.contains("使用 /context all 展开详情"));
     }
 }

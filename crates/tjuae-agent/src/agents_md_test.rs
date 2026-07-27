@@ -251,8 +251,8 @@ mod tests {
             is_global: false,
         }];
         let result = format_agents_md_section(&files);
-        assert!(result.contains("Be sure to adhere to these instructions"));
-        assert!(result.contains("Contents of /workspace/AGENTS.md (project instructions):"));
+        assert!(result.contains("请务必遵守这些指令"));
+        assert!(result.contains("/workspace/AGENTS.md （项目指令） 的内容："));
         assert!(result.contains("My rules"));
     }
 
@@ -274,7 +274,7 @@ mod tests {
         let global_pos = result.find("Global rules").unwrap();
         let project_pos = result.find("Project rules").unwrap();
         assert!(global_pos < project_pos, "global before project");
-        assert!(result.contains("(user's global instructions for all projects)"));
-        assert!(result.contains("(project instructions)"));
+        assert!(result.contains("（用户对所有项目的全局指令）"));
+        assert!(result.contains("（项目指令）"));
     }
 }

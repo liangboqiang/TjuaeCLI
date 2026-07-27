@@ -22,9 +22,8 @@ const MAX_INCLUDE_DEPTH: u8 = 5;
 
 const ALLOWED_EXTENSIONS: &[&str] = &[".md", ".txt", ".json", ".yaml", ".yml", ".toml"];
 
-const INSTRUCTION_PREAMBLE: &str = "Codebase and user instructions are shown below. \
-Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any \
-default behavior and you MUST follow them exactly as written.";
+const INSTRUCTION_PREAMBLE: &str = "以下是代码库说明和用户指令。请务必遵守这些指令。\
+重要：这些指令优先于任何默认行为，你必须严格按照原文执行。";
 
 // ---------------------------------------------------------------------------
 // Discovery
@@ -107,11 +106,11 @@ pub fn format_agents_md_section(files: &[AgentsMdFile]) -> String {
 
     for file in files {
         let description = if file.is_global {
-            "(user's global instructions for all projects)"
+            "（用户对所有项目的全局指令）"
         } else {
-            "(project instructions)"
+            "（项目指令）"
         };
-        let header = format!("Contents of {} {}:", file.path.display(), description);
+        let header = format!("{} {} 的内容：", file.path.display(), description);
         parts.push(format!("{header}\n\n{}", file.content.trim()));
     }
 

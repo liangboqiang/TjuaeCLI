@@ -129,8 +129,8 @@ impl BedrockTransportState {
             let config = loader.load().await;
             let provider = config.credentials_provider().ok_or_else(|| {
                 ProviderError::Connection(
-                    "No AWS credentials found. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY, \
-                     AWS_PROFILE, or configure credentials in ~/.aws/credentials"
+                    "未找到 AWS 凭据。请设置 AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY、\
+                     AWS_PROFILE，或在 ~/.aws/credentials 中配置凭据"
                         .into(),
                 )
             })?;
@@ -139,7 +139,7 @@ impl BedrockTransportState {
             let creds = provider
                 .provide_credentials()
                 .await
-                .map_err(|e| ProviderError::Connection(format!("AWS credential error: {}", e)))?;
+                .map_err(|e| ProviderError::Connection(format!("AWS 凭据错误：{}", e)))?;
 
             Ok(Credentials::new(
                 creds.access_key_id(),
@@ -156,7 +156,7 @@ impl BedrockTransportState {
                 thread::scope(|s| {
                     s.spawn(|| {
                         Runtime::new()
-                            .map_err(|e| ProviderError::Connection(format!("Runtime error: {}", e)))?
+                            .map_err(|e| ProviderError::Connection(format!("运行时错误：{}", e)))?
                             .block_on(resolve)
                     })
                     .join()
@@ -166,7 +166,7 @@ impl BedrockTransportState {
             Err(_) => {
                 // No runtime — safe to create one
                 Runtime::new()
-                    .map_err(|e| ProviderError::Connection(format!("Runtime error: {}", e)))?
+                    .map_err(|e| ProviderError::Connection(format!("运行时错误：{}", e)))?
                     .block_on(resolve)
             }
         }
@@ -192,7 +192,7 @@ impl BedrockTransportState {
             .time(SystemTime::now())
             .settings(signing_settings)
             .build()
-            .map_err(|e| ProviderError::Connection(format!("SigV4 params error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("SigV4 参数错误：{}", e)))?;
 
         // Build header pairs for signing
         let header_pairs: Vec<(&str, &str)> = headers
@@ -201,19 +201,18 @@ impl BedrockTransportState {
             .collect();
 
         let signable_request = SignableRequest::new(method, url, header_pairs.into_iter(), SignableBody::Bytes(body))
-            .map_err(|e| ProviderError::Connection(format!("Signable request error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("可签名请求错误：{}", e)))?;
 
         let (signing_instructions, _signature) = sigv4_http::sign(signable_request, &signing_params.into())
-            .map_err(|e| ProviderError::Connection(format!("SigV4 signing error: {}", e)))?
+            .map_err(|e| ProviderError::Connection(format!("SigV4 签名错误：{}", e)))?
             .into_parts();
 
         let mut signed_headers = headers.clone();
         for (name, value) in signing_instructions.headers() {
             signed_headers.insert(
                 HeaderName::from_bytes(name.as_bytes())
-                    .map_err(|e| ProviderError::Connection(format!("Header name error: {}", e)))?,
-                HeaderValue::from_str(value)
-                    .map_err(|e| ProviderError::Connection(format!("Header value error: {}", e)))?,
+                    .map_err(|e| ProviderError::Connection(format!("请求头名称错误：{}", e)))?,
+                HeaderValue::from_str(value).map_err(|e| ProviderError::Connection(format!("请求头值错误：{}", e)))?,
             );
         }
 
@@ -228,7 +227,7 @@ impl BedrockTransportState {
         tool_wire_shape: ResolvedToolWireShape,
     ) -> Result<ProjectedHttpRequest, ProviderError> {
         let body_bytes =
-            serde_json::to_vec(&body).map_err(|e| ProviderError::Connection(format!("JSON serialize error: {}", e)))?;
+            serde_json::to_vec(&body).map_err(|e| ProviderError::Connection(format!("JSON 序列化错误：{}", e)))?;
         let credentials = self.resolve_credentials()?;
         let url = self.build_url(model);
 
@@ -254,9 +253,8 @@ impl BedrockTransportState {
             tool_wire_shape,
             ..
         } = request;
-        let body_bytes = body_bytes.ok_or_else(|| {
-            ProviderError::Connection("Bedrock projected request missing signed request body bytes".to_string())
-        })?;
+        let body_bytes = body_bytes
+            .ok_or_else(|| ProviderError::Connection("Bedrock 投影请求缺少已签名的请求正文字节".to_string()))?;
 
         let response = self.client.post(&url).headers(headers).body(body_bytes).send().await?;
 
@@ -297,33 +295,27 @@ fn format_bedrock_error(status: u16, body: &str) -> String {
 
     let hint = match status {
         403 => Some(
-            "Check IAM permissions: the role/user needs bedrock:InvokeModelWithResponseStream. \
-             Also verify the model is enabled in the Bedrock console for your account.",
+            "请检查 IAM 权限：角色或用户需要 bedrock:InvokeModelWithResponseStream。\
+             同时确认该模型已在你的账户中通过 Bedrock 控制台启用。",
         ),
-        404 => Some(
-            "Model not found in this region. Verify the model ID and that it's available in \
-             your configured AWS region.",
-        ),
+        404 => Some("在此区域中未找到模型。请确认模型 ID 正确，并且模型在配置的 AWS 区域中可用。"),
         400 => {
             if body.contains("schema") || body.contains("Schema") {
                 Some(
-                    "Request schema validation failed. If using tools, try enabling sanitize_schema=true in [providers.bedrock.compat].",
+                    "请求 schema 验证失败。如果使用工具，请尝试在 [providers.bedrock.compat] 中启用 sanitize_schema=true。",
                 )
             } else {
-                Some("Bad request — check model parameters and message format.")
+                Some("请求无效——请检查模型参数和消息格式。")
             }
         }
-        503 | 529 => Some(
-            "Service overloaded or throttled. You may have exceeded your provisioned throughput quota. \
-             Retry after a moment or request a quota increase.",
-        ),
+        503 | 529 => Some("服务过载或受到限流。你可能已超过预置吞吐量配额。请稍后重试或申请提高配额。"),
         _ => None,
     };
 
     let type_info = error_type.map(|t| format!(" [{}]", t)).unwrap_or_default();
 
     match hint {
-        Some(h) => format!("{}{}\nHint: {}", body, type_info, h),
+        Some(h) => format!("{}{}\n提示：{}", body, type_info, h),
         None => format!("{}{}", body, type_info),
     }
 }

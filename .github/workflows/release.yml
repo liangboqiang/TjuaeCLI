@@ -1,16 +1,16 @@
-name: Release
+name: 发布
 
 on:
   workflow_call:
     inputs:
       tag_name:
-        description: "Release tag to build and publish (e.g., v0.2.0)"
+        description: "要构建和发布的标签（例如 v0.2.0）"
         required: true
         type: string
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Release tag to build and publish (e.g., v0.2.0)"
+        description: "要构建和发布的标签（例如 v0.2.0）"
         required: true
         type: string
 
@@ -25,7 +25,7 @@ env:
 
 jobs:
   prepare-release:
-    name: Prepare Release Metadata
+    name: 准备发布元数据
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.metadata.outputs.version }}
@@ -34,7 +34,7 @@ jobs:
         with:
           ref: refs/tags/${{ inputs.tag_name }}
 
-      - name: Extract version from tag
+      - name: 从标签提取版本
         id: metadata
         shell: bash
         env:
@@ -44,7 +44,7 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
   build:
-    name: Build ${{ matrix.target }}
+    name: 构建 ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     needs: prepare-release
     strategy:
@@ -76,30 +76,30 @@ jobs:
         with:
           ref: refs/tags/${{ inputs.tag_name }}
 
-      - name: Setup vx (installs Rust from vx.toml)
+      - name: 设置 vx（从 vx.toml 安装 Rust）
         uses: loonghao/vx@v0.9.26
         with:
           setup: 'true'
           cache: 'true'
 
-      - name: Add cross-compile target
+      - name: 添加交叉编译目标
         run: rustup target add ${{ matrix.target }}
 
-      - name: Fix MSVC linker (remove Git's link.exe)
+      - name: 修复 MSVC 链接器（删除 Git 的 link.exe）
         if: runner.os == 'Windows'
         shell: pwsh
         run: Remove-Item 'C:\Program Files\Git\usr\bin\link.exe' -Force -ErrorAction SilentlyContinue
 
-      - name: Cache cargo
+      - name: 缓存 cargo
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: release-${{ matrix.target }}
 
-      - name: Install cross (Linux aarch64)
+      - name: 安装 cross（Linux aarch64）
         if: matrix.use_cross == true
         run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - name: Build release binary
+      - name: 构建发布二进制文件
         shell: bash
         run: |
           if [[ "${{ matrix.use_cross }}" == "true" ]]; then
@@ -108,7 +108,7 @@ jobs:
             vx cargo build --release --target ${{ matrix.target }} -p tjuae-cli
           fi
 
-      - name: Package binary (Unix)
+      - name: 打包二进制文件（Unix）
         if: runner.os != 'Windows'
         shell: bash
         env:
@@ -119,7 +119,7 @@ jobs:
           tar -C target/${{ matrix.target }}/release -czf "dist/${ARCHIVE}" ${{ matrix.binary_name }}
           echo "ARCHIVE=${ARCHIVE}" >> "$GITHUB_ENV"
 
-      - name: Package binary (Windows)
+      - name: 打包二进制文件（Windows）
         if: runner.os == 'Windows'
         shell: pwsh
         env:
@@ -130,7 +130,7 @@ jobs:
           Compress-Archive -Path "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" -DestinationPath "dist/${archive}" -Force
           "ARCHIVE=${archive}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Upload release artifact
+      - name: 上传发布产物
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
@@ -138,25 +138,25 @@ jobs:
           if-no-files-found: error
 
   github-release:
-    name: Upload GitHub Release assets
+    name: 上传 GitHub Release 产物
     runs-on: ubuntu-latest
     needs:
       - prepare-release
       - build
     steps:
-      - name: Download build artifacts
+      - name: 下载构建产物
         uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: Generate checksums
+      - name: 生成校验和
         shell: bash
         run: |
           cd artifacts
           sha256sum tjuae-cli-* > tjuae-cli-checksums.txt
 
-      - name: Upload release assets
+      - name: 上传发布产物
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -172,4 +172,4 @@ jobs:
               --title "${RELEASE_TAG}" \
               --generate-notes
           fi
-          echo "Uploaded assets to ${release_url}"
+          echo "产物已上传至 ${release_url}"

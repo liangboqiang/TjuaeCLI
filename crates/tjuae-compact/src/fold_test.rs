@@ -8,7 +8,7 @@ mod tests {
     fn fold_identical_consecutive_lines() {
         let input = "ok\nok\nok\nok\nok\ndone";
         let result = fold_repeated_lines(input);
-        assert!(result.contains("[... 3 identical lines]"));
+        assert!(result.contains("[……3 行相同内容]"));
         assert!(result.contains("ok"));
         assert!(result.contains("done"));
     }
@@ -24,7 +24,7 @@ mod tests {
         let lines: Vec<String> = (0..10).map(|i| format!("Compiling crate-{i} v0.1.0")).collect();
         let input = lines.join("\n");
         let result = fold_repeated_lines(&input);
-        assert!(result.contains("[... 8 similar lines]"));
+        assert!(result.contains("[……8 行相似内容]"));
         assert!(result.contains("Compiling crate-0"));
         assert!(result.contains("Compiling crate-9"));
     }
@@ -47,12 +47,9 @@ mod tests {
         }
         let input = lines.join("\n");
         let result = fold_repeated_lines(&input);
-        assert!(result.contains("[... 4 similar lines]"), "first group folded: {result}");
+        assert!(result.contains("[……4 行相似内容]"), "first group folded: {result}");
         assert!(result.contains("Install complete"));
-        assert!(
-            result.contains("[... 3 similar lines]"),
-            "second group folded: {result}"
-        );
+        assert!(result.contains("[……3 行相似内容]"), "second group folded: {result}");
     }
 
     #[test]

@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-cli"
-description = "CLI binary for TjuaeCLI — a multi-provider AI agent with tool orchestration"
+description = "TjuaeCLI 命令行程序——支持多模型提供商与工具编排的 AI 智能体"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 keywords = ["ai", "agent", "cli", "llm", "anthropic"]

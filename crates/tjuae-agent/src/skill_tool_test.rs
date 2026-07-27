@@ -60,7 +60,7 @@ mod tests {
         let tool = tool_with(vec![make_skill("commit", "content")]);
         let result = tool.execute(json!({ "skill": "nonexistent" })).await;
         assert!(result.is_error);
-        assert!(result.content.contains("not found"));
+        assert!(result.content.contains("未找到技能"));
         assert!(result.content.contains("commit"));
     }
 
@@ -76,7 +76,7 @@ mod tests {
         let tool = tool_with(vec![]);
         let result = tool.execute(json!({})).await;
         assert!(result.is_error);
-        assert!(result.content.contains("Missing required parameter"));
+        assert!(result.content.contains("缺少必需参数"));
     }
 
     #[tokio::test]
@@ -94,21 +94,21 @@ mod tests {
         let tool = tool_with(vec![skill]);
         let result = tool.execute(json!({ "skill": "fork-skill" })).await;
         assert!(result.is_error);
-        assert!(result.content.contains("fork execution context"));
+        assert!(result.content.contains("fork 执行上下文"));
     }
 
     #[test]
     fn test_describe_with_args() {
         let tool = tool_with(vec![]);
         let desc = tool.describe(&json!({ "skill": "commit", "args": "fix bug" }));
-        assert_eq!(desc, "Skill commit fix bug");
+        assert_eq!(desc, "技能 commit fix bug");
     }
 
     #[test]
     fn test_describe_without_args() {
         let tool = tool_with(vec![]);
         let desc = tool.describe(&json!({ "skill": "commit" }));
-        assert_eq!(desc, "Skill commit");
+        assert_eq!(desc, "技能 commit");
     }
 
     #[test]
@@ -260,7 +260,7 @@ mod supplemental_tests {
         let tool = tool_with(vec![make_skill("commit", "body")]);
         let result = tool.execute(json!({"skill": "nonexistent"})).await;
         assert!(result.is_error);
-        assert!(result.content.contains("not found") || result.content.contains("Skill"));
+        assert!(result.content.contains("未找到技能") || result.content.contains("技能"));
     }
 
     #[tokio::test]
@@ -302,7 +302,7 @@ mod supplemental_tests {
         let tool = tool_with(vec![]);
         let result = tool.execute(json!({"args": "foo"})).await;
         assert!(result.is_error);
-        assert!(result.content.to_lowercase().contains("missing") || result.content.contains("skill"));
+        assert!(result.content.contains("缺少") || result.content.contains("skill"));
     }
 
     #[tokio::test]
@@ -577,7 +577,7 @@ mod permission_tests {
         );
         let result = tool.execute(json!({"skill": "dangerous"})).await;
         assert!(result.is_error);
-        assert!(result.content.contains("denied"), "content: {}", result.content);
+        assert!(result.content.contains("禁止"), "content: {}", result.content);
     }
 
     // P5-12: SkillTool returns informative message for a skill that needs approval.
@@ -590,7 +590,7 @@ mod permission_tests {
         let result = tool.execute(json!({"skill": "hooked"})).await;
         assert!(result.is_error);
         assert!(
-            result.content.contains("approval") || result.content.contains("approve"),
+            result.content.contains("批准"),
             "content should mention approval: {}",
             result.content
         );
@@ -801,7 +801,7 @@ mod phase7_tests {
         let result = tool.execute(json!({"skill": "needs-spawner"})).await;
         assert!(result.is_error, "should be error without spawner");
         assert!(
-            result.content.contains("fork execution context"),
+            result.content.contains("fork 执行上下文"),
             "error message should mention 'fork execution context': {}",
             result.content
         );
@@ -883,7 +883,7 @@ mod phase7_tests {
         let result = tool.execute(json!({"skill": "fork-denied"})).await;
         assert!(result.is_error, "denied fork skill should return error");
         assert!(
-            result.content.contains("denied"),
+            result.content.contains("禁止"),
             "error should mention 'denied': {}",
             result.content
         );

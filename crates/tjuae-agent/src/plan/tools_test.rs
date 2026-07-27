@@ -54,7 +54,7 @@ mod tests {
         let tool = EnterPlanModeTool::new(make_shared_flag(false));
         let result = tool.execute(json!({})).await;
         assert!(!result.is_error);
-        assert!(result.content.contains("Entered plan mode"));
+        assert!(result.content.contains("已进入计划模式"));
     }
 
     #[tokio::test]
@@ -62,13 +62,13 @@ mod tests {
         let tool = EnterPlanModeTool::new(make_shared_flag(true));
         let result = tool.execute(json!({})).await;
         assert!(result.is_error);
-        assert!(result.content.contains("Already in plan mode"));
+        assert!(result.content.contains("已处于计划模式"));
     }
 
     #[test]
     fn enter_tool_describe() {
         let tool = EnterPlanModeTool::new(make_shared_flag(false));
-        assert_eq!(tool.describe(&json!({})), "Enter plan mode");
+        assert_eq!(tool.describe(&json!({})), "进入计划模式");
     }
 
     // --- ExitPlanModeTool unit tests ---
@@ -120,7 +120,7 @@ mod tests {
         let tool = ExitPlanModeTool::new(make_shared_flag(true));
         let result = tool.execute(json!({})).await;
         assert!(!result.is_error);
-        assert!(result.content.contains("Exited plan mode"));
+        assert!(result.content.contains("已退出计划模式"));
     }
 
     #[tokio::test]
@@ -128,13 +128,13 @@ mod tests {
         let tool = ExitPlanModeTool::new(make_shared_flag(false));
         let result = tool.execute(json!({})).await;
         assert!(result.is_error);
-        assert!(result.content.contains("Not in plan mode"));
+        assert!(result.content.contains("不在计划模式"));
     }
 
     #[test]
     fn exit_tool_describe() {
         let tool = ExitPlanModeTool::new(make_shared_flag(false));
-        assert_eq!(tool.describe(&json!({})), "Exit plan mode");
+        assert_eq!(tool.describe(&json!({})), "退出计划模式");
     }
 
     // --- Shared flag tests ---

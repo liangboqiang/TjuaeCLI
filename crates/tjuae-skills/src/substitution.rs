@@ -89,7 +89,7 @@ pub fn substitute_arguments(
 
     // 7. Fallback: if nothing changed and args is non-empty, append arguments
     if result == original && !args.is_empty() {
-        result.push_str(&format!("\n\nARGUMENTS: {args}"));
+        result.push_str(&format!("\n\n参数：{args}"));
     }
 
     result

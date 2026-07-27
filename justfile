@@ -1,39 +1,36 @@
-# TjuaeCLI justfile — run tasks with `vx just <recipe>`
-# All commands route through `vx` (when available) so the correct tool
-# versions are used. Everything here is cross-platform: recipe bodies avoid
-# shell builtins and external Unix tools (no printf/sed), relying on just's
-# own functions instead, so the same justfile works on macOS, Linux & Windows.
+# TjuaeCLI justfile——使用 `vx just <recipe>` 运行任务
+# 所有命令在 `vx` 可用时都通过它执行，以确保使用正确的工具版本。
+# 此处所有内容均支持跨平台：recipe 主体避免依赖 shell 内置命令和外部 Unix 工具，
+# 改用 just 自身的函数，使同一份 justfile 可用于 macOS、Linux 和 Windows。
 
-# Cross-platform shell defaults for linewise recipes.
+# 逐行 recipe 使用的跨平台默认 shell。
 set shell := ["sh", "-cu"]
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
 
-# `which()` is used below to probe for `vx`; it is a just unstable feature.
+# 下方使用 `which()` 探测 `vx`；这是 just 的不稳定功能。
 set unstable
 
-# Probe for `vx` once at load time, using just's own (cross-platform) `which`
-# rather than a shell builtin. If present, commands run through it to pin tool
-# versions; if not, this expands to empty and commands run bare.
+# 加载时使用 just 自带的跨平台 `which` 探测一次 `vx`，不依赖 shell 内置命令。
+# 如果存在，命令会通过它运行以固定工具版本；否则变量展开为空，直接运行命令。
 vx := if which("vx") == "" { "" } else { "vx" }
 
-# Route cargo through vx when available — acts like `alias cargo = vx cargo`
-# scoped to this justfile. Recipes just write `{{ cargo }} ...`.
+# `vx` 可用时让 cargo 通过它运行，相当于仅在此 justfile 中设置
+# `alias cargo = vx cargo`。recipe 只需写 `{{ cargo }} ...`。
 cargo := trim(vx + " cargo")
 
-# Bold-cyan / reset ANSI codes for the colored command echo in the unix `_run`.
-# (just's `style("command")` only emits bold — no color — so we spell it out.)
+# Unix `_run` 彩色命令回显使用的粗体青色与重置 ANSI 代码。
+# just 的 `style("command")` 只会加粗而不着色，因此在此显式定义。
 CYAN := "\u{1b}[1;36m"
 NORMAL := "\u{1b}[0m"
 
-# Default: list all recipes
+# 默认操作：列出全部 recipe
 default:
     @{{ vx }} just --list
 
-# Echo a command in bold cyan, then run it. Every action recipe routes through
-# this so the coloring lives in one place. The command is passed as ONE quoted
-# string to preserve embedded quotes (e.g. -E 'test(...)'). Split per-OS: unix
-# emits raw ANSI via `printf`, Windows uses pwsh's native colored `Write-Host`
-# (more reliable than ANSI on older Windows consoles).
+# 先以粗体青色回显命令，再运行命令。所有操作 recipe 都通过这里执行，以集中处理颜色。
+# 命令作为一个带引号的完整字符串传入，保留其中的引号（例如 -E 'test(...)'）。
+# 按操作系统分别实现：Unix 通过 `printf` 输出原始 ANSI，Windows 使用 pwsh 原生的
+# 彩色 `Write-Host`，它在旧版 Windows 控制台中比 ANSI 更可靠。
 [unix]
 _run cmd:
     @printf '%s\n' "{{ CYAN }}{{ cmd }}{{ NORMAL }}"
@@ -44,34 +41,34 @@ _run cmd:
     @Write-Host "{{ cmd }}" -ForegroundColor Cyan
     @{{ cmd }}
 
-# ── Build ──────────────────────────────────────────────────────────────────
+# ── 构建 ───────────────────────────────────────────────────────────────────
 build:
     @just _run "{{ cargo }} build --workspace"
 
 build-release:
     @just _run "{{ cargo }} build --workspace --release"
 
-# ── Test ───────────────────────────────────────────────────────────────────
+# ── 测试 ───────────────────────────────────────────────────────────────────
 
-# Unit + integration tests with nextest (default profile — local dev)
+# 使用 nextest 运行单元测试和集成测试（default profile——本地开发）
 test:
     @just _run "{{ cargo }} nextest run --workspace --profile default"
 
-# Unit + integration tests with nextest (CI profile — used in GitHub Actions)
+# 使用 nextest 运行单元测试和集成测试（CI profile——用于 GitHub Actions）
 test-ci:
     @just _run "{{ cargo }} nextest run --workspace --profile ci"
 
-# Run a single test by name
+# 按名称运行单个测试
 test-one NAME:
     @just _run "{{ cargo }} nextest run --workspace -E 'test({{ NAME }})'"
 
-# Show test output (debug failing tests locally)
+# 显示测试输出（用于本地调试失败测试）
 test-verbose:
     @just _run "{{ cargo }} nextest run --workspace --profile default --no-capture"
 
-# ── E2E Tests ──────────────────────────────────────────────────────────────
-# Requires env vars: ANTHROPIC_API_KEY and/or OPENAI_API_KEY
-# Uses the dedicated e2e nextest profile (sequential, long timeout, no retry)
+# ── 端到端测试 ─────────────────────────────────────────────────────────────
+# 需要环境变量：ANTHROPIC_API_KEY 和/或 OPENAI_API_KEY
+# 使用专用的 e2e nextest profile（顺序执行、长超时、不重试）
 test-e2e:
     @just _run "{{ cargo }} nextest run --workspace --profile e2e --test e2e"
 
@@ -81,9 +78,9 @@ test-e2e-anthropic:
 test-e2e-openai:
     @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test e2e -E 'test(openai)'"
 
-# ── Acceptance Tests (evolution feature validation) ───────────────────────
-# Requires env vars: OPENAI_API_KEY and/or AWS_PROFILE + CLAUDE_CODE_USE_BEDROCK=1
-# Reuses the e2e nextest profile (sequential, long timeout, no retry)
+# ── 验收测试（演进功能验证）────────────────────────────────────────────────
+# 需要环境变量：OPENAI_API_KEY 和/或 AWS_PROFILE + CLAUDE_CODE_USE_BEDROCK=1
+# 复用 e2e nextest profile（顺序执行、长超时、不重试）
 test-acceptance:
     @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test acceptance"
 
@@ -93,7 +90,7 @@ test-acceptance-memory:
 test-acceptance-compact:
     @just _run "{{ cargo }} nextest run -p tjuae-agent --profile e2e --test acceptance -E 'test(compact)'"
 
-# ── Lint / Format ─────────────────────────────────────────────────────────
+# ── Lint / 格式化 ──────────────────────────────────────────────────────────
 lint:
     @just _run "{{ cargo }} clippy --workspace --all-targets -- -D warnings"
 
@@ -107,7 +104,7 @@ fmt:
 fmt-check:
     @just _run "{{ cargo }} fmt --all -- --check"
 
-# ── Workspace-hack (cargo-hakari) ─────────────────────────────────────────
+# ── Workspace-hack（cargo-hakari）──────────────────────────────────────────
 hakari-generate:
     @just _run "{{ cargo }} hakari generate"
     @just _run "{{ cargo }} hakari manage-deps --yes"
@@ -117,17 +114,17 @@ hakari-verify:
     @just _run "{{ cargo }} hakari manage-deps --dry-run"
     @just _run "{{ cargo }} hakari verify"
 
-# ── Security ──────────────────────────────────────────────────────────────
+# ── 安全检查 ───────────────────────────────────────────────────────────────
 audit:
     @just _run "{{ cargo }} audit"
 
-# ── Coverage ──────────────────────────────────────────────────────────────
+# ── 覆盖率 ─────────────────────────────────────────────────────────────────
 coverage:
     @just _run "{{ cargo }} llvm-cov nextest --workspace --profile ci --lcov --output-path lcov.info"
 
-# ── Release ───────────────────────────────────────────────────────────────
-# `cargo pkgid` prints `...#<version>`; strip everything up to and including
-# the `#`. No `sed` (absent on Windows) — use each shell's native facility.
+# ── 发布 ───────────────────────────────────────────────────────────────────
+# `cargo pkgid` 输出 `...#<version>`；删除 `#` 及其之前的全部内容。
+# 不依赖 Windows 中缺少的 `sed`，而是分别使用各 shell 的原生能力。
 [unix]
 version:
     @{{ cargo }} pkgid -p tjuae-cli | sed 's/.*#//'
@@ -136,16 +133,16 @@ version:
 version:
     @({{ cargo }} pkgid -p tjuae-cli) -replace '.*#'
 
-# ── Clean ─────────────────────────────────────────────────────────────────
+# ── 清理 ───────────────────────────────────────────────────────────────────
 clean:
     @just _run "{{ cargo }} clean"
 
-# ── Pre-push gate (lint-fix, format, auto-commit fixes, test, then push) ─
+# ── 推送前门禁（lint-fix、格式化、自动提交修复、测试，然后推送）────────────
 push *ARGS: lint-fix fmt _auto-commit-fixes test hakari-verify
     git push {{ ARGS }}
 
-# Auto-commit any fmt/clippy fixes. Split by shell so the Windows path works
-# with the built-in Windows PowerShell as well as PowerShell 7.
+# 自动提交 fmt/clippy 产生的修复。按 shell 分开实现，使 Windows 路径同时兼容
+# 系统自带 Windows PowerShell 和 PowerShell 7。
 [unix]
 _auto-commit-fixes:
     @git add -A
@@ -156,8 +153,8 @@ _auto-commit-fixes:
     @git add -A
     @git diff --cached --quiet; if ($LASTEXITCODE -eq 1) { git commit -m "chore: auto-commit lint/fmt fixes in just push recipe" } elseif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# ── All checks (mirrors CI exactly) ───────────────────────────────────────
+# ── 全部检查（与 CI 完全一致）──────────────────────────────────────────────
 check-all: fmt-check lint test-ci hakari-verify audit
 
-# Canonical local/CI verification gate.
+# 本地与 CI 的标准验证门禁。
 verify: check-all

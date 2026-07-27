@@ -45,7 +45,7 @@ async fn tc_ax_01_multi_feature_collaboration() {
 
     // Assert: system prompt contains memory content
     assert!(
-        system_prompt.contains("auto memory"),
+        system_prompt.contains("自动记忆"),
         "system prompt should contain memory system display name"
     );
     assert!(
@@ -55,7 +55,7 @@ async fn tc_ax_01_multi_feature_collaboration() {
 
     // Assert: system prompt contains tool guidance
     assert!(
-        system_prompt.contains("# Using your tools"),
+        system_prompt.contains("# 使用工具"),
         "system prompt should contain tool usage guidance heading"
     );
 
@@ -82,7 +82,7 @@ async fn tc_ax_01_multi_feature_collaboration() {
     let r2 = read_tool.execute(input).await;
     assert!(!r2.is_error, "second read should succeed");
     assert!(
-        r2.content.contains("unchanged since last read"),
+        r2.content.contains("自上次读取后没有变化"),
         "second read should return dedup stub, got: {}",
         r2.content
     );

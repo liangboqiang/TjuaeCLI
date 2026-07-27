@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-providers"
-description = "LLM provider implementations for TjuaeCLI (Anthropic, OpenAI, Bedrock, Vertex)"
+description = "TjuaeCLI 的 LLM 提供商实现（Anthropic、OpenAI、Bedrock、Vertex）"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

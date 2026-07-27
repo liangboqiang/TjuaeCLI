@@ -32,7 +32,7 @@ pub fn parse_skill_hooks(
 ) -> Option<SkillHooksConfig> {
     // MCP skills may not register hooks (security boundary).
     if source == SkillSource::Mcp {
-        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "hooks ignored for MCP source");
+        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "已忽略 MCP 来源的 hooks");
         return None;
     }
 
@@ -41,7 +41,7 @@ pub fn parse_skill_hooks(
     let obj = match raw.as_object() {
         Some(o) => o,
         None => {
-            tracing::warn!(target: "tjuae_skills", skill = %skill_name, "hooks_raw is not a JSON object, ignoring");
+            tracing::warn!(target: "tjuae_skills", skill = %skill_name, "hooks_raw 不是 JSON 对象，已忽略");
             return None;
         }
     };
@@ -58,7 +58,7 @@ pub fn parse_skill_hooks(
             "PostToolUse" => &mut config.post_tool_use,
             "Stop" => &mut config.stop,
             other => {
-                tracing::warn!(target: "tjuae_skills", skill = %skill_name, event = %other, "unknown hook event, skipping");
+                tracing::warn!(target: "tjuae_skills", skill = %skill_name, event = %other, "未知的 hook 事件，已跳过");
                 continue;
             }
         };
@@ -66,7 +66,7 @@ pub fn parse_skill_hooks(
         let matchers = match matchers_val.as_array() {
             Some(a) => a,
             None => {
-                tracing::warn!(target: "tjuae_skills", skill = %skill_name, event = %event_key, "hook event value is not an array, skipping");
+                tracing::warn!(target: "tjuae_skills", skill = %skill_name, event = %event_key, "hook 事件值不是数组，已跳过");
                 continue;
             }
         };
@@ -84,11 +84,11 @@ pub fn parse_skill_hooks(
                 match hook["type"].as_str() {
                     Some("command") => {}
                     Some(other) => {
-                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, hook_type = %other, "unsupported hook type, skipping");
+                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, hook_type = %other, "不支持的 hook 类型，已跳过");
                         continue;
                     }
                     None => {
-                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "hook missing type field, skipping");
+                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "hook 缺少 type 字段，已跳过");
                         continue;
                     }
                 }
@@ -96,7 +96,7 @@ pub fn parse_skill_hooks(
                 let command = match hook["command"].as_str() {
                     Some(c) => c.to_string(),
                     None => {
-                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "command-type hook missing command field, skipping");
+                        tracing::warn!(target: "tjuae_skills", skill = %skill_name, "command 类型的 hook 缺少 command 字段，已跳过");
                         continue;
                     }
                 };

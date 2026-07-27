@@ -22,7 +22,7 @@ mod tests {
     #[test]
     fn test_format_output_both() {
         let s = format_output("out", "err");
-        assert_eq!(s, "out\n[stderr]\nerr");
+        assert_eq!(s, "out\n[标准错误]\nerr");
     }
 
     #[test]
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn test_format_output_stderr_only() {
-        assert_eq!(format_output("", "err"), "[stderr]\nerr");
+        assert_eq!(format_output("", "err"), "[标准错误]\nerr");
     }
 
     #[test]
@@ -157,7 +157,7 @@ mod tests {
             "!`echo err >&2`"
         };
         let result = run(content).await.unwrap();
-        assert!(result.contains("[stderr]"));
+        assert!(result.contains("[标准错误]"));
         assert!(result.contains("err"));
     }
 }

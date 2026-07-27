@@ -102,9 +102,8 @@ impl Tool for SkillTool {
     }
 
     fn description(&self) -> &str {
-        "Invoke a named skill by name. \
-         Use the skill name exactly as listed in the system prompt. \
-         Optionally pass arguments as a single string."
+        "按名称调用指定技能。必须使用系统提示词中列出的准确技能名称。\
+         可选择以单个字符串传入参数。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -113,11 +112,11 @@ impl Tool for SkillTool {
             "properties": {
                 "skill": {
                     "type": "string",
-                    "description": "The skill name. E.g., \"commit\", \"review-pr\", or \"pdf\""
+                    "description": "技能名称，例如 \"commit\"、\"review-pr\" 或 \"pdf\""
                 },
                 "args": {
                     "type": "string",
-                    "description": "Optional arguments for the skill"
+                    "description": "传给技能的可选参数"
                 }
             },
             "required": ["skill"]
@@ -132,7 +131,7 @@ impl Tool for SkillTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(skill_name) = input["skill"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: skill".to_string(),
+                content: "缺少必需参数：skill".to_string(),
                 is_error: true,
             };
         };
@@ -142,7 +141,7 @@ impl Tool for SkillTool {
             None => {
                 let available = self.available_names();
                 return ToolResult {
-                    content: format!("Skill '{}' not found. Available skills: {}", skill_name, available),
+                    content: format!("未找到技能 '{}'。可用技能：{}", skill_name, available),
                     is_error: true,
                 };
             }
@@ -152,16 +151,16 @@ impl Tool for SkillTool {
         match self.checker.check(skill) {
             SkillPermission::Deny => {
                 return ToolResult {
-                    content: format!("Skill '{}' is denied by configuration.", skill.name),
+                    content: format!("配置已禁止技能 '{}'。", skill.name),
                     is_error: true,
                 };
             }
             SkillPermission::Ask { reason } => {
                 return ToolResult {
                     content: format!(
-                        "Skill '{}' requires user approval before execution. \
+                        "技能 '{}' 执行前需要用户批准。\
                          {} \
-                         Please ask the user to approve this skill in their configuration.",
+                         请让用户在配置中批准此技能。",
                         skill.name, reason
                     ),
                     is_error: true,
@@ -191,9 +190,9 @@ impl Tool for SkillTool {
                     None => {
                         return ToolResult {
                             content: format!(
-                                "Skill '{}' requires fork execution context, \
-                                 but no AgentSpawner is available. \
-                                 Fork support is enabled via SkillTool::with_spawner().",
+                                "技能 '{}' 需要 fork 执行上下文，\
+                                 但当前没有可用的 AgentSpawner。\
+                                 可通过 SkillTool::with_spawner() 启用 fork 支持。",
                                 skill.name
                             ),
                             is_error: true,
@@ -241,8 +240,8 @@ impl Tool for SkillTool {
     fn describe(&self, input: &Value) -> String {
         let name = input.get("skill").and_then(|v| v.as_str()).unwrap_or("?");
         match input.get("args").and_then(|v| v.as_str()) {
-            Some(args) if !args.is_empty() => format!("Skill {name} {args}"),
-            _ => format!("Skill {name}"),
+            Some(args) if !args.is_empty() => format!("技能 {name} {args}"),
+            _ => format!("技能 {name}"),
         }
     }
 }

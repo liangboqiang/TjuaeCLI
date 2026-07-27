@@ -58,7 +58,7 @@ pub fn build_messages(messages: &[Message], compat: &ProviderCompat) -> Vec<Valu
                             target: "tjuae_providers",
                             tool_call_id = %id,
                             reason = reason.log_reason(),
-                            "downgraded malformed tool_call to text in outgoing request"
+                            "已将传出请求中格式错误的 tool_call 降级为文本"
                         );
                         continue;
                     }
@@ -74,7 +74,7 @@ pub fn build_messages(messages: &[Message], compat: &ProviderCompat) -> Vec<Valu
                             target: "tjuae_providers",
                             tool_call_id = %id,
                             reason = reason.log_reason(),
-                            "downgraded malformed tool_call to text in outgoing request"
+                            "已将传出请求中格式错误的 tool_call 降级为文本"
                         );
                         continue;
                     }
@@ -116,12 +116,12 @@ pub fn build_messages(messages: &[Message], compat: &ProviderCompat) -> Vec<Valu
                         .unwrap_or_else(|| tool_use_id.clone());
 
                     if clean_orphan_tool_results && !available_tool_use_ids.contains(&projected_tool_use_id) {
-                        empty_message_placeholder.get_or_insert("[tool call skipped: malformed (orphan tool result).]");
+                        empty_message_placeholder.get_or_insert("[已跳过工具调用：格式错误（孤立的工具结果）。]");
                         tracing::warn!(
                             target: "tjuae_providers",
                             tool_call_id = %tool_use_id,
                             reason = "orphan_result",
-                            "dropped orphan tool_result in outgoing request"
+                            "已丢弃传出请求中孤立的 tool_result"
                         );
                         continue;
                     }
@@ -148,7 +148,7 @@ pub fn build_messages(messages: &[Message], compat: &ProviderCompat) -> Vec<Valu
                         tracing::warn!(
                             target: "tjuae_providers",
                             error = %e,
-                            "skipping invalid image block in Anthropic projection"
+                            "Anthropic 投影中的图片块无效，已跳过"
                         );
                         continue;
                     }
@@ -365,7 +365,7 @@ pub fn parse_sse_data(event_type: &str, data: &str, state: &mut StreamState) -> 
                     tracing::warn!(
                         target: "tjuae_providers",
                         tool_call_id = %state.tool_id,
-                        "provider emitted tool_call with empty function name; recorded to history as-is"
+                        "提供商返回的 tool_call 函数名为空；已按原样记录到历史"
                     );
                 }
                 events.push(LlmEvent::ToolUse {
@@ -408,7 +408,7 @@ pub fn parse_sse_data(event_type: &str, data: &str, state: &mut StreamState) -> 
         }
 
         "error" => {
-            let msg = json["error"]["message"].as_str().unwrap_or("Unknown API error");
+            let msg = json["error"]["message"].as_str().unwrap_or("未知 API 错误");
             events.push(LlmEvent::Error(msg.to_string()));
         }
 

@@ -4,7 +4,7 @@
 //! post-compact message construction.
 
 /// System prompt used for the compact LLM call.
-pub const COMPACT_SYSTEM_PROMPT: &str = "You are a helpful AI assistant tasked with summarizing conversations.";
+pub const COMPACT_SYSTEM_PROMPT: &str = "你是一名负责总结对话的 AI 助手。";
 
 /// Maximum output tokens for the compact LLM call.
 pub const COMPACT_MAX_OUTPUT_TOKENS: u32 = 20_000;
@@ -17,49 +17,45 @@ pub fn build_compact_prompt() -> String {
 }
 
 const PREAMBLE: &str = "\
-CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
-- Do NOT use Read, ExecCommand, Grep, Glob, Edit, Write, or ANY other tool.
-- You already have all the context you need in the conversation above.
-- Tool calls will be REJECTED and will waste your only turn — you will fail the task.
-- Your entire response must be plain text: an <analysis> block followed by a <summary> block.";
+重要：只能返回文本，绝对不要调用任何工具。
+- 不要使用 Read、ExecCommand、Grep、Glob、Edit、Write 或任何其他工具。
+- 上方对话已经包含你所需的全部上下文。
+- 工具调用会被拒绝，并浪费你唯一的一轮响应，从而导致任务失败。
+- 整个响应必须是纯文本：先输出一个 <analysis> 块，再输出一个 <summary> 块。";
 
 const BODY: &str = "\
-Your task is to create a detailed summary of the conversation so far, paying close attention \
-to the user's explicit requests and your previous actions. This summary should be thorough in \
-capturing technical details, code patterns, and architectural decisions that would be essential \
-for continuing development work.
+你的任务是详细总结迄今为止的对话，尤其关注用户的明确要求和你之前采取的操作。\
+总结必须完整保留继续开发工作所需的技术细节、代码模式和架构决策。
 
-Before providing your final summary, wrap your analysis in <analysis> tags to organize your \
-thoughts and ensure completeness.
+在给出最终总结前，请将分析放入 <analysis> 标签中，以便梳理思路并确保内容完整。
 
-Your summary should include the following sections:
+总结应包含以下章节：
 
-1. **Primary Request and Intent**: What has the user asked for? Include ALL explicit requests \
-made during the conversation.
-2. **Key Technical Concepts**: Important technical details, patterns, or architectural decisions discussed.
-3. **Files and Code Sections**: All files that have been viewed or modified, with brief descriptions of changes.
-4. **Errors and Fixes**: Any errors encountered and how they were resolved.
-5. **Problem Solving Progress**: Current state of each problem — what's solved and what remains.
-6. **All User Messages**: A summary of every non-tool user message, preserving intent and context.
-7. **Pending Tasks**: Any tasks that are not yet complete.
-8. **Current Work**: What was being worked on immediately before this summary.
-9. **Suggested Next Step**: The single most logical next action, which MUST be directly in line \
-with the most recent explicit user request. Quote the user's request verbatim to prevent drift.";
+1. **主要请求与意图**：用户提出了哪些要求？包含对话中的全部明确请求。
+2. **关键技术概念**：讨论过的重要技术细节、模式或架构决策。
+3. **文件与代码区域**：所有查看或修改过的文件，并简述变更。
+4. **错误与修复**：遇到的错误及其解决方式。
+5. **问题处理进度**：每个问题的当前状态——哪些已解决，哪些仍待处理。
+6. **全部用户消息**：总结每条非工具类用户消息，同时保留意图和上下文。
+7. **待办任务**：尚未完成的所有任务。
+8. **当前工作**：生成本总结前正在处理的工作。
+9. **建议的下一步**：最合理的唯一下一步，且必须与用户最近一次明确请求直接一致。\
+请逐字引用该请求，避免偏离目标。";
 
 const FORMAT_INSTRUCTIONS: &str = "\
-Format your response exactly as follows:
+请严格按以下格式响应：
 
 <analysis>
-Your reasoning about what information is most important to preserve
+你对哪些信息最应保留的分析
 </analysis>
 
 <summary>
-Your detailed, structured summary following the 9 sections above
+按上述 9 个章节组织的详细结构化总结
 </summary>";
 
 const REMINDER: &str = "\
-REMINDER: Do NOT call any tools. Respond with plain text only — an <analysis> block followed \
-by a <summary> block. Tool calls will be rejected and you will fail the task.";
+再次提醒：不要调用任何工具。只能用纯文本响应——先输出 <analysis> 块，再输出 \
+<summary> 块。工具调用会被拒绝，并导致任务失败。";
 
 // ── Response parsing ────────────────────────────────────────────────────────
 
@@ -76,7 +72,7 @@ pub fn format_compact_summary(raw: &str) -> String {
         if trimmed.is_empty() {
             return collapse_blank_lines(&without_analysis).trim().to_string();
         }
-        format!("Summary:\n{trimmed}")
+        format!("总结：\n{trimmed}")
     } else {
         // Graceful degradation: use the text with analysis stripped
         collapse_blank_lines(&without_analysis).trim().to_string()
@@ -90,18 +86,14 @@ pub fn format_compact_summary(raw: &str) -> String {
 /// For autocompact (`is_auto = true`), appends an instruction telling the
 /// model to continue seamlessly without acknowledging the compaction.
 pub fn build_summary_content(formatted_summary: &str, is_auto: bool) -> String {
-    let mut content = String::from(
-        "This session is being continued from a previous conversation that ran out of context. \
-         The summary below covers the earlier portion of the conversation.\n\n",
-    );
+    let mut content = String::from("本会话从一个上下文已耗尽的先前对话继续。以下总结涵盖了对话的较早部分。\n\n");
     content.push_str(formatted_summary);
 
     if is_auto {
         content.push_str(
-            "\n\nContinue the conversation from where it left off without asking the user \
-             any further questions. Resume directly — do not acknowledge the summary, \
-             do not recap what was happening, do not preface with \"I'll continue\" or similar. \
-             Pick up the last task as if the break never happened.",
+            "\n\n从中断处直接继续对话，不要再向用户提问。直接恢复工作——不要提及这份总结，\
+             不要回顾之前发生的事情，也不要以“我会继续”等类似措辞开头。\
+             像对话从未中断一样接着处理最后一项任务。",
         );
     }
 

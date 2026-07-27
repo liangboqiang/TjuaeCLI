@@ -155,7 +155,7 @@ fn parse_yaml_with_fallback(yaml_text: &str) -> FrontmatterData {
     match serde_yaml::from_str::<FrontmatterData>(yaml_text) {
         Ok(data) => return data,
         Err(e) => {
-            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter first-pass parse failed");
+            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter 首轮解析失败");
         }
     }
 
@@ -164,7 +164,7 @@ fn parse_yaml_with_fallback(yaml_text: &str) -> FrontmatterData {
     match serde_yaml::from_str::<FrontmatterData>(&fixed) {
         Ok(data) => data,
         Err(e) => {
-            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter second-pass parse failed, returning empty");
+            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter 第二轮解析失败，将返回空结果");
             FrontmatterData::default()
         }
     }

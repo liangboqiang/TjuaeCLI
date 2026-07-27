@@ -75,12 +75,12 @@ mod tests {
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("Command timed out after 1500ms"),
+            result.content.contains("命令在 1500 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );
         assert!(
-            result.content.contains("STDOUT:\n") && result.content.contains("tjuae_stdout_before_timeout"),
+            result.content.contains("标准输出：\n") && result.content.contains("tjuae_stdout_before_timeout"),
             "stdout emitted before timeout should be preserved, got: {}",
             result.content
         );
@@ -102,12 +102,12 @@ mod tests {
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("Command timed out after 1500ms"),
+            result.content.contains("命令在 1500 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );
         assert!(
-            result.content.contains("STDERR:\n") && result.content.contains("tjuae_stderr_before_timeout"),
+            result.content.contains("标准错误：\n") && result.content.contains("tjuae_stderr_before_timeout"),
             "stderr emitted before timeout should be preserved, got: {}",
             result.content
         );
@@ -129,7 +129,7 @@ mod tests {
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("Command timed out after 1500ms"),
+            result.content.contains("命令在 1500 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );
@@ -158,7 +158,7 @@ mod tests {
 
         assert!(!result.is_error, "unexpected error: {}", result.content);
         assert!(
-            result.content.contains("STDOUT:\n") && result.content.contains("tjuae_powershell_stdout_probe"),
+            result.content.contains("标准输出：\n") && result.content.contains("tjuae_powershell_stdout_probe"),
             "PowerShell stdout should be preserved, got: {}",
             result.content
         );
@@ -177,7 +177,7 @@ mod tests {
 
         assert!(!result.is_error, "unexpected error: {}", result.content);
         assert!(
-            result.content.contains("STDOUT:\n") && result.content.contains("message"),
+            result.content.contains("标准输出：\n") && result.content.contains("message"),
             "PowerShell quoted echo stdout should be preserved, got: {}",
             result.content
         );
@@ -196,7 +196,7 @@ mod tests {
 
         assert!(!result.is_error, "unexpected error: {}", result.content);
         assert!(
-            result.content.contains("STDOUT:\n") && result.content.contains("tjuae_cmd_stdout_probe"),
+            result.content.contains("标准输出：\n") && result.content.contains("tjuae_cmd_stdout_probe"),
             "cmd stdout should be preserved, got: {}",
             result.content
         );

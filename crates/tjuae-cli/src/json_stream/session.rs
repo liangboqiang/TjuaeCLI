@@ -23,7 +23,7 @@ use super::pre_message::PreMessageOutcome;
 use super::{dispatch, message, pre_message};
 use crate::bootstrap::build_engine;
 
-const ATTACHED_FILES_HEADER: &str = "[Attached files]";
+const ATTACHED_FILES_HEADER: &str = "[附加文件]";
 
 pub(crate) async fn run(
     config: Config,

@@ -17,8 +17,8 @@ mod tests {
     #[test]
     fn prompt_forbids_tool_calls() {
         let prompt = build_compact_prompt();
-        assert!(prompt.contains("Do NOT call any tools"));
-        assert!(prompt.contains("CRITICAL"));
+        assert!(prompt.contains("不要调用任何工具"));
+        assert!(prompt.contains("重要"));
     }
 
     #[test]
@@ -33,13 +33,13 @@ mod tests {
     #[test]
     fn strips_analysis_extracts_summary() {
         let raw = "<analysis>thinking about things</analysis>\n<summary>the actual result</summary>";
-        assert_eq!(format_compact_summary(raw), "Summary:\nthe actual result");
+        assert_eq!(format_compact_summary(raw), "总结：\nthe actual result");
     }
 
     #[test]
     fn extracts_summary_without_analysis() {
         let raw = "<summary>result only</summary>";
-        assert_eq!(format_compact_summary(raw), "Summary:\nresult only");
+        assert_eq!(format_compact_summary(raw), "总结：\nresult only");
     }
 
     #[test]
@@ -52,7 +52,7 @@ mod tests {
     fn handles_multiline_summary() {
         let raw = "<analysis>analysis\nwith lines</analysis>\n<summary>\nLine 1\nLine 2\n</summary>";
         let result = format_compact_summary(raw);
-        assert!(result.starts_with("Summary:\n"));
+        assert!(result.starts_with("总结：\n"));
         assert!(result.contains("Line 1"));
         assert!(result.contains("Line 2"));
     }
@@ -69,21 +69,21 @@ mod tests {
 
     #[test]
     fn auto_summary_includes_continuation_instruction() {
-        let content = build_summary_content("Summary:\ntest", true);
-        assert!(content.contains("Continue the conversation"));
-        assert!(content.contains("as if the break never happened"));
+        let content = build_summary_content("总结：\ntest", true);
+        assert!(content.contains("从中断处直接继续对话"));
+        assert!(content.contains("像对话从未中断一样"));
     }
 
     #[test]
     fn manual_summary_no_continuation_instruction() {
-        let content = build_summary_content("Summary:\ntest", false);
-        assert!(!content.contains("Continue the conversation"));
+        let content = build_summary_content("总结：\ntest", false);
+        assert!(!content.contains("从中断处直接继续对话"));
     }
 
     #[test]
     fn summary_content_includes_session_header() {
-        let content = build_summary_content("Summary:\ntest", false);
-        assert!(content.contains("This session is being continued"));
+        let content = build_summary_content("总结：\ntest", false);
+        assert!(content.contains("本会话从一个上下文已耗尽的先前对话继续"));
     }
 
     // ── strip_tag ───────────────────────────────────────────────────────

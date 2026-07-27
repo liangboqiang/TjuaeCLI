@@ -2,20 +2,16 @@ use tjuae_providers::error::ProviderError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AgentError {
-    #[error("API error: {0}")]
+    #[error("API 错误：{0}")]
     ApiError(String),
-    #[error(
-        "provider repeatedly returned tool-call malformed outputs ({count}/{limit}); stopped to avoid wasting tokens"
-    )]
+    #[error("提供商反复返回格式错误的工具调用输出（{count}/{limit}）；为避免浪费 token，运行已停止")]
     ToolCallMalformed { count: usize, limit: usize },
-    #[error(
-        "stopped after {count}/{limit} consecutive tool-call failures; the task did not converge. Try adjusting the request or retrying."
-    )]
+    #[error("工具调用连续失败 {count}/{limit} 次后已停止；任务未能收敛。请调整请求或重试。")]
     ToolCallFailures { count: usize, limit: usize },
-    #[error("Provider error: {0}")]
+    #[error("提供商错误：{0}")]
     Provider(#[from] ProviderError),
-    #[error("User aborted the session")]
+    #[error("用户已中止会话")]
     UserAborted,
-    #[error("Context window nearly full ({input_tokens} tokens used, limit {limit})")]
+    #[error("上下文窗口即将用尽（已使用 {input_tokens} token，上限 {limit}）")]
     ContextTooLong { input_tokens: u64, limit: usize },
 }

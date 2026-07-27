@@ -67,7 +67,7 @@ mod tests {
     fn validate_rejects_relative_path() {
         let err = validate_memory_path(Path::new("relative/path")).unwrap_err();
         assert!(matches!(err, MemoryError::PathValidation(_)));
-        assert!(err.to_string().contains("absolute"));
+        assert!(err.to_string().contains("绝对路径"));
     }
 
     #[cfg(unix)]
@@ -75,7 +75,7 @@ mod tests {
     fn validate_rejects_short_path() {
         let err = validate_memory_path(Path::new("/a")).unwrap_err();
         assert!(matches!(err, MemoryError::PathValidation(_)));
-        assert!(err.to_string().contains("short"));
+        assert!(err.to_string().contains("过短"));
     }
 
     #[cfg(windows)]
@@ -83,7 +83,7 @@ mod tests {
     fn validate_rejects_short_path() {
         let err = validate_memory_path(Path::new("C:\\a")).unwrap_err();
         assert!(matches!(err, MemoryError::PathValidation(_)));
-        assert!(err.to_string().contains("short"));
+        assert!(err.to_string().contains("过短"));
     }
 
     #[cfg(unix)]
@@ -91,7 +91,7 @@ mod tests {
     fn validate_rejects_traversal() {
         let err = validate_memory_path(Path::new("/tmp/../../../etc/passwd")).unwrap_err();
         assert!(matches!(err, MemoryError::PathValidation(_)));
-        assert!(err.to_string().contains("traversal"));
+        assert!(err.to_string().contains("目录穿越"));
     }
 
     #[cfg(windows)]
@@ -99,7 +99,7 @@ mod tests {
     fn validate_rejects_traversal() {
         let err = validate_memory_path(Path::new("C:\\tmp\\..\\..\\..\\etc\\passwd")).unwrap_err();
         assert!(matches!(err, MemoryError::PathValidation(_)));
-        assert!(err.to_string().contains("traversal"));
+        assert!(err.to_string().contains("目录穿越"));
     }
 
     #[cfg(unix)]

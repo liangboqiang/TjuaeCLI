@@ -31,7 +31,7 @@ pub async fn load_mcp_skills(manager: &McpManager) -> Vec<LoadedSkill> {
         let resources = match manager.list_resources(&server_name).await {
             Ok(r) => r,
             Err(e) => {
-                tracing::warn!(target: "tjuae_skills", server = %server_name, error = %e, "failed to list mcp resources");
+                tracing::warn!(target: "tjuae_skills", server = %server_name, error = %e, "列出 MCP 资源失败");
                 continue;
             }
         };
@@ -45,7 +45,7 @@ pub async fn load_mcp_skills(manager: &McpManager) -> Vec<LoadedSkill> {
             let text = match manager.read_resource(&server_name, &resource.uri).await {
                 Ok(t) => t,
                 Err(e) => {
-                    tracing::warn!(target: "tjuae_skills", server = %server_name, uri = %resource.uri, error = %e, "failed to read mcp resource");
+                    tracing::warn!(target: "tjuae_skills", server = %server_name, uri = %resource.uri, error = %e, "读取 MCP 资源失败");
                     continue;
                 }
             };

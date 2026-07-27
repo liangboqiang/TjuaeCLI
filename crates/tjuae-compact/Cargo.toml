@@ -1,7 +1,9 @@
 [package]
 name = "tjuae-compact"
+description = "TjuaeCLI 的输出压缩与 TOON 编码组件"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [dependencies]

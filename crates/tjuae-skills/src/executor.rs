@@ -25,7 +25,7 @@ pub async fn prepare_inline_content(
     let base = match skill.skill_root.as_deref() {
         Some(root) => {
             let normalized = normalize_path_separators(root);
-            format!("Base directory for this skill: {normalized}\n\n{}", skill.content)
+            format!("此技能的基础目录：{normalized}\n\n{}", skill.content)
         }
         None => skill.content.clone(),
     };
@@ -59,8 +59,8 @@ fn normalize_path_separators(path: &str) -> String {
 pub fn check_execution_context(skill: &SkillMetadata) -> Result<(), String> {
     if skill.execution_context == ExecutionContext::Fork {
         return Err(format!(
-            "Skill '{}' requires fork execution context, \
-             which requires fork support. This function only validates inline context.",
+            "技能 '{}' 需要 fork 执行上下文，因此必须启用 fork 支持。\
+             此函数只验证 inline 上下文。",
             skill.name
         ));
     }

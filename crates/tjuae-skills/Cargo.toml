@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-skills"
-description = "Skills system for TjuaeCLI: named prompt snippets with tool orchestration, permissions, hooks, and MCP integration"
+description = "TjuaeCLI 技能系统：支持工具编排、权限、钩子和 MCP 集成的命名提示词片段"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

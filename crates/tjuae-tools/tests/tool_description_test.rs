@@ -86,7 +86,7 @@ fn read_description_requires_absolute_path() {
     let tool = ReadTool::new(None);
     let desc = tool.description();
     assert!(
-        desc.contains("absolute path"),
+        desc.contains("绝对路径"),
         "Read description should mention absolute path requirement"
     );
 }
@@ -96,7 +96,7 @@ fn read_description_mentions_line_numbers() {
     let tool = ReadTool::new(None);
     let desc = tool.description();
     assert!(
-        desc.contains("line number"),
+        desc.contains("行号"),
         "Read description should explain line number output format"
     );
 }
@@ -106,7 +106,7 @@ fn read_description_handles_binary() {
     let tool = ReadTool::new(None);
     let desc = tool.description();
     assert!(
-        desc.to_lowercase().contains("binary"),
+        desc.contains("二进制"),
         "Read description should mention binary file handling"
     );
 }
@@ -128,7 +128,7 @@ fn edit_description_mentions_uniqueness() {
     let tool = EditTool::new(None);
     let desc = tool.description();
     assert!(
-        desc.contains("unique"),
+        desc.contains("唯一"),
         "Edit description should mention old_string uniqueness requirement"
     );
 }
@@ -150,7 +150,7 @@ fn write_description_mentions_overwrite() {
     let tool = WriteTool::new(None);
     let desc = tool.description();
     assert!(
-        desc.contains("overwrite") || desc.contains("overwrites"),
+        desc.contains("覆盖"),
         "Write description should explain overwrite semantics"
     );
 }
@@ -193,7 +193,7 @@ fn glob_description_mentions_sort_order() {
     let desc = tool.description();
     let lower = desc.to_lowercase();
     assert!(
-        lower.contains("modification time") || lower.contains("newest"),
+        lower.contains("修改时间") || lower.contains("最新"),
         "Glob description should explain sort order"
     );
 }
@@ -205,7 +205,7 @@ fn grep_description_forbids_bash_grep() {
     let tool = GrepTool::new(test_cwd());
     let desc = tool.description();
     assert!(
-        desc.contains("NEVER") || desc.contains("never"),
+        desc.contains("绝不"),
         "Grep description should forbid using grep in ExecCommand"
     );
 }
@@ -214,7 +214,10 @@ fn grep_description_forbids_bash_grep() {
 fn grep_description_mentions_regex() {
     let tool = GrepTool::new(test_cwd());
     let desc = tool.description();
-    assert!(desc.contains("regex"), "Grep description should mention regex support");
+    assert!(
+        desc.contains("正则表达式"),
+        "Grep description should mention regex support"
+    );
 }
 
 #[test]
@@ -238,7 +241,7 @@ fn grep_description_does_not_say_at_most_matches() {
         "Grep description should not say 'at most 250 matches' (was per-file, not global)"
     );
     assert!(
-        desc.contains("truncated to 250 lines"),
+        desc.contains("最多保留 250 行"),
         "Grep description should accurately say 'truncated to 250 lines'"
     );
 }

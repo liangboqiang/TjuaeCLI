@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn invalid_input_error() {
         let err = "unknown".parse::<CompactLevel>().unwrap_err();
-        assert!(err.contains("unknown compaction level"));
+        assert!(err.contains("未知压缩级别"));
     }
 
     #[test]

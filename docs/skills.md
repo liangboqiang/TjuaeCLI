@@ -1,209 +1,200 @@
-# Skills
+# 技能
 
-Skills are named prompt snippets that the agent can invoke on demand.  They
-let you package reusable instructions, workflows, or tool sequences into a
-single callable name.
+技能是智能体可按需调用的命名提示词片段。它可以将可复用指令、工作流或工具序列
+封装为一个可调用名称。
 
-## Overview
+## 概览
 
-A skill is a Markdown file with a YAML front matter header.  When the agent
-invokes a skill, it:
+技能是带有 YAML front matter 头部的 Markdown 文件。智能体调用技能时会：
 
-1. Resolves the skill by name from the loaded skill list
-2. Substitutes variables (`$ARGUMENTS`, `$0`, `${TJUAE_SKILL_DIR}`)
-3. Expands any shell commands (`` !`cmd` `` syntax)
-4. Returns the processed text as the skill's output
+1. 按名称从已加载的技能列表中解析技能。
+2. 替换变量（`$ARGUMENTS`、`$0`、`${TJUAE_SKILL_DIR}`）。
+3. 展开 shell 命令（`` !`cmd` `` 语法）。
+4. 将处理后的文本作为技能输出返回。
 
-## Directory Structure
+## 目录结构
 
-Skills are loaded from the following locations, in priority order (first match
-wins for duplicate names):
+技能按以下优先级顺序加载；名称重复时，最先匹配的技能生效：
 
-| Priority | Path | Description |
-|----------|------|-------------|
-| 1 | `.tjuae/skills/` | Project-local skills (checked-in with the repo) |
-| 2 | `<CONFIG_DIR>/tjuae/skills/` | User-global skills (see below) |
+| 优先级 | 路径 | 说明 |
+|--------|------|------|
+| 1 | `.tjuae/skills/` | 项目本地技能，可随仓库提交 |
+| 2 | `<CONFIG_DIR>/tjuae/skills/` | 用户全局技能，位置见下文 |
 
-> **`<CONFIG_DIR>` by platform:**
-> - **macOS:** `~/Library/Application Support/`
-> - **Linux:** `~/.config/` (or `$XDG_CONFIG_HOME`)
-> - **Windows:** `C:\Users\<USER>\AppData\Roaming\`
+> **各平台的 `<CONFIG_DIR>`：**
 >
-> Run `tjuae-cli skills path` to see the actual paths on your machine.
+> - **macOS：** `~/Library/Application Support/`
+> - **Linux：** `~/.config/`（或 `$XDG_CONFIG_HOME`）
+> - **Windows：** `C:\Users\<USER>\AppData\Roaming\`
+>
+> 运行 `tjuae-cli skills path` 可查看当前计算机上的实际路径。
 
-Each skill is a `SKILL.md` file inside a named subdirectory:
+每个技能都是命名子目录中的一个 `SKILL.md` 文件：
 
-```
+```text
 .tjuae/skills/
 ├── deploy/
-│   └── SKILL.md          # invoked as "deploy"
+│   └── SKILL.md          # 以 "deploy" 名称调用
 ├── review-pr/
-│   └── SKILL.md          # invoked as "review-pr"
+│   └── SKILL.md          # 以 "review-pr" 名称调用
 ```
 
-## Writing a Skill
+## 编写技能
 
-### Minimal skill
+### 最小技能
 
 ```markdown
 ---
 name: greet
-description: Print a greeting
+description: 输出问候语
 ---
 
-Hello! How can I help you today?
+你好！今天需要我做什么？
 ```
 
-### Full front matter reference
+### 完整 front matter 参考
 
 ```yaml
 ---
-# Required
-name: skill-name          # Unique identifier; used to invoke the skill
-description: One-line description shown in the skill list
+# 必填
+name: skill-name          # 唯一标识符，用于调用技能
+description: 技能列表中显示的单行说明
 
-# Optional — conditional activation
+# 可选——条件激活
 paths:
-  - "src/**/*.rs"         # Skill is only active when the working path matches
+  - "src/**/*.rs"         # 仅当工作路径匹配时激活技能
 
-# Optional — context overrides applied when the skill runs
-model: claude-sonnet-4-20250514  # Override the active model
-effort: high              # reasoning effort: low | medium | high
-allowedTools:             # Restrict which tools the skill may use
+# 可选——技能运行时应用的上下文覆盖
+model: claude-sonnet-4-20250514  # 覆盖当前模型
+effort: high              # 推理强度：low | medium | high
+allowedTools:             # 限制技能可使用的工具
   - Read
   - Grep
 
-# Optional — permission rules
+# 可选——权限规则
 permissions:
   allow:
     - "ExecCommand(git *)"
   deny:
     - "ExecCommand(rm *)"
 
-# Optional — hooks registered when the skill is active
+# 可选——技能激活时注册的钩子
 hooks:
   PreToolUse:
-    - "echo 'about to run a tool'"
+    - "echo '即将运行工具'"
   PostToolUse:
-    - "echo 'tool finished'"
+    - "echo '工具运行结束'"
   Stop:
-    - "echo 'session ended'"
+    - "echo '会话已结束'"
 ---
 
-Skill body goes here.
+技能正文写在这里。
 ```
 
-### Front matter fields
+### Front matter 字段
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | **Required.** Unique skill name. |
-| `description` | string | **Required.** Shown in system prompt skill list. |
-| `paths` | string[] | Glob patterns; skill is dormant unless the current path matches at least one. |
-| `model` | string | Override active model for the duration of the skill. |
-| `effort` | string | Override reasoning effort: `low`, `medium`, or `high`. |
-| `allowedTools` | string[] | Restrict tools to this list when the skill is running. |
-| `permissions.allow` | string[] | Tool patterns that are always allowed. |
-| `permissions.deny` | string[] | Tool patterns that are always denied (highest priority). |
-| `hooks.PreToolUse` | string[] | Shell commands run before each tool call. |
-| `hooks.PostToolUse` | string[] | Shell commands run after each tool call. |
-| `hooks.Stop` | string[] | Shell commands run when the session ends. |
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | **必填。** 唯一的技能名称。 |
+| `description` | string | **必填。** 在系统提示词的技能列表中显示。 |
+| `paths` | string[] | Glob 模式；当前路径至少匹配一项时技能才会激活。 |
+| `model` | string | 在技能运行期间覆盖当前模型。 |
+| `effort` | string | 覆盖推理强度：`low`、`medium` 或 `high`。 |
+| `allowedTools` | string[] | 技能运行期间只能使用此列表中的工具。 |
+| `permissions.allow` | string[] | 始终允许的工具模式。 |
+| `permissions.deny` | string[] | 始终拒绝的工具模式，优先级最高。 |
+| `hooks.PreToolUse` | string[] | 每次工具调用前运行的 shell 命令。 |
+| `hooks.PostToolUse` | string[] | 每次工具调用后运行的 shell 命令。 |
+| `hooks.Stop` | string[] | 会话结束时运行的 shell 命令。 |
 
-## Variable Substitution
+## 变量替换
 
-Inside the skill body, the following variables are replaced at runtime:
+技能正文中的以下变量会在运行时替换：
 
-| Variable | Replaced with |
-|----------|---------------|
-| `$ARGUMENTS` | The full argument string passed to the skill invocation |
-| `$0` | The skill name itself |
-| `${TJUAE_SKILL_DIR}` | Absolute path to the directory containing this skill's `SKILL.md` |
+| 变量 | 替换内容 |
+|------|----------|
+| `$ARGUMENTS` | 调用技能时传入的完整参数字符串 |
+| `$0` | 技能自身的名称 |
+| `${TJUAE_SKILL_DIR}` | 包含该技能 `SKILL.md` 的目录绝对路径 |
 
-Example:
+示例：
 
 ```markdown
 ---
 name: run-tests
-description: Run tests for a specific module
+description: 运行指定模块的测试
 ---
 
-Run the test suite for module: $ARGUMENTS
+运行以下模块的测试套件：$ARGUMENTS
 
-Working directory: ${TJUAE_SKILL_DIR}
+工作目录：${TJUAE_SKILL_DIR}
 ```
 
-## Shell Command Expansion
+## Shell 命令展开
 
-Lines containing `` !`cmd` `` execute `cmd` in a shell and substitute the
-output inline:
+包含 `` !`cmd` `` 的行会在 shell 中执行 `cmd`，并将输出内联替换：
 
 ```markdown
 ---
 name: git-status
-description: Show current git status
+description: 显示当前 Git 状态
 ---
 
-Current branch: !`git rev-parse --abbrev-ref HEAD`
+当前分支：!`git rev-parse --abbrev-ref HEAD`
 
-Recent commits:
+最近的提交：
 !`git log --oneline -5`
 ```
 
-## Conditional Activation
+## 条件激活
 
-Skills with a `paths:` field are **dormant** by default and become **active**
-only when the current working path matches one of the glob patterns:
+带有 `paths:` 字段的技能默认处于**休眠**状态，只有当前工作路径匹配其中一个
+Glob 模式时才会**激活**：
 
 ```yaml
 ---
 name: rust-review
-description: Rust-specific code review checklist
+description: Rust 专用代码审查清单
 paths:
   - "**/*.rs"
   - "Cargo.toml"
 ---
 
-When reviewing Rust code, check:
-- No unwrap() in library code
-- Error types implement std::error::Error
-- Public APIs have doc comments
+审查 Rust 代码时，请检查：
+- 库代码中没有 unwrap()
+- 错误类型实现 std::error::Error
+- 公共 API 具有文档注释
 ```
 
-The skill appears in the system prompt only when a `.rs` file or `Cargo.toml`
-is in scope.
+只有 `.rs` 文件或 `Cargo.toml` 位于当前工作范围时，该技能才会出现在系统提示词中。
 
-## MCP Skills
+## MCP 技能
 
-Skills can also be loaded from MCP servers.  MCP-sourced skills behave
-identically to local skills with one restriction: **shell command expansion
-(`` !`cmd` ``) is disabled** for MCP skills to prevent arbitrary code
-execution from untrusted sources.
+技能也可以从 MCP 服务器加载。MCP 来源的技能与本地技能行为相同，但有一项限制：
+为防止不受信任的来源执行任意代码，MCP 技能会禁用 **shell 命令展开
+（`` !`cmd` ``）**。
 
-Configure MCP skill sources in the config file — see [mcp.md](mcp.md) for
-server configuration.
+在配置文件中声明 MCP 技能来源；服务器配置参见 [mcp.md](mcp.md)。
 
-## Bundled Skills
+## 内置技能
 
-A small set of skills is compiled into the binary.  Bundled skills:
+二进制文件会编译进少量技能。内置技能：
 
-- Are always available regardless of the filesystem skill directories
-- Are **never truncated** by the prompt budget (they survive even when the
-  skill list is shortened to stay within token limits)
-- Cannot be overridden by a user skill with the same name
+- 无论文件系统技能目录如何，都始终可用。
+- **不会因提示词预算而截断**；即使为满足 token 上限缩短技能列表，它们仍会保留。
+- 不能被同名的用户技能覆盖。
 
-## Prompt Budget
+## 提示词预算
 
-When the total size of all skill descriptions exceeds the prompt budget, the
-agent truncates the non-bundled skill list.  Bundled skills are always
-preserved.  To stay within budget, keep skill descriptions concise.
+所有技能说明的总大小超过提示词预算时，智能体会截断非内置技能列表，内置技能
+始终保留。为避免浪费预算，请保持技能说明简洁。
 
-## Troubleshooting
+## 故障排查
 
-Use `tjuae-cli skills path` to see which directories are being scanned and whether
-they exist on disk:
+运行 `tjuae-cli skills path` 可以查看正在扫描的目录，以及它们是否存在：
 
-```
+```text
 $ tjuae-cli skills path
-User:    ~/Library/Application Support/tjuae/skills      (exists)
-Project: /path/to/repo/.tjuae/skills                 (exists)
+用户：~/Library/Application Support/tjuae/skills     （存在）
+项目：/path/to/repo/.tjuae/skills                    （存在）
 ```

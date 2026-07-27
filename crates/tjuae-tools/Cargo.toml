@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-tools"
-description = "Built-in agent tools for TjuaeCLI (Read, Write, Edit, ExecCommand, Grep, Glob, Spawn)"
+description = "TjuaeCLI 的内置智能体工具（Read、Write、Edit、ExecCommand、Grep、Glob、Spawn）"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

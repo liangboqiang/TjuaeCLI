@@ -200,7 +200,7 @@ fn parse_frontmatter(raw: &str, path: Option<&Path>) -> (MemoryFrontmatter, Stri
         Ok(fm) => fm,
         Err(e) => {
             if let Some(p) = path {
-                tracing::warn!(target: "tjuae_memory", path = %p.display(), error = %e, "failed to parse memory frontmatter");
+                tracing::warn!(target: "tjuae_memory", path = %p.display(), error = %e, "解析记忆 frontmatter 失败");
             }
             MemoryFrontmatter::default()
         }

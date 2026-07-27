@@ -102,19 +102,19 @@ impl OAuthManager {
 
         if !resp.status().is_success() {
             let body = resp.text().await.unwrap_or_default();
-            anyhow::bail!("Failed to request device code: {}", body);
+            anyhow::bail!("请求设备代码失败：{}", body);
         }
 
         let device_resp: DeviceCodeResponse = resp.json().await?;
 
         // Step 2: Display instructions
         eprintln!();
-        eprintln!("  To authenticate, visit:");
+        eprintln!("  要完成身份认证，请访问：");
         eprintln!("  {}", device_resp.verification_uri);
         eprintln!();
-        eprintln!("  Enter code: {}", device_resp.user_code);
+        eprintln!("  输入代码：{}", device_resp.user_code);
         eprintln!();
-        eprintln!("  Waiting for authorization...");
+        eprintln!("  正在等待授权……");
 
         // Step 3: Poll for token
         let interval = std::time::Duration::from_secs(device_resp.interval.max(5));
@@ -122,7 +122,7 @@ impl OAuthManager {
 
         loop {
             if std::time::Instant::now() > deadline {
-                anyhow::bail!("Device authorization timed out. Please try again.");
+                anyhow::bail!("设备授权超时，请重试。");
             }
 
             tokio::time::sleep(interval).await;
@@ -162,18 +162,18 @@ impl OAuthManager {
                         continue;
                     }
                     "expired_token" => {
-                        anyhow::bail!("Device code expired. Please try again.");
+                        anyhow::bail!("设备代码已过期，请重试。");
                     }
                     "access_denied" => {
-                        anyhow::bail!("Authorization denied by user.");
+                        anyhow::bail!("用户拒绝了授权。");
                     }
                     other => {
-                        anyhow::bail!("OAuth error: {}", other);
+                        anyhow::bail!("OAuth 错误：{}", other);
                     }
                 }
             }
 
-            anyhow::bail!("Unexpected OAuth response: {}", body);
+            anyhow::bail!("收到意外的 OAuth 响应：{}", body);
         }
     }
 
@@ -192,7 +192,7 @@ impl OAuthManager {
             return Ok(new_creds.access_token);
         }
 
-        anyhow::bail!("Token expired and no refresh token available. Run 'tjuae-cli auth login'")
+        anyhow::bail!("token 已过期且没有可用的刷新 token。请运行 'tjuae-cli auth login'")
     }
 
     /// Refresh the access token
@@ -211,7 +211,7 @@ impl OAuthManager {
 
         if !resp.status().is_success() {
             let body = resp.text().await.unwrap_or_default();
-            anyhow::bail!("Token refresh failed: {}", body);
+            anyhow::bail!("刷新 token 失败：{}", body);
         }
 
         let token: TokenResponse = resp.json().await?;
@@ -227,9 +227,9 @@ impl OAuthManager {
     pub fn logout(&self) -> anyhow::Result<()> {
         if self.credentials_path.exists() {
             std::fs::remove_file(&self.credentials_path)?;
-            eprintln!("Credentials removed: {}", self.credentials_path.display());
+            eprintln!("凭据已删除：{}", self.credentials_path.display());
         } else {
-            eprintln!("No saved credentials found.");
+            eprintln!("未找到已保存的凭据。");
         }
         Ok(())
     }
@@ -250,7 +250,7 @@ impl OAuthManager {
 
     fn load_credentials(&self) -> anyhow::Result<OAuthCredentials> {
         let json = std::fs::read_to_string(&self.credentials_path)
-            .map_err(|_| anyhow::anyhow!("No saved credentials. Run 'tjuae-cli auth login'"))?;
+            .map_err(|_| anyhow::anyhow!("未找到已保存的凭据。请运行 'tjuae-cli auth login'"))?;
         let creds: OAuthCredentials = serde_json::from_str(&json)?;
         Ok(creds)
     }
@@ -262,7 +262,7 @@ impl AuthConfig {
         let client_id = self.client_id.trim();
         if client_id.is_empty() {
             anyhow::bail!(
-                "OAuth client_id is not configured. Set `client_id` in the `[auth]` section of {}.",
+                "尚未配置 OAuth client_id。请在 {} 的 `[auth]` 节中设置 `client_id`。",
                 crate::config::global_config_path().display()
             );
         }

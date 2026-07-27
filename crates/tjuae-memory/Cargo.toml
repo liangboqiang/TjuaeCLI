@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-memory"
-description = "Long-term memory system for TjuaeCLI: cross-session storage of user preferences, feedback, project context, and external references"
+description = "TjuaeCLI 长期记忆系统：跨会话存储用户偏好、反馈、项目上下文和外部引用"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

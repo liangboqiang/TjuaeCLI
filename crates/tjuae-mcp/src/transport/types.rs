@@ -18,21 +18,21 @@ pub trait McpTransport: Send + Sync {
 /// Errors from MCP transport and protocol
 #[derive(Debug, thiserror::Error)]
 pub enum McpError {
-    #[error("Transport error: {0}")]
+    #[error("传输错误：{0}")]
     Transport(String),
 
-    #[error("JSON-RPC error {code}: {message}")]
+    #[error("JSON-RPC 错误 {code}：{message}")]
     JsonRpc { code: i64, message: String },
 
-    #[error("Server not found: {0}")]
+    #[error("未找到服务器：{0}")]
     ServerNotFound(String),
 
-    #[error("Tool not found: {server}/{tool}")]
+    #[error("未找到工具：{server}/{tool}")]
     ToolNotFound { server: String, tool: String },
 
-    #[error("Initialization failed: {0}")]
+    #[error("初始化失败：{0}")]
     InitFailed(String),
 
-    #[error("IO error: {0}")]
+    #[error("I/O 错误：{0}")]
     Io(#[from] std::io::Error),
 }

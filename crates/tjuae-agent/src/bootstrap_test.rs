@@ -127,7 +127,7 @@ mod tests {
         let denied = tool_search.execute(json!({"query": "DeniedDeferred"})).await;
 
         assert!(allowed.content.contains("AllowedDeferred"));
-        assert!(denied.content.starts_with("No deferred tools matching"));
+        assert!(denied.content.starts_with("未找到"));
         assert!(!denied.content.contains("\"name\": \"DeniedDeferred\""));
     }
 }

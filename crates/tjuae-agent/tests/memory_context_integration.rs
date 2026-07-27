@@ -36,13 +36,10 @@ fn tc_7_1_memory_dir_with_content_injects_prompt() {
     );
 
     // Should contain minimal memory system sections
+    assert!(result.contains("自动记忆"), "should contain memory system display name");
+    assert!(result.contains("记忆类型包括"), "should contain compact type summary");
     assert!(
-        result.contains("auto memory"),
-        "should contain memory system display name"
-    );
-    assert!(result.contains("Memory types:"), "should contain compact type summary");
-    assert!(
-        result.contains("MEMORY.md is the index"),
+        result.contains("MEMORY.md 是索引"),
         "should contain compact save guidance"
     );
 
@@ -70,11 +67,11 @@ fn tc_7_2_no_memory_dir_no_injection() {
     );
 
     assert!(
-        !result.contains("auto memory"),
+        !result.contains("自动记忆"),
         "no memory content when memory_dir is None"
     );
     assert!(
-        !result.contains("Types of memory"),
+        !result.contains("记忆类型"),
         "no type definitions when memory_dir is None"
     );
 }
@@ -139,7 +136,7 @@ fn tc_7_3_section_ordering() {
     let agents_pos = result
         .find("PROJECT_RULES_CONTENT")
         .expect("AGENTS.md content should be present");
-    let memory_pos = result.find("auto memory").expect("memory section should be present");
+    let memory_pos = result.find("自动记忆").expect("memory section should be present");
     let skills_pos = result.find("test-skill").expect("skills section should be present");
 
     assert!(
@@ -172,11 +169,11 @@ fn tc_7_4_nonexistent_dir_graceful_degradation() {
 
     // Should not panic
     assert!(
-        result.contains("currently empty"),
+        result.contains("当前为空"),
         "nonexistent memory dir should show empty state"
     );
     assert!(
-        result.contains("auto memory"),
+        result.contains("自动记忆"),
         "memory section should still be present (with empty state)"
     );
 }
@@ -243,7 +240,7 @@ fn tc_7_6_no_memory_md_shows_empty() {
     );
 
     assert!(
-        result.contains("currently empty"),
+        result.contains("当前为空"),
         "should show empty state when MEMORY.md doesn't exist"
     );
 }

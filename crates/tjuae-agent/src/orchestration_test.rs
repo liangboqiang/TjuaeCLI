@@ -46,14 +46,14 @@ mod tests {
     fn truncate_result_cjk_does_not_panic() {
         let cjk: String = "这是一段较长的中文内容用于测试截断功能".repeat(50);
         let result = truncate_result(&cjk, 100);
-        assert!(result.contains("truncated"));
+        assert!(result.contains("已截断"));
     }
 
     #[test]
     fn truncate_result_mixed_cjk_ascii_does_not_panic() {
         let mixed = "Hello你好World世界Test测试".repeat(100);
         let result = truncate_result(&mixed, 200);
-        assert!(result.contains("truncated"));
+        assert!(result.contains("已截断"));
     }
 
     // -- maybe_append_deferred_hint -------------------------------------------

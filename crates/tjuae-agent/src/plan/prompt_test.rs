@@ -25,24 +25,24 @@ mod tests {
     #[test]
     fn instructions_forbid_writes() {
         let text = plan_mode_instructions();
-        assert!(text.contains("MUST NOT"));
-        assert!(text.contains("Forbidden"));
+        assert!(text.contains("严禁"));
+        assert!(text.contains("禁止的操作"));
     }
 
     #[test]
     fn instructions_guide_planning_workflow() {
         let text = plan_mode_instructions();
-        assert!(text.contains("Understand"), "should have explore phase");
-        assert!(text.contains("Design"), "should have design phase");
-        assert!(text.contains("Write the plan"), "should have plan writing phase");
-        assert!(text.contains("Submit for review"), "should have submission phase");
+        assert!(text.contains("阶段 1：理解"), "should have explore phase");
+        assert!(text.contains("阶段 2：设计"), "should have design phase");
+        assert!(text.contains("阶段 3：编写计划"), "should have plan writing phase");
+        assert!(text.contains("阶段 4：提交审核"), "should have submission phase");
     }
 
     #[test]
     fn instructions_compose_in_response_not_write_file() {
         let text = plan_mode_instructions();
         assert!(
-            text.contains("Compose your implementation plan in your response"),
+            text.contains("在响应文本中编写实施计划"),
             "should guide LLM to compose plan in response text"
         );
         assert!(

@@ -15,15 +15,15 @@ pub(crate) enum ToolCallMalformedReason {
 impl ToolCallMalformedReason {
     fn description(self) -> &'static str {
         match self {
-            Self::EmptyFunctionName => "empty function name",
-            Self::EmptyToolCallId => "empty tool call id",
+            Self::EmptyFunctionName => "函数名称为空",
+            Self::EmptyToolCallId => "工具调用 ID 为空",
         }
     }
 
     fn reissue_field(self) -> &'static str {
         match self {
-            Self::EmptyFunctionName => "function name",
-            Self::EmptyToolCallId => "tool call id",
+            Self::EmptyFunctionName => "函数名称",
+            Self::EmptyToolCallId => "工具调用 ID",
         }
     }
 
@@ -192,13 +192,13 @@ pub(crate) fn merge_tool_results(
                 tool_call_id = %id,
                 tool = %name,
                 reason = reason.log_reason(),
-                "generated synthetic error result for malformed tool call"
+                "已为格式错误的工具调用生成合成错误结果"
             );
 
             tool_results.push(ContentBlock::ToolResult {
                 tool_use_id: id.clone(),
                 content: format!(
-                    "Malformed tool call: {}. Re-issue the tool call with a non-empty {} if still needed, or answer in text.",
+                    "工具调用格式错误：{}。如果仍需调用，请使用非空的{}重新发起工具调用；否则请用文本回答。",
                     reason.description(),
                     reason.reissue_field()
                 ),
@@ -214,14 +214,12 @@ pub(crate) fn merge_tool_results(
                 event = "agent.tool_policy.denied",
                 tool_call_id = %id,
                 tool = %denied_name,
-                "rejected tool call by runtime policy"
+                "运行时策略已拒绝工具调用"
             );
 
             tool_results.push(ContentBlock::ToolResult {
                 tool_use_id: id.clone(),
-                content: format!(
-                    "Tool '{denied_name}' is not available in this runtime. Use an available tool or answer in text."
-                ),
+                content: format!("工具 '{denied_name}' 在当前运行环境中不可用。请使用可用工具或用文本回答。"),
                 is_error: true,
             });
             tool_modifiers.push(None);

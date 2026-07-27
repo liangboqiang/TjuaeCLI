@@ -29,9 +29,9 @@ impl SseTransport {
         let mut header_map = HeaderMap::new();
         for (k, v) in headers {
             let name = reqwest::header::HeaderName::from_bytes(k.as_bytes())
-                .map_err(|e| McpError::Transport(format!("Invalid header name '{}': {}", k, e)))?;
-            let value = HeaderValue::from_str(v)
-                .map_err(|e| McpError::Transport(format!("Invalid header value '{}': {}", v, e)))?;
+                .map_err(|e| McpError::Transport(format!("无效的请求头名称 '{}'：{}", k, e)))?;
+            let value =
+                HeaderValue::from_str(v).map_err(|e| McpError::Transport(format!("无效的请求头值 '{}'：{}", v, e)))?;
             header_map.insert(name, value);
         }
 
@@ -44,13 +44,10 @@ impl SseTransport {
             .header("Accept", "text/event-stream")
             .send()
             .await
-            .map_err(|e| McpError::Transport(format!("SSE connection failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("SSE 连接失败：{}", e)))?;
 
         if !response.status().is_success() {
-            return Err(McpError::Transport(format!(
-                "SSE connection returned status: {}",
-                response.status()
-            )));
+            return Err(McpError::Transport(format!("SSE 连接返回状态：{}", response.status())));
         }
 
         let pending: Arc<Mutex<HashMap<u64, oneshot::Sender<JsonRpcResponse>>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -65,7 +62,7 @@ impl SseTransport {
         use futures::StreamExt;
         // Read initial events to get the endpoint URL
         while let Some(chunk) = bytes_stream.next().await {
-            let chunk = chunk.map_err(|e| McpError::Transport(format!("SSE read error: {}", e)))?;
+            let chunk = chunk.map_err(|e| McpError::Transport(format!("SSE 读取错误：{}", e)))?;
             // Normalize CRLF to LF: Python `fastmcp` / MCP SDK servers emit
             // `\r\n` separators (via `sse-starlette`), so event boundaries are
             // `\r\n\r\n` and would not match a `\n\n` search otherwise.
@@ -95,7 +92,7 @@ impl SseTransport {
             }
         }
 
-        let post_url = post_url.ok_or_else(|| McpError::Transport("No endpoint event received from SSE".into()))?;
+        let post_url = post_url.ok_or_else(|| McpError::Transport("未从 SSE 收到 endpoint 事件".into()))?;
 
         // Spawn background task to listen for SSE responses
         let pending_clone = pending.clone();
@@ -143,9 +140,7 @@ impl SseTransport {
 #[async_trait]
 impl McpTransport for SseTransport {
     async fn request(&self, req: &JsonRpcRequest) -> Result<JsonRpcResponse, McpError> {
-        let req_id = req
-            .id
-            .ok_or_else(|| McpError::Transport("Request must have an id".into()))?;
+        let req_id = req.id.ok_or_else(|| McpError::Transport("请求必须包含 id".into()))?;
 
         // Set up response channel before sending
         let (tx, rx) = oneshot::channel::<JsonRpcResponse>();
@@ -156,8 +151,7 @@ impl McpTransport for SseTransport {
         }
 
         // POST the request
-        let body =
-            serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON serialize error: {}", e)))?;
+        let body = serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON 序列化错误：{}", e)))?;
 
         let response = self
             .client
@@ -167,21 +161,16 @@ impl McpTransport for SseTransport {
             .body(body)
             .send()
             .await
-            .map_err(|e| McpError::Transport(format!("POST request failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("POST 请求失败：{}", e)))?;
 
         if !response.status().is_success() {
             // Clean up pending
             self.pending.lock().await.remove(&req_id);
-            return Err(McpError::Transport(format!(
-                "POST returned status: {}",
-                response.status()
-            )));
+            return Err(McpError::Transport(format!("POST 返回状态：{}", response.status())));
         }
 
         // Wait for response from SSE stream
-        let rpc_response = rx
-            .await
-            .map_err(|_| McpError::Transport("Response channel closed unexpectedly".into()))?;
+        let rpc_response = rx.await.map_err(|_| McpError::Transport("响应通道意外关闭".into()))?;
 
         if let Some(err) = &rpc_response.error {
             return Err(McpError::JsonRpc {
@@ -194,8 +183,7 @@ impl McpTransport for SseTransport {
     }
 
     async fn notify(&self, req: &JsonRpcRequest) -> Result<(), McpError> {
-        let body =
-            serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON serialize error: {}", e)))?;
+        let body = serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON 序列化错误：{}", e)))?;
 
         self.client
             .post(&self.post_url)
@@ -204,7 +192,7 @@ impl McpTransport for SseTransport {
             .body(body)
             .send()
             .await
-            .map_err(|e| McpError::Transport(format!("Notification POST failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("通知 POST 请求失败：{}", e)))?;
 
         Ok(())
     }

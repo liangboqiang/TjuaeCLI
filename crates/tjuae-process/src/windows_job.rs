@@ -18,7 +18,7 @@ impl JobObject {
     pub(crate) fn assign_and_resume(child_raw: RawHandle, pid: u32) -> std::result::Result<Self, String> {
         let job = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
         if job.is_null() {
-            return Err(format!("CreateJobObjectW failed: {}", std::io::Error::last_os_error()));
+            return Err(format!("CreateJobObjectW 失败：{}", std::io::Error::last_os_error()));
         }
 
         let this = Self { job };
@@ -26,14 +26,14 @@ impl JobObject {
         let ok = unsafe { AssignProcessToJobObject(job, child_raw as HANDLE) };
         if ok == 0 {
             return Err(format!(
-                "AssignProcessToJobObject failed: {}",
+                "AssignProcessToJobObject 失败：{}",
                 std::io::Error::last_os_error()
             ));
         }
 
         if let Err(error) = resume_threads(pid) {
             let _ = this.terminate();
-            return Err(format!("resume failed: {error}"));
+            return Err(format!("恢复执行失败：{error}"));
         }
 
         Ok(this)
@@ -59,7 +59,7 @@ fn resume_threads(pid: u32) -> std::result::Result<(), String> {
     let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) };
     if snapshot == INVALID_HANDLE_VALUE {
         return Err(format!(
-            "CreateToolhelp32Snapshot failed: {}",
+            "CreateToolhelp32Snapshot 失败：{}",
             std::io::Error::last_os_error()
         ));
     }
@@ -75,7 +75,7 @@ fn resume_threads_from_snapshot(snapshot: HANDLE, pid: u32) -> std::result::Resu
 
     let mut ok = unsafe { Thread32First(snapshot, &mut entry) };
     if ok == 0 {
-        return Err(format!("Thread32First failed: {}", std::io::Error::last_os_error()));
+        return Err(format!("Thread32First 失败：{}", std::io::Error::last_os_error()));
     }
 
     let mut resumed = 0_u32;
@@ -89,7 +89,7 @@ fn resume_threads_from_snapshot(snapshot: HANDLE, pid: u32) -> std::result::Resu
     }
 
     if resumed == 0 {
-        return Err(format!("no threads found for child process {pid}"));
+        return Err(format!("未找到子进程 {pid} 的线程"));
     }
 
     Ok(())
@@ -99,7 +99,7 @@ fn resume_thread(thread_id: u32) -> std::result::Result<(), String> {
     let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, 0, thread_id) };
     if thread.is_null() {
         return Err(format!(
-            "OpenThread({thread_id}) failed: {}",
+            "OpenThread({thread_id}) 失败：{}",
             std::io::Error::last_os_error()
         ));
     }
@@ -109,7 +109,7 @@ fn resume_thread(thread_id: u32) -> std::result::Result<(), String> {
 
     if resume_result == u32::MAX {
         return Err(format!(
-            "ResumeThread({thread_id}) failed: {}",
+            "ResumeThread({thread_id}) 失败：{}",
             std::io::Error::last_os_error()
         ));
     }

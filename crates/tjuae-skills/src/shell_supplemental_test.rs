@@ -177,7 +177,7 @@ async fn tc_4_3_stderr_captured_and_formatted() {
         "!`echo stderr_msg >&2`"
     };
     let result = run(content).await.unwrap();
-    assert!(result.contains("[stderr]"), "stderr prefix missing: {result}");
+    assert!(result.contains("[标准错误]"), "stderr prefix missing: {result}");
     assert!(result.contains("stderr_msg"));
 }
 
@@ -267,7 +267,7 @@ async fn tc_4_7_nonexistent_command_returns_err() {
         Ok(s) => {
             // bash returns Ok with [stderr] content since stderr is non-empty
             assert!(
-                s.contains("[stderr]") || s.contains("not found"),
+                s.contains("[标准错误]") || s.contains("not found"),
                 "unexpected Ok result: {s}"
             );
         }
@@ -393,7 +393,7 @@ async fn tc_6_8_surrounding_text_preserved() {
 fn tc_7_1_command_failed_message_contains_pattern() {
     let err = ShellExecutionError::CommandFailed {
         pattern: "my-cmd".to_string(),
-        output: "exit code 1".to_string(),
+        output: "退出码 1".to_string(),
     };
     let msg = err.to_string();
     assert!(msg.contains("my-cmd"), "error message should contain pattern: {msg}");

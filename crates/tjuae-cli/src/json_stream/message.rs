@@ -96,7 +96,7 @@ pub(super) async fn handle(
                             });
                             let _ = ctx.writer.emit(&ProtocolEvent::Info {
                                 msg_id: String::new(),
-                                message: "set_config: queued, will apply after current response".to_string(),
+                                message: "set_config：已排队，将在当前响应结束后应用".to_string(),
                             });
                         }
                         ProtocolCommand::SetMode { mode } => {
@@ -104,14 +104,14 @@ pub(super) async fn handle(
                             mode_changed = true;
                             let _ = ctx.writer.emit(&ProtocolEvent::Info {
                                 msg_id: String::new(),
-                                message: format!("mode updated: {}", ctx.approval_manager.current_mode()),
+                                message: format!("模式已更新：{}", ctx.approval_manager.current_mode()),
                             });
                         }
                         ProtocolCommand::Ping => {
                             let _ = ctx.writer.emit(&ProtocolEvent::Pong);
                         }
                         _ => {
-                            tracing::debug!(target: "tjuae_protocol", "ignoring command during active message processing");
+                            tracing::debug!(target: "tjuae_protocol", "消息处理期间收到命令，已忽略");
                         }
                     }
                 }
@@ -131,7 +131,7 @@ pub(super) async fn handle(
         if !changes.is_empty() {
             let _ = ctx.writer.emit(&ProtocolEvent::Info {
                 msg_id: String::new(),
-                message: format!("config applied: {}", changes.join(", ")),
+                message: format!("配置已应用：{}", changes.join("，")),
             });
         }
         ctx.protocol_sink

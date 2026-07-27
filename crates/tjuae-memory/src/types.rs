@@ -73,7 +73,7 @@ pub struct ParseMemoryTypeError(pub String);
 
 impl fmt::Display for ParseMemoryTypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "unknown memory type: {:?}", self.0)
+        write!(f, "未知记忆类型：{:?}", self.0)
     }
 }
 

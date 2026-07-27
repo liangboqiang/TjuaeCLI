@@ -49,7 +49,7 @@ mod tests {
         let result = run_glob("*.xyz", base.to_str().unwrap()).await;
 
         assert!(!result.is_error, "no-match glob should not be an error");
-        assert_eq!(result.content, "No files matched the pattern");
+        assert_eq!(result.content, "没有文件匹配该模式");
     }
 
     #[tokio::test]

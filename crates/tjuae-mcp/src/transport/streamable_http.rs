@@ -24,9 +24,9 @@ impl StreamableHttpTransport {
         let mut header_map = HeaderMap::new();
         for (k, v) in headers {
             let name = reqwest::header::HeaderName::from_bytes(k.as_bytes())
-                .map_err(|e| McpError::Transport(format!("Invalid header name '{}': {}", k, e)))?;
-            let value = HeaderValue::from_str(v)
-                .map_err(|e| McpError::Transport(format!("Invalid header value '{}': {}", v, e)))?;
+                .map_err(|e| McpError::Transport(format!("无效的请求头名称 '{}'：{}", k, e)))?;
+            let value =
+                HeaderValue::from_str(v).map_err(|e| McpError::Transport(format!("无效的请求头值 '{}'：{}", v, e)))?;
             header_map.insert(name, value);
         }
 
@@ -83,9 +83,9 @@ impl StreamableHttpTransport {
             let text = response
                 .text()
                 .await
-                .map_err(|e| McpError::Transport(format!("Read response body failed: {}", e)))?;
+                .map_err(|e| McpError::Transport(format!("读取响应正文失败：{}", e)))?;
             serde_json::from_str(&text)
-                .map_err(|e| McpError::Transport(format!("Parse JSON response failed: {} — raw: {}", e, text)))
+                .map_err(|e| McpError::Transport(format!("解析 JSON 响应失败：{}——原始内容：{}", e, text)))
         }
     }
 
@@ -97,7 +97,7 @@ impl StreamableHttpTransport {
         let mut buffer = String::new();
 
         while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| McpError::Transport(format!("SSE read error: {}", e)))?;
+            let chunk = chunk.map_err(|e| McpError::Transport(format!("SSE 读取错误：{}", e)))?;
             buffer.push_str(&String::from_utf8_lossy(&chunk));
 
             if let Some(rpc_response) = extract_jsonrpc_from_sse_buffer(&buffer) {
@@ -105,7 +105,7 @@ impl StreamableHttpTransport {
             }
         }
 
-        Err(McpError::Transport("SSE stream ended without JSON-RPC response".into()))
+        Err(McpError::Transport("SSE 流结束时没有 JSON-RPC 响应".into()))
     }
 }
 
@@ -142,20 +142,16 @@ fn extract_jsonrpc_from_sse_buffer(buffer: &str) -> Option<JsonRpcResponse> {
 #[async_trait]
 impl McpTransport for StreamableHttpTransport {
     async fn request(&self, req: &JsonRpcRequest) -> Result<JsonRpcResponse, McpError> {
-        let body =
-            serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON serialize error: {}", e)))?;
+        let body = serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON 序列化错误：{}", e)))?;
 
         let http_req = self.build_request(&body).await;
         let response = http_req
             .send()
             .await
-            .map_err(|e| McpError::Transport(format!("HTTP request failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("HTTP 请求失败：{}", e)))?;
 
         if !response.status().is_success() {
-            return Err(McpError::Transport(format!(
-                "HTTP request returned status: {}",
-                response.status()
-            )));
+            return Err(McpError::Transport(format!("HTTP 请求返回状态：{}", response.status())));
         }
 
         let rpc_response = self.parse_response(response).await?;
@@ -171,14 +167,13 @@ impl McpTransport for StreamableHttpTransport {
     }
 
     async fn notify(&self, req: &JsonRpcRequest) -> Result<(), McpError> {
-        let body =
-            serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON serialize error: {}", e)))?;
+        let body = serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON 序列化错误：{}", e)))?;
 
         let http_req = self.build_request(&body).await;
         http_req
             .send()
             .await
-            .map_err(|e| McpError::Transport(format!("Notification request failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("通知请求失败：{}", e)))?;
 
         Ok(())
     }

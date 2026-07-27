@@ -1,96 +1,100 @@
-# Built-in Tools
+# 内置工具
 
-The agent has 7 built-in tools. The LLM automatically selects and invokes them based on the task.
+智能体提供 8 个内置工具。LLM 会根据任务自动选择并调用它们。
 
-| Tool | Function | Concurrent |
-|------|----------|------------|
-| **Read** | Read file contents (with line numbers) | Yes |
-| **Write** | Write files (auto-creates directories) | No |
-| **Edit** | Precise string replacement | No |
-| **ExecCommand** | Execute shell commands | No |
-| **Grep** | Regex search file contents (via ripgrep) | Yes |
-| **Glob** | Find files by pattern matching | Yes |
-| **Spawn** | Spawn sub-agents for parallel tasks | No |
-| **ToolSearch** | Load schemas for deferred tools | Yes |
+| 工具 | 功能 | 可并发 |
+|------|------|--------|
+| **Read** | 读取文件内容并附带行号 | 是 |
+| **Write** | 写入文件，自动创建目录 | 否 |
+| **Edit** | 精确替换字符串 | 否 |
+| **ExecCommand** | 执行 shell 命令 | 否 |
+| **Grep** | 通过 ripgrep 使用正则表达式搜索文件内容 | 是 |
+| **Glob** | 按模式查找文件 | 是 |
+| **Spawn** | 启动子智能体并行处理任务 | 否 |
+| **ToolSearch** | 加载延迟工具的 schema | 是 |
 
 ---
 
 ## Read
 
-Read file contents with line numbers, similar to `cat -n`.
+读取文件内容并显示行号，行为类似 `cat -n`。
 
-- Supports `offset` and `limit` parameters for reading file slices
-- Auto-detects binary files
-- Output format: line-numbered text
+- 支持通过 `offset` 和 `limit` 参数读取文件片段。
+- 自动检测二进制文件。
+- 输出格式为带行号的文本。
 
 ## Write
 
-Write content to a file atomically.
+以原子方式向文件写入内容。
 
-- Atomic write: writes to a temp file first, then renames
-- Auto-creates parent directories
+- 先写入临时文件，再重命名，确保原子写入。
+- 自动创建父目录。
 
 ## Edit
 
-Find and replace exact strings in a file.
+在文件中查找并替换精确字符串。
 
-- Matches `old_string` exactly and replaces with `new_string`
-- Requires a unique match by default; errors on multiple matches
-- Use `replace_all` to replace all occurrences
+- 精确匹配 `old_string`，并替换为 `new_string`。
+- 默认要求唯一匹配；存在多个匹配项时返回错误。
+- 使用 `replace_all` 替换全部匹配项。
 
 ## ExecCommand
 
-Execute a shell command and return the result.
+执行 shell 命令并返回结果。
 
-- Default timeout: 120 seconds, max 600 seconds
-- Returns exit code, stdout, and stderr
+- 默认超时 120 秒，最长 600 秒。
+- 返回退出码、标准输出和标准错误。
 
 ## Grep
 
-Search file contents with regular expressions.
+使用正则表达式搜索文件内容。
 
-- Uses `rg` (ripgrep) when available, falls back to `grep -rn`
-- Supports glob filtering and case-insensitive search
-- Results limited to 250 lines
+- 优先使用 `rg`（ripgrep），不可用时回退到 `grep -rn`。
+- 支持 glob 过滤和忽略大小写搜索。
+- 结果最多保留 250 行。
 
 ## Glob
 
-Find files matching a glob pattern.
+查找符合 glob 模式的文件。
 
-- Standard glob patterns (e.g., `**/*.rs`)
-- Results sorted by modification time (newest first)
-- Returns up to 100 files
+- 支持标准 glob 模式，例如 `**/*.rs`。
+- 按修改时间排序，最新文件在前。
+- 最多返回 100 个文件。
 
 ## Spawn
 
-See [Sub-Agent Spawning](advanced.md#sub-agent-spawning) in the Advanced Features guide.
+参阅高级功能指南中的[子智能体](advanced.md#子智能体)。
 
 ## ToolSearch
 
-Load full schemas for deferred tools so the LLM can invoke them. Deferred tools (from MCP servers with `deferred = true`) are registered by name only — their parameter schemas are not loaded until the LLM calls ToolSearch.
+加载延迟工具的完整 schema，使 LLM 能够调用它们。来自设置了
+`deferred = true` 的 MCP 服务器的工具在注册时只有名称；只有当 LLM 调用
+ToolSearch 后，参数 schema 才会加载。
 
-- Query by exact name: `"select:Read,Edit,Grep"`
-- Keyword search: `"slack send"` returns best matches
-- Returns up to 5 results by default
+- 按精确名称查询：`"select:Read,Edit,Grep"`。
+- 关键字搜索：`"slack send"` 返回最匹配的结果。
+- 默认最多返回 5 个结果。
 
 ---
 
-## How It Works
+## 工作原理
 
+```text
+用户输入 → 构建请求（系统提示词 + 历史记录 + 工具定义）
+         → 流式接收 LLM API 响应
+         → 实时向标准输出写出文本
+         → 若 LLM 返回 tool_use，则确认、执行并回传结果
+         → 循环，直到 LLM 停止调用工具
+         → 输出最终答复并保存会话
 ```
-User input → Build request (system prompt + history + tool definitions)
-           → Stream LLM API response
-           → Output text to stdout in real-time
-           → If LLM returns tool_use → confirm → execute → send result back
-           → Loop until LLM stops calling tools
-           → Output final reply → save session
-```
 
-- Concurrent-safe tools (Read, Grep, Glob) execute in parallel
-- Non-concurrent tools (Write, Edit, ExecCommand) execute sequentially
-- Tool output is auto-truncated to prevent context window overflow
-- Tool output can be compacted (see [Output Compaction](advanced.md#output-compaction))
+- 支持并发的工具（Read、Grep、Glob）会并行执行。
+- 不支持并发的工具（Write、Edit、ExecCommand）会顺序执行。
+- 工具输出会自动截断，防止超出上下文窗口。
+- 工具输出支持压缩，详见[输出压缩](advanced.md#输出压缩)。
 
-## Tool Descriptions
+## 工具描述
 
-Each built-in tool includes a detailed description and usage guidance that is injected into the system prompt. These descriptions help the LLM select the right tool and use it effectively — for example, preferring Grep over ExecCommand for content search, or using Edit instead of Write for modifications.
+每个内置工具都带有详细描述和使用建议，并会注入系统提示词。这些描述帮助 LLM
+选择合适的工具并正确使用，例如搜索内容时优先使用 Grep 而不是 ExecCommand，
+修改文件时使用 Edit 而不是 Write。

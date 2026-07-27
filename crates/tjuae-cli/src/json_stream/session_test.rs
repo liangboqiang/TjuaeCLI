@@ -6,10 +6,7 @@ fn appends_protocol_file_paths_to_model_input() {
 
     let content = content_with_attachment_paths("inspect these", &files);
 
-    assert_eq!(
-        content,
-        "inspect these\n\n[Attached files]\n/tmp/image.png\n/tmp/notes.txt"
-    );
+    assert_eq!(content, "inspect these\n\n[附加文件]\n/tmp/image.png\n/tmp/notes.txt");
 }
 
 #[test]

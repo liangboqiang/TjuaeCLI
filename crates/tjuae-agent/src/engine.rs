@@ -470,10 +470,8 @@ impl AgentEngine {
         loop {
             if let Some(limit) = guards.turn_budget_reached() {
                 self.save_session();
-                let message = format!(
-                    "Stopped after reaching the turn budget (max_turns={limit}); the task did not converge. Try adjusting the request or retrying."
-                );
-                warn!(target: "tjuae_agent", limit, "stopping agent run at turn budget");
+                let message = format!("达到轮次上限（max_turns={limit}）后已停止；任务未能收敛。请调整请求或重试。");
+                warn!(target: "tjuae_agent", limit, "达到轮次预算，正在停止智能体运行");
                 self.output.emit_error(&message);
                 return Ok(AgentResult {
                     text: String::new(),
@@ -524,7 +522,7 @@ impl AgentEngine {
                         assistant_text_bytes = outcome.assistant_text.len(),
                         thinking_text_bytes = outcome.thinking_text.len(),
                         tool_call_count = outcome.tool_calls.len(),
-                        "provider turn produced no valid final answer; retrying finalization"
+                        "提供商轮次未生成有效最终答案，正在重试收尾"
                     );
                     return self
                         .finalize_once(
@@ -793,7 +791,7 @@ impl AgentEngine {
                         target: "tjuae_agent",
                         tool = %tool_name,
                         status,
-                        "tool result has empty tool_use_id"
+                        "工具结果的 tool_use_id 为空"
                     );
                 } else {
                     debug!(
@@ -801,7 +799,7 @@ impl AgentEngine {
                         tool_use_id = %tool_use_id,
                         tool = %tool_name,
                         status,
-                        "tool result emitted"
+                        "已发出工具结果"
                     );
                 }
                 self.output.emit_tool_result(tool_use_id, tool_name, *is_error, content);
@@ -867,7 +865,7 @@ impl AgentEngine {
             assistant_text_bytes = outcome.assistant_text.len(),
             thinking_text_bytes = outcome.thinking_text.len(),
             tool_call_count = outcome.tool_calls.len(),
-            "provider finalization did not produce a valid final answer"
+            "提供商收尾未生成有效最终答案"
         );
         let fallback = reason.fallback_prompt();
         self.output.emit_error(fallback);
@@ -917,14 +915,14 @@ impl AgentEngine {
                         error!(
                             target: "tjuae_agent",
                             tool = %name,
-                            "provider emitted tool call with empty tool_use_id"
+                            "提供商返回的工具调用 tool_use_id 为空"
                         );
                     } else {
                         debug!(
                             target: "tjuae_agent",
                             tool_use_id = %id,
                             tool = %name,
-                            "provider tool call received"
+                            "已收到提供商工具调用"
                         );
                     }
                     let input_str = to_string(&input).unwrap_or_default();
@@ -975,7 +973,7 @@ impl AgentEngine {
 
         let context_usage = turn_usage.input_tokens.saturating_add(turn_usage.output_tokens);
         if context_usage == 0 {
-            debug!(target: "tjuae_agent", "provider omitted turn usage; retaining local context projection");
+            debug!(target: "tjuae_agent", "提供商省略了轮次用量，将保留本地上下文投影");
             return false;
         }
 
@@ -991,18 +989,17 @@ impl AgentEngine {
         if let Some(diagnostic) = self.cache_detector.check_response(cache_stats) {
             match &diagnostic {
                 CacheDiagnostic::FullMiss { cause } => {
-                    self.output.emit_info(&format!("Cache full miss: {cause:?}"));
+                    self.output.emit_info(&format!("缓存完全未命中：{cause:?}"));
                 }
                 CacheDiagnostic::PartialMiss { hit_rate, cause } => {
                     if self.compact_config.cache_diagnostics {
                         self.output
-                            .emit_info(&format!("Cache: {:.0}% hit rate (cause: {cause:?})", hit_rate * 100.0));
+                            .emit_info(&format!("缓存命中率：{:.0}%（原因：{cause:?}）", hit_rate * 100.0));
                     }
                 }
                 CacheDiagnostic::Healthy { hit_rate } => {
                     if self.compact_config.cache_diagnostics {
-                        self.output
-                            .emit_info(&format!("Cache: {:.0}% hit rate", hit_rate * 100.0));
+                        self.output.emit_info(&format!("缓存命中率：{:.0}%", hit_rate * 100.0));
                     }
                 }
             }
@@ -1028,7 +1025,7 @@ impl AgentEngine {
             tool_result_tokens,
             tool_image_tokens,
             context_tokens = self.compact_state.last_input_tokens,
-            "tool results added to context token estimate"
+            "工具结果已计入上下文 token 估算"
         );
     }
 
@@ -1073,7 +1070,7 @@ impl AgentEngine {
             let result = microcompact(&mut self.messages, &self.compact_config);
             if result.cleared_count > 0 {
                 self.output.emit_info(&format!(
-                    "Microcompact: cleared {} tool results (~{} tokens freed)",
+                    "微压缩：已清除 {} 个工具结果（约释放 {} token）",
                     result.cleared_count, result.estimated_tokens_freed
                 ));
                 self.context_state.record_microcompact();
@@ -1086,11 +1083,11 @@ impl AgentEngine {
         let mut compacted = false;
         let should_compact = should_autocompact(self.compact_state.last_input_tokens, &self.compact_config);
         if should_compact {
-            info!(target: "tjuae_agent", context_tokens = self.compact_state.last_input_tokens, "context compaction triggered");
+            info!(target: "tjuae_agent", context_tokens = self.compact_state.last_input_tokens, "已触发上下文压缩");
             let threshold = if let Some(pct) = self.compact_config.autocompact_threshold_pct {
                 let t = self.compact_config.context_window * pct as usize / 100;
                 self.output.emit_info(&format!(
-                    "Autocompact threshold: {} tokens ({}% of {})",
+                    "自动压缩阈值：{} token（{}%，上下文窗口大小为 {}）",
                     t, pct, self.compact_config.context_window
                 ));
                 t
@@ -1117,7 +1114,7 @@ impl AgentEngine {
             {
                 Ok(result) => {
                     self.output.emit_info(&format!(
-                        "Autocompact: summarized {} messages ({} tokens → compact)",
+                        "自动压缩：已总结 {} 条消息（{} token → compact）",
                         result.messages_summarized, result.pre_compact_tokens
                     ));
                     self.messages = result.messages;
@@ -1130,13 +1127,13 @@ impl AgentEngine {
                     // Already tripped; logged at circuit-breaker level
                 }
                 Err(e) => {
-                    self.output.emit_error(&format!("Autocompact failed: {}", e));
+                    self.output.emit_error(&format!("自动压缩失败：{}", e));
                 }
             }
         } else if should_compact {
             self.output.emit_info(&format!(
-                "Autocompact: skipped (circuit breaker tripped after {} consecutive failures, \
-                 context_tokens={})",
+                "自动压缩：已跳过（连续失败 {} 次后熔断器已触发，\
+                 context_tokens={}）",
                 self.compact_state.consecutive_failures, self.compact_state.last_input_tokens
             ));
         } else if !self.compact_config.enabled {
@@ -1150,8 +1147,8 @@ impl AgentEngine {
             };
             if self.compact_state.last_input_tokens as usize >= threshold {
                 self.output.emit_info(&format!(
-                    "Autocompact: disabled (compact.enabled=false, \
-                     context_tokens={}, threshold={})",
+                    "自动压缩：已禁用（compact.enabled=false，\
+                     context_tokens={}，threshold={}）",
                     self.compact_state.last_input_tokens, threshold
                 ));
             }
@@ -1189,7 +1186,7 @@ fn project_image_input(messages: &mut [Message], capability: ImageInputCapabilit
                     target: "tjuae_agent",
                     model,
                     error = %error,
-                    "omitting invalid historical image from provider request"
+                    "提供商请求中的历史图片无效，已省略"
                 );
                 removed_image = true;
                 return false;
@@ -1199,14 +1196,20 @@ fn project_image_input(messages: &mut [Message], capability: ImageInputCapabilit
 
         if removed_image {
             let text = match capability {
-                ImageInputCapability::Supported => "[Image unavailable: the stored image payload is invalid.]",
-                ImageInputCapability::Unsupported => "[Image omitted: the selected model does not support vision.]",
-                ImageInputCapability::Unknown => {
-                    "[Image omitted: image-input support is unknown for the selected model.]"
-                }
+                ImageInputCapability::Supported => "[图片不可用：存储的图片数据无效。]",
+                ImageInputCapability::Unsupported => "[图片已省略：所选模型不支持视觉输入。]",
+                ImageInputCapability::Unknown => "[图片已省略：无法确定所选模型是否支持图片输入。]",
             };
             message.content.push(ContentBlock::Text { text: text.to_owned() });
         }
+    }
+}
+
+fn image_input_capability_label(capability: ImageInputCapability) -> &'static str {
+    match capability {
+        ImageInputCapability::Supported => "支持",
+        ImageInputCapability::Unsupported => "不支持",
+        ImageInputCapability::Unknown => "未知",
     }
 }
 
@@ -1217,7 +1220,7 @@ impl AgentEngine {
             let mut session = mgr.create(provider_name, &self.model, cwd, session_id)?;
             session.context_state = self.context_state.clone();
             mgr.save(&session)?;
-            info!(target: "tjuae_agent", session_id = %session.id, provider = %provider_name, model = %self.model, "session started");
+            info!(target: "tjuae_agent", session_id = %session.id, provider = %provider_name, model = %self.model, "会话已启动");
             self.current_session = Some(session);
         }
         Ok(())
@@ -1244,18 +1247,20 @@ impl AgentEngine {
 
         if let Some(new_model) = model {
             let old = replace(&mut self.model, new_model.clone());
-            changes.push(format!("model: {old} → {new_model}"));
+            changes.push(format!("模型：{old} → {new_model}"));
         }
 
         if let Some(new_capability) = image_input {
-            let old = self.compat.image_input();
+            let old = image_input_capability_label(self.compat.image_input());
             self.compat.image_input = Some(new_capability);
-            changes.push(format!("image input: {old:?} → {new_capability:?}"));
+            let new = image_input_capability_label(new_capability);
+            changes.push(format!("图片输入：{old} → {new}"));
         } else if model_changed {
-            let old = self.compat.image_input();
+            let old_capability = self.compat.image_input();
             self.compat.image_input = None;
-            if old != ImageInputCapability::Unknown {
-                changes.push(format!("image input: {old:?} → Unknown"));
+            if old_capability != ImageInputCapability::Unknown {
+                let old = image_input_capability_label(old_capability);
+                changes.push(format!("图片输入：{old} → 未知"));
             }
         }
 
@@ -1264,34 +1269,34 @@ impl AgentEngine {
                 "enabled" => {
                     let budget = thinking_budget.unwrap_or(Self::DEFAULT_THINKING_BUDGET);
                     self.thinking = Some(ThinkingConfig::Enabled { budget_tokens: budget });
-                    changes.push(format!("thinking: enabled (budget: {budget})"));
+                    changes.push(format!("思考模式：已启用（预算：{budget}）"));
                 }
                 "disabled" => {
                     self.thinking = Some(ThinkingConfig::Disabled);
-                    changes.push("thinking: disabled".to_string());
+                    changes.push("思考模式：已禁用".to_string());
                 }
                 other => {
-                    changes.push(format!("thinking: ignored invalid value \"{other}\""));
+                    changes.push(format!("思考模式：已忽略无效值 \"{other}\""));
                 }
             }
         } else if let Some(new_budget) = thinking_budget
             && let Some(ThinkingConfig::Enabled { budget_tokens }) = &mut self.thinking
         {
             *budget_tokens = new_budget;
-            changes.push(format!("thinking budget: {new_budget}"));
+            changes.push(format!("思考预算：{new_budget}"));
         }
 
         if let Some(new_effort) = effort {
             if new_effort.is_empty() {
                 self.reasoning_effort = None;
-                changes.push("effort: cleared".to_string());
+                changes.push("推理强度：已清除".to_string());
             } else if !self.compat.supports_effort() {
-                changes.push("effort: not supported by current provider".to_string());
+                changes.push("推理强度：当前提供商不支持".to_string());
             } else {
                 let levels = self.compat.effort_levels();
                 if !levels.is_empty() && !levels.iter().any(|l| l == &new_effort) {
                     changes.push(format!(
-                        "effort: invalid level \"{}\" (valid: {})",
+                        "推理强度：无效级别 \"{}\"（有效值：{}）",
                         new_effort,
                         levels.join(", ")
                     ));
@@ -1299,8 +1304,8 @@ impl AgentEngine {
                     let old = self
                         .reasoning_effort
                         .replace(new_effort.clone())
-                        .unwrap_or_else(|| "none".to_string());
-                    changes.push(format!("effort: {old} → {new_effort}"));
+                        .unwrap_or_else(|| "无".to_string());
+                    changes.push(format!("推理强度：{old} → {new_effort}"));
                 }
             }
         }
@@ -1310,10 +1315,10 @@ impl AgentEngine {
                 Ok(new_level) => {
                     let old = self.compact_level.to_string();
                     self.compact_level = new_level;
-                    changes.push(format!("compaction: {old} → {new_level}"));
+                    changes.push(format!("压缩级别：{old} → {new_level}"));
                 }
                 Err(e) => {
-                    changes.push(format!("compaction: invalid ({e})"));
+                    changes.push(format!("压缩级别：无效（{e}）"));
                 }
             }
         }
@@ -1332,7 +1337,7 @@ impl AgentEngine {
 
         match result {
             Ok(CommandResult::Continue) => {
-                info!(command = command.display_name, "Slash command executed");
+                info!(command = command.display_name, "斜杠命令已执行");
                 Ok(Some(AgentResult {
                     text: String::new(),
                     stop_reason: StopReason::EndTurn,
@@ -1343,10 +1348,7 @@ impl AgentEngine {
             Ok(CommandResult::ContextChanged) => {
                 self.refresh_local_context_estimate();
                 self.save_session();
-                info!(
-                    command = command.display_name,
-                    "Slash command executed and context persisted"
-                );
+                info!(command = command.display_name, "斜杠命令已执行，上下文已持久化");
                 Ok(Some(AgentResult {
                     text: String::new(),
                     stop_reason: StopReason::EndTurn,
@@ -1355,11 +1357,11 @@ impl AgentEngine {
                 }))
             }
             Ok(CommandResult::Exit) => {
-                info!(command = command.display_name, "Slash command executed: exit");
+                info!(command = command.display_name, "斜杠命令已执行：退出");
                 Err(AgentError::UserAborted)
             }
             Err(e) => {
-                error!(command = command.display_name, error = %e, "Slash command failed");
+                error!(command = command.display_name, error = %e, "斜杠命令执行失败");
                 Err(AgentError::ApiError(e.to_string()))
             }
         }
@@ -1456,7 +1458,7 @@ impl AgentEngine {
             session.context_state = self.context_state.clone();
             session.updated_at = Utc::now();
             if let Err(e) = mgr.save(session) {
-                self.output.emit_error(&format!("Failed to save session: {}", e));
+                self.output.emit_error(&format!("保存会话失败：{}", e));
             }
         }
     }
@@ -1498,7 +1500,7 @@ impl AgentEngine {
                     target: "tjuae_agent",
                     tool_use_id = %tool_use_id,
                     tool = %name,
-                    "closing pending tool_use after abort"
+                    "中止后正在关闭待处理的 tool_use"
                 );
                 self.output.emit_tool_result(&tool_use_id, &name, true, reason);
                 ContentBlock::ToolResult {
@@ -1519,7 +1521,7 @@ impl AgentEngine {
         if let Some(hook_engine) = &self.hooks {
             let messages = hook_engine.run_stop().await;
             for msg in messages {
-                info!(target: "tjuae_agent", hook_message = %msg, "stop hook output");
+                info!(target: "tjuae_agent", hook_message = %msg, "停止 hook 输出");
             }
         }
     }

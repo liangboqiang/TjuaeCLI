@@ -12,13 +12,13 @@ impl SlashCommand for ClearCommand {
     }
 
     fn description(&self) -> &str {
-        "Clear conversation history"
+        "清空对话历史"
     }
 
     async fn execute(&self, ctx: &mut CommandContext<'_>, _args: &str) -> anyhow::Result<CommandResult> {
         ctx.messages.clear();
         *ctx.compact_state = CompactState::new();
-        ctx.output.emit_info("Conversation cleared");
+        ctx.output.emit_info("对话已清空");
         Ok(CommandResult::ContextChanged)
     }
 }

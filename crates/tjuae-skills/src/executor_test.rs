@@ -53,7 +53,7 @@ mod tests {
             .await
             .unwrap();
         assert!(
-            result.starts_with("Base directory for this skill: /my/skill/dir\n\n"),
+            result.starts_with("此技能的基础目录：/my/skill/dir\n\n"),
             "expected base directory header, got: {result}"
         );
         assert!(result.contains("Content here."));
@@ -98,7 +98,7 @@ mod tests {
         let mut skill = make_skill("", None);
         skill.execution_context = ExecutionContext::Fork;
         let err = check_execution_context(&skill).unwrap_err();
-        assert!(err.contains("fork execution context"));
+        assert!(err.contains("fork 执行上下文"));
     }
 }
 
@@ -179,7 +179,7 @@ mod supplemental_tests {
             .await
             .unwrap();
         assert!(
-            result.starts_with("Base directory for this skill: /path/to/skill"),
+            result.starts_with("此技能的基础目录：/path/to/skill"),
             "expected header, got: {result}"
         );
         assert!(result.contains("/path/to/skill/script.sh"));
@@ -214,7 +214,7 @@ mod supplemental_tests {
         assert!(result.is_err());
         let msg = result.unwrap_err();
         assert!(msg.contains("fork-skill"));
-        assert!(msg.contains("fork execution context"));
+        assert!(msg.contains("fork 执行上下文"));
     }
 
     // TC-10.x: inline context check returns Ok

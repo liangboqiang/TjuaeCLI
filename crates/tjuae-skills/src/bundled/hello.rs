@@ -4,8 +4,8 @@ use super::{BundledSkillDefinition, register_bundled_skill};
 pub fn register_hello_skill() {
     register_bundled_skill(BundledSkillDefinition {
         name: "hello",
-        description: "A simple greeting skill for testing the bundled skill framework.",
-        content: "Hello! I'm a bundled skill. How can I help you today?\n\n$ARGUMENTS",
+        description: "用于测试内置技能框架的简单问候技能。",
+        content: "你好！我是一个内置技能。今天需要我帮你做什么？\n\n$ARGUMENTS",
         user_invocable: true,
         when_to_use: None,
         argument_hint: None,

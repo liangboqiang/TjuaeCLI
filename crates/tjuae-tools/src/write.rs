@@ -36,12 +36,12 @@ impl Tool for WriteTool {
     }
 
     fn description(&self) -> &str {
-        "Writes content to a file, creating parent directories if needed.\n\n\
-         Usage:\n\
-         - This tool overwrites the existing file completely (not append).\n\
-         - If the file already exists, you must use Read first to see its current content.\n\
-         - Prefer Edit over Write for modifying existing files — Edit only sends the diff.\n\
-         - Use Write only for creating new files or complete rewrites."
+        "将内容写入文件，并在需要时创建父目录。\n\n\
+         用法：\n\
+         - 此工具会完整覆盖现有文件，而不是追加内容。\n\
+         - 如果文件已经存在，必须先使用 Read 查看当前内容。\n\
+         - 修改现有文件时优先使用 Edit，因为 Edit 只发送差异。\n\
+         - 仅在新建文件或完整重写时使用 Write。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -50,11 +50,11 @@ impl Tool for WriteTool {
             "properties": {
                 "file_path": {
                     "type": "string",
-                    "description": "The absolute path to the file to write"
+                    "description": "待写入文件的绝对路径"
                 },
                 "content": {
                     "type": "string",
-                    "description": "The content to write to the file"
+                    "description": "要写入文件的内容"
                 }
             },
             "required": ["file_path", "content"]
@@ -68,13 +68,13 @@ impl Tool for WriteTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(file_path) = input["file_path"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: file_path".to_string(),
+                content: "缺少必需参数：file_path".to_string(),
                 is_error: true,
             };
         };
         let Some(content) = input["content"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: content".to_string(),
+                content: "缺少必需参数：content".to_string(),
                 is_error: true,
             };
         };
@@ -88,7 +88,7 @@ impl Tool for WriteTool {
                 Ok(()) => {}
                 Err(e) => {
                     return ToolResult {
-                        content: format!("Failed to create directories: {}", e),
+                        content: format!("创建目录失败：{}", e),
                         is_error: true,
                     };
                 }
@@ -99,7 +99,7 @@ impl Tool for WriteTool {
         let tmp_path = format!("{}.tmp.{}", file_path, std::process::id());
         if let Err(e) = std::fs::write(&tmp_path, content) {
             return ToolResult {
-                content: format!("Failed to write file: {}", e),
+                content: format!("写入文件失败：{}", e),
                 is_error: true,
             };
         }
@@ -109,7 +109,7 @@ impl Tool for WriteTool {
             let _ = std::fs::remove_file(&tmp_path);
             if let Err(e) = std::fs::write(file_path, content) {
                 return ToolResult {
-                    content: format!("Failed to write file: {}", e),
+                    content: format!("写入文件失败：{}", e),
                     is_error: true,
                 };
             }
@@ -118,7 +118,7 @@ impl Tool for WriteTool {
             }
 
             return ToolResult {
-                content: format!("Updated {} (rename failed: {}, used direct write)", file_path, e),
+                content: format!("已更新 {}（重命名失败：{}，已改为直接写入）", file_path, e),
                 is_error: false,
             };
         }
@@ -128,9 +128,9 @@ impl Tool for WriteTool {
         }
 
         let line_count = content.lines().count();
-        let action = if existed { "Updated" } else { "Created" };
+        let action = if existed { "已更新" } else { "已创建" };
         ToolResult {
-            content: format!("{} {} ({} lines)", action, file_path, line_count),
+            content: format!("{} {}（{} 行）", action, file_path, line_count),
             is_error: false,
         }
     }
@@ -144,8 +144,8 @@ impl Tool for WriteTool {
     }
 
     fn describe(&self, input: &Value) -> String {
-        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("unknown");
-        format!("Write to {}", path)
+        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("未知");
+        format!("写入 {}", path)
     }
 }
 

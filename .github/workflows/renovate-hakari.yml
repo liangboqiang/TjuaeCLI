@@ -1,4 +1,4 @@
-name: Renovate Hakari
+name: Renovate Hakari 同步
 
 on:
   pull_request_target:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   renovate-hakari:
-    name: Regenerate Hakari
+    name: 重新生成 Hakari
     if: >-
       (
         github.event_name == 'workflow_dispatch' ||
@@ -38,25 +38,25 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Ensure latest main
+      - name: 确保 main 为最新
         run: git pull --ff-only origin main
 
-      - name: Install Rust
+      - name: 安装 Rust
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
 
-      - name: Install cargo-hakari
+      - name: 安装 cargo-hakari
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-hakari
 
-      - name: Regenerate
+      - name: 重新生成
         run: |
           cargo hakari generate
           cargo hakari manage-deps --yes
 
-      - name: Create follow-up pull request
+      - name: 创建后续拉取请求
         env:
           GH_TOKEN: ${{ github.token }}
           HAKARI_BRANCH: automation/renovate-hakari
@@ -74,16 +74,16 @@ jobs:
 
           body_file="$(mktemp)"
           cat > "${body_file}" <<EOF
-          Regenerated Hakari after Renovate dependency changes.
+          Renovate 更新依赖后，已重新生成 Hakari。
 
-          Commands:
+          执行的命令：
 
           \`\`\`bash
           cargo hakari generate
           cargo hakari manage-deps --yes
           \`\`\`
 
-          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          运行记录：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           EOF
 
           if gh pr view "${HAKARI_BRANCH}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then

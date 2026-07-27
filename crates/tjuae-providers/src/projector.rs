@@ -35,19 +35,19 @@ impl fmt::Display for WireProvider {
 
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ProjectionError {
-    #[error("{provider} tools count {count} exceeds configured limit {max}")]
+    #[error("{provider} 工具数量 {count} 超过配置上限 {max}")]
     ToolLimitExceeded {
         provider: WireProvider,
         count: usize,
         max: usize,
     },
-    #[error("{provider} request body is {bytes} bytes, exceeding configured limit {max_bytes} bytes")]
+    #[error("{provider} 请求正文为 {bytes} 字节，超过配置上限 {max_bytes} 字节")]
     BodyLimitExceeded {
         provider: WireProvider,
         bytes: usize,
         max_bytes: usize,
     },
-    #[error("{provider} tool schema for {tool_name} is invalid: {reason}")]
+    #[error("{provider} 工具 {tool_name} 的 schema 无效：{reason}")]
     SchemaInvalid {
         provider: WireProvider,
         tool_name: String,
@@ -187,7 +187,7 @@ impl OpenAiProjector {
         } else if !request.tools.is_empty() {
             tracing::warn!(
                 target: "tjuae_providers",
-                "OpenAI-compatible outgoing tools omitted because compat.emit_tools is disabled"
+                "compat.emit_tools 已禁用，OpenAI 兼容请求的传出工具已省略"
             );
         }
 
@@ -197,7 +197,7 @@ impl OpenAiProjector {
             } else {
                 tracing::warn!(
                     target: "tjuae_providers",
-                    "OpenAI-compatible reasoning_effort omitted because compat.supports_effort is disabled"
+                    "compat.supports_effort 已禁用，OpenAI 兼容请求的 reasoning_effort 已省略"
                 );
             }
         }
@@ -278,7 +278,7 @@ fn tool_description_and_schema(tool: &ToolDef) -> (String, Value) {
     if tool.deferred {
         let short_desc = truncate_deferred_description(&tool.description);
         (
-            format!("(Deferred) {short_desc} — Use ToolSearch to load full schema before calling."),
+            format!("（延迟加载）{short_desc}——调用前请使用 ToolSearch 加载完整 schema。"),
             legalize_json_schema(&json!({
                 "type": "object",
                 "properties": {}
@@ -318,7 +318,7 @@ pub(crate) fn classify_tools_wire_shape_mismatch(
         }?;
 
     Some(format!(
-        "tools wire shape mismatch: configured tool_wire_shape resolved to {}; upstream appears to expect {}; upstream error: {}",
+        "工具 wire shape 不匹配：配置的 tool_wire_shape 解析为 {}；上游似乎要求 {}；上游错误：{}",
         configured_shape.as_config_value(),
         expected_shape.as_config_value(),
         body_text

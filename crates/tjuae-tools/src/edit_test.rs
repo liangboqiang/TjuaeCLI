@@ -63,7 +63,7 @@ mod tests {
 
         assert!(result.is_error);
         assert!(
-            result.content.contains("not found"),
+            result.content.contains("未找到"),
             "expected 'not found' in error message, got: {}",
             result.content
         );
@@ -175,7 +175,7 @@ mod tests {
 
         assert!(result.is_error);
         assert!(
-            result.content.contains("Ambiguous line-ending match"),
+            result.content.contains("换行符匹配不明确"),
             "expected ambiguity error, got: {}",
             result.content
         );
@@ -207,7 +207,7 @@ mod tests {
 
         assert!(result.is_error);
         assert!(
-            result.content.contains("Failed to read file"),
+            result.content.contains("读取文件"),
             "expected read failure message, got: {}",
             result.content
         );
@@ -234,7 +234,7 @@ mod tests {
 
         assert!(result.is_error);
         assert!(
-            result.content.contains("must Read"),
+            result.content.contains("必须先读取"),
             "expected 'must Read' in error: {}",
             result.content
         );
@@ -288,7 +288,7 @@ mod tests {
 
         assert!(result.is_error);
         assert!(
-            result.content.contains("modified externally"),
+            result.content.contains("已被外部修改"),
             "expected staleness error: {}",
             result.content
         );

@@ -41,7 +41,7 @@ fn spawn_description_mentions_parallel() {
     let tool = make_spawn_tool();
     let desc = tool.description();
     assert!(
-        desc.contains("parallel"),
+        desc.contains("并行"),
         "Spawn description should mention parallel execution"
     );
 }

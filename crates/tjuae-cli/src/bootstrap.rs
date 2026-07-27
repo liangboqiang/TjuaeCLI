@@ -47,7 +47,7 @@ pub(crate) fn resolve_config(cli: &Cli) -> anyhow::Result<Config> {
     if let Some(ref level_str) = cli.compaction {
         match level_str.parse::<CompactLevel>() {
             Ok(level) => config.compact.compaction = level,
-            Err(e) => anyhow::bail!("Invalid --compaction value: {e}"),
+            Err(e) => anyhow::bail!("无效的 --compaction 值：{e}"),
         }
     }
     if cli.toon {
@@ -76,7 +76,7 @@ pub(crate) fn init_logging(config: &Config, log_dir: Option<&str>, log_level: Op
             Some(guard)
         }
         Err(e) => {
-            eprintln!("Warning: failed to initialize logging: {e}");
+            eprintln!("警告：日志初始化失败：{e}");
             None
         }
     }

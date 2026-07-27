@@ -58,7 +58,7 @@ mod tests {
         let tool = ToolSearchTool::new(build_tool_defs());
         let result = tool.execute(json!({"query": "Read"})).await;
         // "Read" is not deferred, should not appear in results
-        assert!(!result.content.contains("\"name\": \"Read\"") || result.content.contains("No deferred tools"));
+        assert!(!result.content.contains("\"name\": \"Read\"") || result.content.contains("未找到"));
     }
 
     #[tokio::test]
@@ -66,7 +66,7 @@ mod tests {
         let tool = ToolSearchTool::new(build_tool_defs());
         let result = tool.execute(json!({"query": "nonexistent"})).await;
         assert!(!result.is_error);
-        assert!(result.content.contains("No deferred tools"));
+        assert!(result.content.contains("未找到"));
     }
 
     #[tokio::test]

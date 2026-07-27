@@ -92,7 +92,7 @@ fn incomplete_response(event: &Value, state: &mut StreamState) -> Vec<LlmEvent> 
     let reason = response
         .pointer("/incomplete_details/reason")
         .and_then(Value::as_str)
-        .unwrap_or("unknown");
+        .unwrap_or("未知");
 
     state.terminal = true;
     if reason == "max_output_tokens" {
@@ -101,7 +101,7 @@ fn incomplete_response(event: &Value, state: &mut StreamState) -> Vec<LlmEvent> 
             usage: response.get("usage").map(parse_usage).unwrap_or_default(),
         });
     } else {
-        events.push(LlmEvent::Error(format!("OpenAI response incomplete: {reason}")));
+        events.push(LlmEvent::Error(format!("OpenAI 响应不完整：{reason}")));
     }
     events
 }
@@ -113,7 +113,7 @@ fn failed_response(event: &Value, state: &mut StreamState) -> Vec<LlmEvent> {
         .pointer("/error/message")
         .and_then(Value::as_str)
         .or_else(|| response.get("error").and_then(Value::as_str))
-        .unwrap_or("OpenAI response failed");
+        .unwrap_or("OpenAI 响应失败");
     vec![LlmEvent::Error(message.to_string())]
 }
 
@@ -123,7 +123,7 @@ fn error_event(event: &Value, state: &mut StreamState) -> Vec<LlmEvent> {
         .pointer("/error/message")
         .and_then(Value::as_str)
         .or_else(|| event.get("message").and_then(Value::as_str))
-        .unwrap_or("OpenAI Responses stream error");
+        .unwrap_or("OpenAI Responses 流错误");
     vec![LlmEvent::Error(message.to_string())]
 }
 

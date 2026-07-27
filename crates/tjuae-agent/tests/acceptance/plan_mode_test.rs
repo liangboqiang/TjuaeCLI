@@ -164,27 +164,27 @@ fn tc_a3_02_plan_mode_system_prompt_injection() {
     );
 
     assert!(
-        active_prompt.contains("# Plan Mode"),
+        active_prompt.contains("# 计划模式"),
         "active prompt should contain plan mode heading"
     );
     assert!(
-        active_prompt.contains("Understand"),
+        active_prompt.contains("阶段 1：理解"),
         "active prompt should mention Phase 1: Understand"
     );
     assert!(
-        active_prompt.contains("Design"),
+        active_prompt.contains("阶段 2：设计"),
         "active prompt should mention Phase 2: Design"
     );
     assert!(
-        active_prompt.contains("Write the plan"),
+        active_prompt.contains("阶段 3：编写计划"),
         "active prompt should mention Phase 3: Write the plan"
     );
     assert!(
-        active_prompt.contains("Submit for review"),
+        active_prompt.contains("阶段 4：提交审核"),
         "active prompt should mention Phase 4: Submit for review"
     );
     assert!(
-        active_prompt.contains("Forbidden"),
+        active_prompt.contains("禁止的操作"),
         "active prompt should mention forbidden actions"
     );
     assert!(
@@ -206,11 +206,11 @@ fn tc_a3_02_plan_mode_system_prompt_injection() {
     );
 
     assert!(
-        !inactive_prompt.contains("# Plan Mode"),
+        !inactive_prompt.contains("# 计划模式"),
         "inactive prompt should NOT contain plan mode heading"
     );
     assert!(
-        !inactive_prompt.contains("Forbidden actions"),
+        !inactive_prompt.contains("禁止的操作"),
         "inactive prompt should NOT contain forbidden actions section"
     );
 }

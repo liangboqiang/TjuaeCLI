@@ -33,9 +33,9 @@ fn list_sessions() -> anyhow::Result<()> {
     let session_mgr = SessionManager::new(config.session.directory.clone().into(), config.session.max_sessions);
     let sessions = session_mgr.list()?;
     if sessions.is_empty() {
-        eprintln!("No saved sessions.");
+        eprintln!("没有已保存的会话。");
     } else {
-        eprintln!("{:<8} {:<12} {:<30} {:>5}  Summary", "ID", "Date", "Model", "Msgs");
+        eprintln!("{:<8} {:<12} {:<30} {:>5}  摘要", "ID", "日期", "模型", "消息数");
         for s in &sessions {
             eprintln!(
                 "{:<8} {:<12} {:<30} {:>5}  {}",

@@ -195,7 +195,7 @@ pub(crate) fn parse_sse_chunk(data: &str, state: &mut StreamState, auto_tool_id:
                             tracing::warn!(
                                 target: "tjuae_providers",
                                 tool_call_id = %id,
-                                "provider emitted tool_call with empty function name; recorded to history as-is"
+                                "提供商返回的 tool_call 函数名为空；已按原样记录到历史"
                             );
                         }
                         events.push(LlmEvent::ToolUse {

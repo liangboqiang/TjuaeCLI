@@ -76,7 +76,7 @@ impl SessionManager {
         };
         self.with_session_lock(&session.id, || {
             if self.session_exists(&session.id)? {
-                anyhow::bail!("Session ID '{}' already exists", session.id);
+                anyhow::bail!("会话 ID '{}' 已存在", session.id);
             }
             self.save_unlocked(&session)
         })?;
@@ -93,7 +93,7 @@ impl SessionManager {
     pub fn load(&self, id_or_latest: &str) -> anyhow::Result<Session> {
         if id_or_latest == "latest" {
             let sessions = self.list()?;
-            let latest = sessions.last().ok_or_else(|| anyhow::anyhow!("No sessions found"))?;
+            let latest = sessions.last().ok_or_else(|| anyhow::anyhow!("未找到会话"))?;
             return self.load(&latest.id);
         }
 
@@ -107,7 +107,7 @@ impl SessionManager {
                 return Ok(session);
             }
 
-            Err(anyhow::anyhow!("Session '{}' not found", id_or_latest))
+            Err(anyhow::anyhow!("未找到会话 '{}'", id_or_latest))
         })
     }
 
@@ -230,7 +230,7 @@ impl SessionManager {
                         target: "tjuae_agent",
                         path = %index_path.display(),
                         error = %error,
-                        "skipping invalid legacy session index"
+                        "旧版会话索引无效，已跳过"
                     );
                     Ok(None)
                 }
@@ -281,7 +281,7 @@ impl SessionManager {
                 return Ok(id);
             }
         }
-        anyhow::bail!("failed to generate unique session id")
+        anyhow::bail!("无法生成唯一会话 ID")
     }
 
     fn sessions_dir(&self) -> PathBuf {
@@ -300,7 +300,7 @@ impl SessionManager {
         let lock = session_lock(self.session_dir(session_id));
         let _guard = lock
             .lock()
-            .map_err(|_| anyhow::anyhow!("session lock poisoned for '{}'", session_id))?;
+            .map_err(|_| anyhow::anyhow!("会话 '{}' 的锁已损坏", session_id))?;
         f()
     }
 
@@ -317,7 +317,7 @@ impl SessionManager {
             let lock = session_lock(self.session_dir(&meta.id));
             let _guard = lock
                 .lock()
-                .map_err(|_| anyhow::anyhow!("session lock poisoned for '{}'", meta.id))?;
+                .map_err(|_| anyhow::anyhow!("会话 '{}' 的锁已损坏", meta.id))?;
             match fs::remove_dir_all(self.session_dir(&meta.id)) {
                 Ok(()) => {}
                 Err(error) if error.kind() == ErrorKind::NotFound => {}
@@ -356,9 +356,7 @@ fn meta_from_session(session: &Session) -> SessionMeta {
 }
 
 fn write_atomic(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
-    let parent = path
-        .parent()
-        .ok_or_else(|| anyhow::anyhow!("state path has no parent"))?;
+    let parent = path.parent().ok_or_else(|| anyhow::anyhow!("状态路径没有父目录"))?;
     fs::create_dir_all(parent)?;
     let tmp_path = path.with_extension("json.tmp");
     fs::write(&tmp_path, bytes)?;
@@ -384,7 +382,7 @@ fn read_session_file_if_valid(path: &Path) -> anyhow::Result<Option<Session>> {
                 target: "tjuae_agent",
                 path = %path.display(),
                 error = %error,
-                "skipping invalid session file"
+                "会话文件无效，已跳过"
             );
             Ok(None)
         }

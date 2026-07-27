@@ -4,15 +4,15 @@ use std::path::PathBuf;
 #[derive(Debug, thiserror::Error)]
 pub enum MemoryError {
     /// File I/O error.
-    #[error("memory I/O error: {0}")]
+    #[error("记忆 I/O 错误：{0}")]
     Io(#[from] std::io::Error),
 
     /// YAML frontmatter failed to parse.
-    #[error("failed to parse frontmatter in {path}: {source}")]
+    #[error("解析 {path} 中的 frontmatter 失败：{source}")]
     FrontmatterParse { path: PathBuf, source: serde_yaml::Error },
 
     /// Memory path failed security validation.
-    #[error("path validation failed: {0}")]
+    #[error("路径验证失败：{0}")]
     PathValidation(String),
 }
 

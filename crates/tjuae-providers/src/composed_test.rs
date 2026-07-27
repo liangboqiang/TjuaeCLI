@@ -122,7 +122,7 @@ mod tests {
 
         match &error {
             ProviderError::PromptTooLong(message) => {
-                assert!(message.contains("openai tools count 1 exceeds configured limit 0"));
+                assert!(message.contains("openai 工具数量 1 超过配置上限 0"));
             }
             other => panic!("unexpected provider error: {other}"),
         }

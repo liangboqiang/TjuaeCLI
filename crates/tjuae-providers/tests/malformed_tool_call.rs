@@ -135,7 +135,7 @@ async fn test_both_providers_produce_no_empty_name_and_no_orphan() {
         .find(|m| m["role"] == "assistant")
         .and_then(|m| m["content"].as_str())
         .expect("expected OpenAI assistant content");
-    assert!(openai_assistant_content.contains("[tool call skipped:"));
+    assert!(openai_assistant_content.contains("[已跳过工具调用："));
     assert!(openai_assistant_content.contains("arguments={}"));
 
     let an = anthropic_shared::build_messages(&messages, &ProviderCompat::anthropic_defaults());
@@ -198,7 +198,7 @@ async fn test_public_projection_downgrades_empty_id_when_auto_id_disabled() {
     let assistant = messages.iter().find(|m| m["role"] == "assistant").unwrap();
     assert!(assistant.get("tool_calls").is_none());
     let content = assistant["content"].as_str().unwrap();
-    assert!(content.contains("empty tool call id"));
+    assert!(content.contains("工具调用 ID 为空"));
     assert!(content.contains("arguments={\"command\":\"ls\"}"));
 
     let after = serde_json::to_string(&request.messages).unwrap();

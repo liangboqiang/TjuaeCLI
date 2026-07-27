@@ -15,7 +15,7 @@ impl SlashCommand for QuitCommand {
     }
 
     fn description(&self) -> &str {
-        "Exit the REPL"
+        "退出 REPL"
     }
 
     async fn execute(&self, _ctx: &mut CommandContext<'_>, _args: &str) -> anyhow::Result<CommandResult> {

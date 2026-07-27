@@ -41,7 +41,7 @@ impl LlmProvider for ComposedProvider {
             tool_count = request.tools.len(),
             max_tokens = ?request.max_tokens,
             thinking_configured = request.thinking.is_some(),
-            "provider request projected"
+            "提供商请求投影完成"
         );
 
         let transport = self.transport.clone();

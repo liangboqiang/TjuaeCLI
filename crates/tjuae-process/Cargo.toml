@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-process"
-description = "Process execution helpers for TjuaeCLI"
+description = "TjuaeCLI 的进程执行辅助组件"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

@@ -1,152 +1,150 @@
 # TjuaeCLI
 
-A Rust-based LLM tool-use agent for the command line. It connects to LLM APIs, autonomously invokes local tools (file I/O, shell, search, etc.), and completes tasks end-to-end.
+一个基于 Rust 的命令行 LLM 工具调用智能体。它连接 LLM API，自主调用文件 I/O、shell、搜索等本地工具，端到端完成任务。
 
-## Features
+## 功能
 
-- **Multi-provider** — Anthropic, OpenAI (and compatibles like DeepSeek/Ollama/Gemini), AWS Bedrock, Google Vertex AI
-- **ProviderCompat layer** — Configuration-driven compatibility for provider quirks (no hardcoded conditionals)
-- **Reasoning model support** — OpenAI `o1`/`o3` reasoning models with `reasoning_effort` control
-- **7 built-in tools** — Read, Write, Edit, Bash, Grep, Glob, Spawn (sub-agents)
-- **MCP client** — Connect to any [Model Context Protocol](https://modelcontextprotocol.io/) server (stdio / SSE / streamable-http)
-- **Dynamic MCP injection** — Host clients can inject MCP servers at runtime via the [JSON stream protocol](docs/json-stream-protocol.md)
-- **Skills** — Named prompt snippets with variable substitution, shell expansion, conditional activation, and per-skill model/permission overrides (see [docs/skills.md](docs/skills.md))
-- **Hook system** — Event-driven automation on tool lifecycle (auto-format, lint, audit)
-- **Sub-agent spawning** — Parallel task execution via the Spawn tool
-- **Session persistence** — Save and resume conversation history
-- **Persistent memory** — Project-specific memory with auto-indexing across sessions (see [docs/advanced.md](docs/advanced.md#memory-system))
-- **Plan mode** — Read-only exploration mode for designing implementation plans before coding (see [docs/advanced.md](docs/advanced.md#plan-mode))
-- **Context compression** — Three-tier automatic compaction: microcompact, autocompact, emergency (see [docs/advanced.md](docs/advanced.md#context-compression))
-- **Output compaction** — Configurable output compression (off/safe/full) with TOON encoding (see [docs/advanced.md](docs/advanced.md#output-compaction))
-- **File state cache** — LRU cache with read deduplication and write tracking
-- **Prompt caching** — Anthropic cache_control for up to 90% cost reduction
-- **Profile inheritance** — Named profiles with `extends` for quick provider/model switching
-- **OAuth login** — Use Claude.ai subscription directly, no API key needed
-- **AGENTS.md injection** — Hierarchical loading of project instructions with @include support
+- **多提供商支持**——Anthropic、OpenAI（以及 DeepSeek、Ollama、Gemini 等兼容服务）、AWS Bedrock、Google Vertex AI
+- **ProviderCompat 层**——通过配置适配提供商差异，不使用硬编码条件判断
+- **推理模型支持**——支持 OpenAI `o1`/`o3` 推理模型及 `reasoning_effort` 控制
+- **8 个内置工具**——Read、Write、Edit、ExecCommand、Grep、Glob、Spawn（子智能体）和 ToolSearch
+- **MCP 客户端**——连接任意[模型上下文协议](https://modelcontextprotocol.io/)服务器（stdio / SSE / streamable-http）
+- **动态注入 MCP**——宿主客户端可通过 [JSON 流协议](docs/json-stream-protocol.md)在运行时注入 MCP 服务器
+- **技能系统**——支持变量替换、shell 展开、条件激活，以及按技能覆盖模型和权限的命名提示词片段（参见 [docs/skills.md](docs/skills.md)）
+- **钩子系统**——在工具生命周期中执行事件驱动的自动化操作（自动格式化、lint、审计）
+- **子智能体生成**——通过 Spawn 工具并行执行任务
+- **会话持久化**——保存和恢复对话历史
+- **持久记忆**——带跨会话自动索引的项目专属记忆（参见 [docs/advanced.md](docs/advanced.md#记忆系统)）
+- **计划模式**——编码前用于制定实施计划的只读探索模式（参见 [docs/advanced.md](docs/advanced.md#计划模式)）
+- **上下文压缩**——三级自动压缩：microcompact、autocompact、emergency（参见 [docs/advanced.md](docs/advanced.md#上下文压缩)）
+- **输出压缩**——支持 off/safe/full 级别和 TOON 编码的可配置输出压缩（参见 [docs/advanced.md](docs/advanced.md#输出压缩)）
+- **文件状态缓存**——支持读取去重和写入跟踪的 LRU 缓存
+- **提示词缓存**——使用 Anthropic `cache_control`，最高可降低 90% 成本
+- **配置档继承**——命名配置档通过 `extends` 快速切换提供商和模型
+- **OAuth 登录**——无需 API 密钥，直接使用 Claude.ai 订阅
+- **AGENTS.md 注入**——分层加载项目指令，支持 `@include`
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Build from source
+# 从源码构建
 cargo build --release
 
-# Generate default config, then add your API key
+# 生成默认配置，然后添加 API 密钥
 ./target/release/tjuae-cli config init
-# Edit the generated config (run `tjuae-cli config path` to find it)
+# 编辑生成的配置（运行 `tjuae-cli config path` 查看路径）
 
-# Single-shot mode
-tjuae-cli "Read Cargo.toml and explain the dependencies"
+# 单次运行模式
+tjuae-cli "读取 Cargo.toml 并解释其中的依赖"
 
-# Interactive REPL
+# 交互式 REPL
 tjuae-cli
 
-# Full CLI reference
+# 完整 CLI 帮助
 tjuae-cli --help
 ```
 
-## Runtime Limits
+## 运行限制
 
-`max_turns` is the broad model-turn limit per run. It is unset by default,
-so runs have no broad model-turn limit unless you configure one. Set it to
-`0` to explicitly disable the broad limit. `max_tool_call_malformed_turns`
-stops repeated same tool-call-malformed rounds earlier; it defaults to `3`.
-`max_tool_call_failure_turns` finalizes repeated failed tool-call patterns
-based on failed tool names and inputs, regardless of assistant text or
-successful sibling calls in the same round; it also defaults to `3`. The
-failure guard additionally detects consecutive all-error rounds and short
-repeating call cycles. Set either guard to `0` to disable that breaker and
-rely on `max_turns` if a broad turn limit is configured.
+`max_turns` 是每次运行的总体模型轮次上限。默认不设置，因此除非显式配置，
+否则运行没有总体轮次限制。设为 `0` 也可明确禁用此限制。
+`max_tool_call_malformed_turns` 会提前终止反复出现的相同工具调用格式错误，
+默认值为 `3`。`max_tool_call_failure_turns` 根据失败工具的名称和输入识别并终止
+重复失败模式，不受助手文本或同一轮中其他成功调用的影响，默认值同样为 `3`。
+失败保护还会检测连续全错误轮次和短周期重复调用。将任一保护设为 `0` 可禁用
+相应熔断器；如果已配置总体轮次限制，则改由 `max_turns` 兜底。
 
-See [Core Concepts](docs/core-concepts.md) for the distinction between runs,
-turns, tool rounds, and tool calls.
+运行、轮次、工具轮次和工具调用之间的区别参见[核心概念](docs/core-concepts.md)。
 
 ```toml
 [default]
-max_turns = 20  # optional broad model-turn limit
+max_turns = 20  # 可选的总体模型轮次上限
 max_tool_call_malformed_turns = 3
 max_tool_call_failure_turns = 3
 
-# Profile names are user-defined; this is not a built-in profile.
+# 配置档名称由用户定义；这不是内置配置档。
 [profiles.my-weak-provider]
 max_turns = 10
 max_tool_call_malformed_turns = 2
 max_tool_call_failure_turns = 2
 ```
 
-CLI override:
+CLI 覆盖参数：
 
 ```bash
-tjuae-cli --max-turns 10 "Run the task"
-tjuae-cli --max-tool-call-malformed-turns 2 "Run the task"
-tjuae-cli --max-tool-call-failure-turns 2 "Run the task"
+tjuae-cli --max-turns 10 "执行任务"
+tjuae-cli --max-tool-call-malformed-turns 2 "执行任务"
+tjuae-cli --max-tool-call-failure-turns 2 "执行任务"
 ```
 
-## Architecture
+## 架构
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                      main.rs (CLI / REPL)                    │
+│                      main.rs（CLI / REPL）                   │
 ├──────────────────────────────────────────────────────────────┤
-│  Config          │  Engine (agent loop)  │  Session Manager  │
-│  (3-level merge) │  streaming + tools    │  save / resume    │
+│  配置             │  引擎（智能体循环）   │  会话管理器        │
+│  （三级合并）     │  流式输出 + 工具      │  保存 / 恢复       │
 ├──────────────────┼───────────────────────┼───────────────────┤
-│  Providers       │  Tool Registry        │  Hook Executor    │
-│  ├ Anthropic     │  ├ Built-in (7)       │  ├ pre_tool_use   │
-│  ├ OpenAI        │  ├ MCP tools (N)      │  ├ post_tool_use  │
-│  ├ Bedrock       │  └ Plan Mode tools    │  └ stop           │
+│  提供商           │  工具注册表           │  钩子执行器         │
+│  ├ Anthropic     │  ├ 内置工具（8）      │  ├ pre_tool_use   │
+│  ├ OpenAI        │  ├ MCP 工具（N）      │  ├ post_tool_use  │
+│  ├ Bedrock       │  └ 计划模式工具       │  └ stop           │
 │  └ Vertex AI     │                       │                   │
-│                  │  MCP Client           │  Memory System    │
-│  ProviderCompat  │  ├ Stdio transport    │  (per-project)    │
-│  (compat layer)  │  ├ SSE transport      │                   │
-│                  │  └ HTTP transport     │  Sub-Agent        │
-│  Compact Engine  │                       │  Spawner          │
-│  ├ Microcompact  │  File State Cache     │                   │
-│  ├ Autocompact   │  (LRU)                │  Output Compactor │
+│                  │  MCP 客户端           │  记忆系统          │
+│  ProviderCompat  │  ├ Stdio 传输         │  （按项目）        │
+│  （兼容层）      │  ├ SSE 传输           │                   │
+│                  │  └ HTTP 传输          │  子智能体          │
+│  压缩引擎        │                       │  生成器            │
+│  ├ Microcompact  │  文件状态缓存         │                   │
+│  ├ Autocompact   │  （LRU）              │  输出压缩器        │
 │  └ Emergency     │                       │  (off/safe/full)  │
 └──────────────────┴───────────────────────┴───────────────────┘
 ```
 
-## Documentation
+## 文档
 
-| Document | Description |
+| 文档 | 说明 |
 |----------|-------------|
-| [Getting Started](docs/getting-started.md) | Installation, CLI reference, configuration, usage examples |
-| [Built-in Tools](docs/tools.md) | Detailed reference for all 7 tools |
-| [MCP Integration](docs/mcp.md) | Model Context Protocol client setup and usage |
-| [Providers & Auth](docs/providers.md) | Multi-provider config, profiles, Bedrock, Vertex, OAuth |
-| [Advanced Features](docs/advanced.md) | Sub-agents, hooks, prompt caching, VCR, AGENTS.md |
-| [Troubleshooting](docs/troubleshooting.md) | Common errors and solutions |
-| [JSON Stream Protocol](docs/json-stream-protocol.md) | Host integration protocol (`--json-stream` mode) |
+| [快速入门](docs/getting-started.md) | 安装、CLI 参考、配置和使用示例 |
+| [内置工具](docs/tools.md) | 8 个工具的详细参考 |
+| [MCP 集成](docs/mcp.md) | 模型上下文协议客户端的设置与使用 |
+| [提供商与认证](docs/providers.md) | 多提供商配置、配置档、Bedrock、Vertex 和 OAuth |
+| [高级功能](docs/advanced.md) | 子智能体、钩子、提示词缓存、VCR 和 AGENTS.md |
+| [故障排除](docs/troubleshooting.md) | 常见错误和解决方案 |
+| [JSON 流协议](docs/json-stream-protocol.md) | 宿主集成协议（`--json-stream` 模式） |
 
-## Supported Providers
+## 支持的提供商
 
-| Provider | Auth | Notes |
+| 提供商 | 认证方式 | 说明 |
 |----------|------|-------|
-| Anthropic | API Key / OAuth | Prompt caching, streaming, vision |
-| OpenAI | API Key | Reasoning models (`o1`/`o3`), compatible with DeepSeek, Qwen, Ollama, Gemini, vLLM |
-| AWS Bedrock | SigV4 | Regional endpoints, AWS credential chain, schema sanitization, actionable error hints |
-| Google Vertex AI | GCP OAuth2 / Service Account | Metadata server auto-detection |
+| Anthropic | API 密钥 / OAuth | 提示词缓存、流式输出、视觉能力 |
+| OpenAI | API 密钥 | 推理模型（`o1`/`o3`），兼容 DeepSeek、Qwen、Ollama、Gemini、vLLM |
+| AWS Bedrock | SigV4 | 区域端点、AWS 凭据链、schema 清理、可操作的错误提示 |
+| Google Vertex AI | GCP OAuth2 / 服务账户 | 自动检测元数据服务器 |
 
 ## ProviderCompat
 
-All provider-specific behaviors are driven by the `ProviderCompat` configuration layer — no hardcoded URL or model-name checks. Each provider type has sensible defaults; override any field via config:
+所有提供商专属行为均由 `ProviderCompat` 配置层驱动，不使用硬编码 URL 或模型名称判断。
+每种提供商类型都有合理默认值，也可通过配置覆盖任意字段：
 
 ```toml
 [providers.my-openai.compat]
-max_tokens_field = "max_completion_tokens"   # Field name for max tokens
-merge_assistant_messages = true              # Merge consecutive assistant messages
-clean_orphan_tool_calls = true               # Remove tool_use without tool_result
-dedup_tool_results = true                    # Deduplicate same tool_call_id results
-ensure_alternation = false                   # Insert filler for user/assistant alternation
-merge_same_role = false                      # Merge consecutive same-role messages
-sanitize_schema = false                      # Bedrock-style schema sanitization
-strip_patterns = ["<think>", "</think>"]     # Strip text patterns from history
-auto_tool_id = false                         # Auto-generate missing tool IDs
-api_path = "/v1/chat/completions"            # Custom chat completions endpoint path
+max_tokens_field = "max_completion_tokens"   # 最大 token 数对应的字段名
+merge_assistant_messages = true              # 合并连续的 assistant 消息
+clean_orphan_tool_calls = true               # 删除缺少 tool_result 的 tool_use
+dedup_tool_results = true                    # 对相同 tool_call_id 的结果去重
+ensure_alternation = false                   # 为 user/assistant 交替插入占位消息
+merge_same_role = false                      # 合并连续的同角色消息
+sanitize_schema = false                      # 使用 Bedrock 风格的 schema 清理
+strip_patterns = ["<think>", "</think>"]     # 从历史记录中删除文本模式
+auto_tool_id = false                         # 自动生成缺失的工具 ID
+api_path = "/v1/chat/completions"            # 自定义 chat completions 端点路径
 ```
 
-Provider defaults: **Anthropic/Vertex** — alternation, merge, auto tool ID; **Bedrock** — same + schema sanitization; **OpenAI** — assistant merge, orphan cleanup, dedup.
+提供商默认行为：**Anthropic/Vertex**——消息交替、合并、自动工具 ID；
+**Bedrock**——前述行为加 schema 清理；**OpenAI**——合并 assistant 消息、清理孤立工具调用、结果去重。
 
-## License
+## 许可证
 
 Apache-2.0

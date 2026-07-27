@@ -13,9 +13,8 @@ use crate::file_cache::{FileStateCache, file_mtime_ms};
 
 /// Stub returned when a file has not changed since the model last read it.
 /// Saves tokens by avoiding re-sending identical content.
-const FILE_UNCHANGED_STUB: &str = "File unchanged since last read. The content from the earlier Read \
-     tool_result in this conversation is still current — refer to that \
-     instead of re-reading.";
+const FILE_UNCHANGED_STUB: &str = "文件自上次读取后没有变化。本次对话中先前 Read 工具结果里的内容仍然有效，\
+     请直接参考该内容，不要重复读取。";
 
 pub struct ReadTool {
     file_cache: Option<Arc<RwLock<FileStateCache>>>,
@@ -37,13 +36,13 @@ impl Tool for ReadTool {
     }
 
     fn description(&self) -> &str {
-        "Reads a file from the local filesystem. Returns content with line numbers.\n\n\
-         Usage:\n\
-         - The file_path parameter must be an absolute path, not a relative path.\n\
-         - By default, it reads the entire file. Use offset and limit for partial reads on large files.\n\
-         - Results are returned with line numbers (1-based) followed by a tab and the line content.\n\
-         - Binary files return \"(binary file, N bytes)\" instead of content.\n\
-         - This tool can only read files, not directories. To list a directory, use ExecCommand with ls."
+        "从本地文件系统读取文件，并返回带行号的内容。\n\n\
+         用法：\n\
+         - file_path 参数必须是绝对路径，不能是相对路径。\n\
+         - 默认读取整个文件。读取大型文件的一部分时请使用 offset 和 limit。\n\
+         - 返回结果以从 1 开始的行号开头，行号与内容之间用制表符分隔。\n\
+         - 二进制文件返回“（二进制文件，N 字节）”，而不是文件内容。\n\
+         - 此工具只能读取文件，不能读取目录。要列出目录，请用 ExecCommand 执行 ls。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -52,15 +51,15 @@ impl Tool for ReadTool {
             "properties": {
                 "file_path": {
                     "type": "string",
-                    "description": "The absolute path to the file to read"
+                    "description": "待读取文件的绝对路径"
                 },
                 "offset": {
                     "type": "integer",
-                    "description": "Line number to start reading from (0-based)"
+                    "description": "开始读取的行号（从 0 开始）"
                 },
                 "limit": {
                     "type": "integer",
-                    "description": "Maximum number of lines to read"
+                    "description": "最多读取的行数"
                 }
             },
             "required": ["file_path"]
@@ -74,7 +73,7 @@ impl Tool for ReadTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(file_path) = input["file_path"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: file_path".to_string(),
+                content: "缺少必需参数：file_path".to_string(),
                 is_error: true,
             };
         };
@@ -105,7 +104,7 @@ impl Tool for ReadTool {
             Ok(bytes) => bytes,
             Err(e) => {
                 return ToolResult {
-                    content: format!("Failed to read file {}: {}", file_path, e),
+                    content: format!("读取文件 {} 失败：{}", file_path, e),
                     is_error: true,
                 };
             }
@@ -114,7 +113,7 @@ impl Tool for ReadTool {
         // Check if binary.
         if content.iter().take(8192).any(|&b| b == 0) {
             return ToolResult {
-                content: format!("(binary file, {} bytes)", content.len()),
+                content: format!("（二进制文件，{} 字节）", content.len()),
                 is_error: false,
             };
         }
@@ -166,8 +165,8 @@ impl Tool for ReadTool {
     }
 
     fn describe(&self, input: &Value) -> String {
-        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("unknown");
-        format!("Read {}", path)
+        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("未知");
+        format!("读取 {}", path)
     }
 }
 

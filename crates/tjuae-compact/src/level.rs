@@ -30,9 +30,7 @@ impl FromStr for CompactLevel {
             "off" => Ok(Self::Off),
             "safe" => Ok(Self::Safe),
             "full" => Ok(Self::Full),
-            other => Err(format!(
-                "unknown compaction level: '{other}' (expected: off, safe, full)"
-            )),
+            other => Err(format!("未知压缩级别：'{other}'（应为 off、safe 或 full）")),
         }
     }
 }

@@ -142,7 +142,7 @@ mod tests {
         assert!(matches!(
             error,
             ProviderError::Api { status: 400, message }
-                if message.contains("tools wire shape mismatch")
+                if message.contains("工具 wire shape 不匹配")
                     && message.contains("anthropic_input_schema")
                     && message.contains("openai_function")
         ));

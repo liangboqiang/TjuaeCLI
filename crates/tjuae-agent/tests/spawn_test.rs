@@ -201,7 +201,7 @@ async fn test_spawn_agent_error_captured() {
 
     assert!(result.is_error, "expected is_error=true");
     assert!(
-        result.text.to_lowercase().contains("error"),
+        result.text.contains("错误"),
         "expected error message to contain 'error', got: {}",
         result.text
     );

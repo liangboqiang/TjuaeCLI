@@ -151,7 +151,7 @@ async fn test_unknown_tool_returns_error() {
         ContentBlock::ToolResult { content, is_error, .. } => {
             assert!(*is_error, "unknown tool should produce is_error = true");
             assert!(
-                content.contains("Unknown tool"),
+                content.contains("未知工具"),
                 "error message should mention 'Unknown tool', got: {}",
                 content
             );
@@ -215,7 +215,7 @@ async fn test_pre_hook_blocks_tool() {
         ContentBlock::ToolResult { content, is_error, .. } => {
             assert!(*is_error, "blocked execution should produce is_error = true");
             assert!(
-                content.contains("Blocked by hook"),
+                content.contains("已被钩子阻止"),
                 "result should mention 'Blocked by hook', got: {}",
                 content
             );
@@ -287,7 +287,7 @@ async fn test_tool_result_truncation() {
                 "truncated result should be shorter than the original"
             );
             assert!(
-                content.contains("truncated"),
+                content.contains("已截断"),
                 "truncated result should contain the word 'truncated', got length {}",
                 content.len()
             );

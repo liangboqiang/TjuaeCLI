@@ -37,9 +37,8 @@ impl Tool for EnterPlanModeTool {
     }
 
     fn description(&self) -> &str {
-        "Enter plan mode to focus on reading code and creating an implementation plan. \
-         While in plan mode, only read-only tools are available. \
-         Use ExitPlanMode when your plan is ready."
+        "进入计划模式，专注于阅读代码和制定实施计划。\
+         在计划模式中只能使用只读工具。计划准备完成后使用 ExitPlanMode。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -61,15 +60,14 @@ impl Tool for EnterPlanModeTool {
     async fn execute(&self, _input: Value) -> ToolResult {
         if self.plan_active.load(Ordering::Acquire) {
             return ToolResult {
-                content: "Already in plan mode. Use ExitPlanMode to exit first.".to_string(),
+                content: "当前已处于计划模式。请先使用 ExitPlanMode 退出。".to_string(),
                 is_error: true,
             };
         }
 
         ToolResult {
-            content: "Entered plan mode. You can now only use read-only tools to explore \
-                      the codebase and create your implementation plan. When your plan is \
-                      ready, use ExitPlanMode to exit plan mode and begin implementation."
+            content: "已进入计划模式。现在只能使用只读工具探索代码库并制定实施计划。\
+                      计划准备完成后，使用 ExitPlanMode 退出计划模式并开始实施。"
                 .to_string(),
             is_error: false,
         }
@@ -87,7 +85,7 @@ impl Tool for EnterPlanModeTool {
     }
 
     fn describe(&self, _input: &Value) -> String {
-        "Enter plan mode".to_string()
+        "进入计划模式".to_string()
     }
 }
 
@@ -118,8 +116,8 @@ impl Tool for ExitPlanModeTool {
     }
 
     fn description(&self) -> &str {
-        "Exit plan mode after completing your implementation plan. \
-         This restores full tool access so you can begin implementing the plan."
+        "实施计划完成后退出计划模式。\
+         这会恢复完整的工具访问权限，以便开始实施计划。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -141,15 +139,13 @@ impl Tool for ExitPlanModeTool {
     async fn execute(&self, _input: Value) -> ToolResult {
         if !self.plan_active.load(Ordering::Acquire) {
             return ToolResult {
-                content: "Not in plan mode. Use EnterPlanMode to enter plan mode first.".to_string(),
+                content: "当前不在计划模式中。请先使用 EnterPlanMode 进入计划模式。".to_string(),
                 is_error: true,
             };
         }
 
         ToolResult {
-            content: "Exited plan mode. Full tool access has been restored. \
-                      You can now proceed with implementing the plan."
-                .to_string(),
+            content: "已退出计划模式并恢复完整工具访问权限。现在可以继续实施计划。".to_string(),
             is_error: false,
         }
     }
@@ -166,7 +162,7 @@ impl Tool for ExitPlanModeTool {
     }
 
     fn describe(&self, _input: &Value) -> String {
-        "Exit plan mode".to_string()
+        "退出计划模式".to_string()
     }
 }
 

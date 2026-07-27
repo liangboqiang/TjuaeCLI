@@ -26,7 +26,7 @@ fn system_prompt_contains_tool_guidance() {
 
     // 1. Heading
     assert!(
-        prompt.contains("# Using your tools"),
+        prompt.contains("# 使用工具"),
         "system prompt must contain the '# Using your tools' heading"
     );
 
@@ -53,17 +53,17 @@ fn system_prompt_contains_tool_guidance() {
     );
 
     // 3. Parallel call guidance
-    assert!(prompt.contains("parallel"), "should contain parallel call guidance");
+    assert!(prompt.contains("并行"), "should contain parallel call guidance");
 
     // 4. Edit-over-Write preference
     assert!(
-        prompt.contains("Prefer Edit over Write"),
+        prompt.contains("优先使用 Edit，而不是 Write"),
         "should contain Edit-over-Write preference"
     );
 
     // 5. Read-before-Edit rule
     assert!(
-        prompt.contains("Read a file before editing"),
+        prompt.contains("编辑文件前始终先使用 Read"),
         "should contain Read-before-Edit rule"
     );
 }

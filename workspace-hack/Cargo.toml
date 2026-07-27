@@ -6,7 +6,7 @@
 name = "workspace-hack"
 version = "0.1.0"
 edition = "2021"
-description = "workspace-hack package, managed by hakari"
+description = "由 hakari 管理的 workspace-hack 包"
 publish = false
 
 # The parts of the file between the BEGIN HAKARI SECTION and END HAKARI SECTION comments

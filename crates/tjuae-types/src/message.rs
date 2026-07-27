@@ -95,11 +95,11 @@ pub enum ImageUrlError {
 impl fmt::Display for ImageUrlError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidFormat => write!(f, "image URL is not a data URI with base64 payload"),
+            Self::InvalidFormat => write!(f, "图片 URL 不是包含 base64 数据的 data URI"),
             Self::UnsupportedMediaType(mime) => {
-                write!(f, "unsupported image media type: {mime}")
+                write!(f, "不支持的图片媒体类型：{mime}")
             }
-            Self::InvalidBase64 => write!(f, "image base64 payload is invalid"),
+            Self::InvalidBase64 => write!(f, "图片的 base64 数据无效"),
         }
     }
 }

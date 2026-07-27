@@ -1,15 +1,15 @@
-# MCP (Model Context Protocol) Integration
+# MCP（Model Context Protocol）集成
 
-## Overview
+## 概览
 
-MCP allows the agent to connect to external tool servers, extending beyond the 7 built-in tools to the entire MCP server ecosystem.
+MCP 允许智能体连接外部工具服务器，将 8 个内置工具扩展到整个 MCP 服务器生态。
 
-## Configuring MCP Servers
+## 配置 MCP 服务器
 
-Declare MCP servers in the config file:
+在配置文件中声明 MCP 服务器：
 
 ```toml
-# Stdio transport: launch a local subprocess
+# Stdio 传输：启动本地子进程
 [mcp.servers.filesystem]
 transport = "stdio"
 command = "npx"
@@ -22,31 +22,30 @@ args = ["-y", "@modelcontextprotocol/server-github"]
 env = { GITHUB_TOKEN = "ghp_xxx" }
 startup_timeout_ms = 30000
 
-# SSE transport: connect to a remote SSE server
+# SSE 传输：连接远程 SSE 服务器
 [mcp.servers.database]
 transport = "sse"
 url = "http://localhost:3001/sse"
 
-# Streamable HTTP transport: HTTP POST communication
+# Streamable HTTP 传输：通过 HTTP POST 通信
 [mcp.servers.remote-tools]
 transport = "streamable-http"
 url = "https://tools.example.com/mcp"
 headers = { Authorization = "Bearer xxx" }
 ```
 
-## Transport Types
+## 传输类型
 
-| Transport | Description | Use Case |
-|-----------|-------------|----------|
-| `stdio` | Launch local subprocess, communicate via stdin/stdout | Local MCP servers (npx, uvx) |
-| `sse` | GET for SSE event stream, POST for requests | Remote MCP servers |
-| `streamable-http` | HTTP POST, supports SSE streaming responses | Remote MCP servers |
+| 传输 | 说明 | 适用场景 |
+|------|------|----------|
+| `stdio` | 启动本地子进程，通过 stdin/stdout 通信 | 本地 MCP 服务器（npx、uvx） |
+| `sse` | 使用 GET 建立 SSE 事件流，使用 POST 发送请求 | 远程 MCP 服务器 |
+| `streamable-http` | 使用 HTTP POST，并支持 SSE 流式响应 | 远程 MCP 服务器 |
 
-## Startup Timeout
+## 启动超时
 
-Configured MCP servers are connected concurrently during startup. Each server
-has a startup timeout covering transport connection, `initialize`, and
-`tools/list`. The default is `30000` milliseconds.
+启动时会并发连接全部已配置的 MCP 服务器。每台服务器的启动超时涵盖传输连接、
+`initialize` 和 `tools/list`，默认值为 `30000` 毫秒。
 
 ```toml
 [mcp.servers.slow-tools]
@@ -56,37 +55,38 @@ args = ["-y", "slow-mcp-server"]
 startup_timeout_ms = 60000
 ```
 
-Increase `startup_timeout_ms` for servers that need extra time for first-run
-setup, package downloads, remote authentication, or slow network handshakes.
+若服务器首次设置、下载软件包、远程认证或网络握手需要更长时间，可增大
+`startup_timeout_ms`。
 
-## Deferred Loading
+## 延迟加载
 
-MCP tools can be registered as "deferred" — their full schema is not loaded into the system prompt at startup, reducing initial token usage. The LLM discovers deferred tools via the `ToolSearch` tool when needed.
+MCP 工具可以注册为“延迟工具”：启动时不将其完整 schema 加载到系统提示词，从而
+减少初始 token 用量。需要时，LLM 会通过 `ToolSearch` 发现延迟工具。
 
 ```toml
 [mcp.servers.large-toolset]
 transport = "stdio"
 command = "npx"
 args = ["-y", "my-mcp-server"]
-deferred = true    # Don't load tool schemas at startup
+deferred = true    # 启动时不加载工具 schema
 ```
 
-| `deferred` | Behavior |
-|------------|----------|
-| `false` (default for config servers) | Tool schemas included in system prompt at startup |
-| `true` | Tools registered but schemas loaded on-demand via ToolSearch |
+| `deferred` | 行为 |
+|------------|------|
+| `false`（配置服务器的默认值） | 启动时将工具 schema 加入系统提示词 |
+| `true` | 注册工具，但仅在需要时通过 ToolSearch 加载 schema |
 
-Use `deferred = true` for MCP servers with many tools to keep the initial system prompt small.
+对于工具数量较多的 MCP 服务器，建议设置 `deferred = true`，以缩小初始系统提示词。
 
-## Tool Naming
+## 工具命名
 
-- MCP tool names are used directly when there's no conflict
-- On conflict with built-in or other MCP tools, names are auto-prefixed: `mcp__{server}__{tool}`
+- 不存在冲突时，直接使用 MCP 工具名称。
+- 与内置工具或其他 MCP 工具重名时，自动添加前缀：`mcp__{server}__{tool}`。
 
-## Startup Flow
+## 启动流程
 
-1. Connect to all configured MCP servers
-2. Perform MCP protocol handshake (`initialize`) for each server
-3. Discover available tools (`tools/list`)
-4. Register tools in the tool registry — the agent uses them like built-in tools
-5. Gracefully close all connections on exit
+1. 连接全部已配置的 MCP 服务器。
+2. 分别执行 MCP 协议握手（`initialize`）。
+3. 发现可用工具（`tools/list`）。
+4. 将工具注册到工具注册表，智能体会像使用内置工具一样使用它们。
+5. 退出时优雅关闭全部连接。

@@ -87,7 +87,7 @@ impl OpenAiTransport {
         let mut headers = HeaderMap::new();
         let bearer = format!("Bearer {}", self.api_key);
         let auth = HeaderValue::from_str(&bearer)
-            .map_err(|error| ProviderError::Connection(format!("Invalid authorization header: {error}")))?;
+            .map_err(|error| ProviderError::Connection(format!("无效的 authorization 请求头：{error}")))?;
         headers.insert(AUTHORIZATION, auth);
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
@@ -122,7 +122,7 @@ impl AnthropicTransport {
     ) -> Result<ProjectedHttpRequest, ProviderError> {
         let mut headers = HeaderMap::new();
         let api_key = HeaderValue::from_str(&self.api_key)
-            .map_err(|error| ProviderError::Connection(format!("Invalid x-api-key header: {error}")))?;
+            .map_err(|error| ProviderError::Connection(format!("无效的 x-api-key 请求头：{error}")))?;
         headers.insert("x-api-key", api_key);
         headers.insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -348,11 +348,7 @@ async fn inspect_success_json_response(
         && let Some(error) = map_success_json_error(&body, &body_bytes)
     {
         let provider_status = provider_error_status(&error);
-        tracing::warn!(
-            http_status,
-            provider_status,
-            "provider returned a JSON error with a successful HTTP status"
-        );
+        tracing::warn!(http_status, provider_status, "提供商在 HTTP 状态成功时返回了 JSON 错误");
         return Err(error);
     }
 
@@ -377,7 +373,7 @@ fn map_success_json_error(body: &Value, body_bytes: &[u8]) -> Option<ProviderErr
         .or_else(|| body.get("message").and_then(Value::as_str))
         .map(str::trim)
         .filter(|message| !message.is_empty())
-        .unwrap_or("Provider returned a JSON error response without a message")
+        .unwrap_or("提供商返回了不含消息的 JSON 错误响应")
         .to_string();
 
     match status {
@@ -387,7 +383,7 @@ fn map_success_json_error(body: &Value, body_bytes: &[u8]) -> Option<ProviderErr
         }),
         Some(status) => Some(ProviderError::Api { status, message }),
         None if body.get("error").is_some() => Some(ProviderError::Parse(format!(
-            "Provider returned a JSON error response without an HTTP status: {message}"
+            "提供商返回了不含 HTTP 状态的 JSON 错误响应：{message}"
         ))),
         None => None,
     }
@@ -408,7 +404,7 @@ where
         .version(version)
         .url(url)
         .body(body)
-        .map_err(|error| ProviderError::Connection(format!("Failed to preserve provider response: {error}")))?;
+        .map_err(|error| ProviderError::Connection(format!("保存提供商响应失败：{error}")))?;
     *response.headers_mut() = headers;
     Ok(reqwest::Response::from(response))
 }

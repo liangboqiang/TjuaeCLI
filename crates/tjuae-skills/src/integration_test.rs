@@ -832,7 +832,7 @@ fn wb_4a_substitution_fallback_appended_when_no_placeholder_matched() {
     // Content has no $ARGUMENTS placeholder → fallback append
     let result = substitute_arguments("Fixed content.", Some("extra_arg"), &[], None, None);
     assert!(
-        result.ends_with("\n\nARGUMENTS: extra_arg"),
+        result.ends_with("\n\n参数：extra_arg"),
         "fallback should be appended, got: {result}"
     );
 }

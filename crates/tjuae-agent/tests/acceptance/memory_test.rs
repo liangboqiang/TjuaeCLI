@@ -49,11 +49,11 @@ fn memory_injection_into_system_prompt() {
 
     // Behavioral instructions must be present
     assert!(
-        prompt.contains("auto memory"),
+        prompt.contains("自动记忆"),
         "system prompt should contain the memory display name"
     );
     assert!(
-        prompt.contains("Memory types:"),
+        prompt.contains("记忆类型包括"),
         "system prompt should contain the compact memory type summary"
     );
 
@@ -124,11 +124,11 @@ fn memory_full_lifecycle() {
     );
 
     assert!(
-        prompt_with_memory.contains("auto memory"),
+        prompt_with_memory.contains("自动记忆"),
         "prompt should contain behavioral instructions"
     );
     assert!(
-        prompt_with_memory.contains("Memory types:"),
+        prompt_with_memory.contains("记忆类型包括"),
         "prompt should contain compact memory type summary"
     );
     assert!(
@@ -179,7 +179,7 @@ fn memory_full_lifecycle() {
     );
     // With everything removed, the index is empty — the prompt should show the empty state
     assert!(
-        prompt_after_delete.contains("currently empty"),
+        prompt_after_delete.contains("当前为空"),
         "prompt should show empty memory state after all entries are removed"
     );
 }

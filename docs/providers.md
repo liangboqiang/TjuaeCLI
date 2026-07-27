@@ -1,19 +1,20 @@
-# Providers & Authentication
+# 提供商与认证
 
-## Supported Providers
+## 支持的提供商
 
-| Provider | Auth Method | Notes |
-|----------|------------|-------|
-| Anthropic | API Key / OAuth | Prompt caching, streaming, vision |
-| OpenAI | API Key | Compatible with DeepSeek, Qwen, Ollama, vLLM |
-| AWS Bedrock | SigV4 | Regional endpoints, AWS credential chain |
-| Google Vertex AI | GCP OAuth2 / Service Account | Metadata server auto-detection |
+| 提供商 | 认证方式 | 说明 |
+|--------|----------|------|
+| Anthropic | API 密钥 / OAuth | 提示词缓存、流式输出、视觉能力 |
+| OpenAI | API 密钥 | 兼容 DeepSeek、Qwen、Ollama 和 vLLM |
+| AWS Bedrock | SigV4 | 区域端点、AWS 凭据链 |
+| Google Vertex AI | GCP OAuth2 / 服务账户 | 自动检测元数据服务器 |
 
 ---
 
-## Custom Provider Alias
+## 自定义提供商别名
 
-如果你的后端兼容某个内置 provider 的协议，可以给它定义一个自定义 alias，而不是把 `provider` 直接写成内置名字。
+如果后端兼容某个内置提供商的协议，可以为它定义自定义别名，而不必将 `provider`
+直接写成内置名称。
 
 ```toml
 [default]
@@ -28,28 +29,29 @@ base_url = "https://my-service.example.com/api/openai"
 
 规则：
 
-- `provider = "my-service"` 是配置层 alias
-- `[providers.my-service].provider` 必须指向底层内置 provider
-- 底层 provider 目前只能是 `anthropic`、`openai`、`bedrock`、`vertex`
-- alias 条目的 `model`、`api_key`、`base_url`、`compat` 会覆盖底层 provider 的默认配置
+- `provider = "my-service"` 是配置层别名。
+- `[providers.my-service].provider` 必须指向底层内置提供商。
+- 底层提供商目前只能是 `anthropic`、`openai`、`bedrock` 或 `vertex`。
+- 别名条目的 `model`、`api_key`、`base_url` 和 `compat` 会覆盖底层提供商的
+  默认配置。
 
-这适合 DeepSeek 网关、内部 OpenAI-compatible 服务这类场景。
+这种方式适用于 DeepSeek 网关、内部 OpenAI-compatible 服务等场景。
 
 ---
 
-## Profile Inheritance
+## 配置档继承
 
-Profiles support `extends` to inherit settings from another profile, avoiding duplication.
+配置档支持通过 `extends` 继承另一个配置档的设置，从而避免重复。
 
-### Configuration
+### 配置
 
 ```toml
-# Base profile
+# 基础配置档
 [profiles.base-anthropic]
 provider = "anthropic"
 api_key = "sk-ant-xxx"
 
-# Inherits base-anthropic, overrides model
+# 继承 base-anthropic 并覆盖模型
 [profiles.claude-fast]
 extends = "base-anthropic"
 model = "claude-haiku-4-5-20251001"
@@ -60,41 +62,45 @@ extends = "base-anthropic"
 model = "claude-opus-4-20250514"
 max_tokens = 16384
 
-# Profile can specify which MCP servers to use
+# 配置档可以指定要使用的 MCP 服务器
 [profiles.dev]
 extends = "base-anthropic"
 model = "claude-sonnet-4-20250514"
 mcp_servers = ["filesystem", "github"]
 
-# Profile names are user-defined; this is not a built-in profile.
+# 配置档名称由用户定义；这不是内置配置档。
 [profiles.my-weak-provider]
 extends = "base-anthropic"
 max_tool_call_malformed_turns = 2
 max_tool_call_failure_turns = 2
 ```
 
-### Usage
+### 用法
 
 ```bash
-tjuae-cli --profile claude-fast "Quick question"
-tjuae-cli --profile claude-deep "Deep security audit"
-tjuae-cli --profile dev "Create a GitHub issue"
+tjuae-cli --profile claude-fast "快速回答这个问题"
+tjuae-cli --profile claude-deep "执行深入的安全审计"
+tjuae-cli --profile dev "创建一个 GitHub issue"
 ```
 
-- Supports multi-level inheritance chains
-- Auto-detects circular inheritance
-- Child profile settings override parent
-- `max_tool_call_malformed_turns` can be set per profile. It defaults to `3`; `0` disables this tool-call-malformed round breaker and leaves stopping to `max_turns` if a broad turn limit is configured.
-- `max_tool_call_failure_turns` can be set per profile. It defaults to `3`; `0` disables this tool-call-failure round breaker and leaves stopping to `max_turns` if a broad turn limit is configured.
-- Override them for one run with `--max-tool-call-malformed-turns <n>` or `--max-tool-call-failure-turns <n>`.
+- 支持多级继承链。
+- 自动检测循环继承。
+- 子配置档的设置会覆盖父配置档。
+- 可为每个配置档设置 `max_tool_call_malformed_turns`。默认值为 `3`；设为 `0`
+  会禁用工具调用格式错误轮次熔断器。若已配置总体轮次限制，则改由 `max_turns`
+  负责终止运行。
+- 可为每个配置档设置 `max_tool_call_failure_turns`。默认值为 `3`；设为 `0`
+  会禁用工具调用失败轮次熔断器。若已配置总体轮次限制，则改由 `max_turns`
+  负责终止运行。
+- 单次运行可通过 `--max-tool-call-malformed-turns <n>` 或
+  `--max-tool-call-failure-turns <n>` 覆盖这两个值。
 
 ---
 
 ## OpenAI Responses API
 
-OpenAI providers use Chat Completions by default so existing OpenAI-compatible
-services keep the same request and streaming format. Select Responses only for
-models or endpoints that require it:
+OpenAI 提供商默认使用 Chat Completions，以便现有的 OpenAI-compatible 服务
+继续采用相同的请求和流式格式。只有模型或端点明确要求 Responses 时才启用：
 
 ```toml
 [providers.openai]
@@ -105,19 +111,18 @@ base_url = "https://api.openai.com/v1"
 openai_api_mode = "responses"
 ```
 
-The setting changes the complete wire contract: the endpoint becomes
-`/responses`, requests use `input` items and flat function tools, and typed SSE
-events are decoded into the existing provider-neutral agent events. Tool calls
-and encrypted reasoning items are persisted and replayed for subsequent tool
-rounds. `chat_completions` remains the default when the setting is omitted.
+该设置会改变完整的线协议契约：端点改为 `/responses`，请求使用 `input` 条目
+和平铺的 function tools，带类型的 SSE 事件则会解码为现有的提供商无关智能体
+事件。工具调用和加密推理条目会持久化，并在后续工具轮次中重放。省略该设置时，
+`chat_completions` 仍为默认值。
 
 ---
 
-## OpenAI-Compatible Thinking Models
+## OpenAI-compatible 思考模型
 
-Some OpenAI-compatible providers support a `thinking` request object in
-addition to, or instead of, OpenAI `reasoning_effort`. Set the compat capability
-when the provider/profile should advertise thinking support to host UIs.
+部分 OpenAI-compatible 提供商支持 `thinking` 请求对象，可与 OpenAI 的
+`reasoning_effort` 同时使用或取而代之。当提供商或配置档需要向宿主 UI 声明
+思考能力时，应设置相应的兼容能力：
 
 ```toml
 [profiles.deepseek-v4-pro]
@@ -131,14 +136,13 @@ max_tokens = 16384
 supports_thinking = true
 ```
 
-Then enable thinking from the host protocol with `set_config`, or force it for
-one startup:
+随后可以从宿主协议通过 `set_config` 启用思考，也可以在启动时强制启用：
 
 ```bash
 tjuae-cli --profile deepseek-v4-pro --thinking enabled
 ```
 
-For one-off OpenAI-compatible launches without a profile, the equivalent is:
+不使用配置档而临时启动 OpenAI-compatible 提供商时，等效命令如下：
 
 ```bash
 tjuae-cli --json-stream \
@@ -149,17 +153,17 @@ tjuae-cli --json-stream \
   --thinking enabled
 ```
 
-`--thinking-budget` only has effect together with `--thinking enabled`, and is
-only sent on the Anthropic wire path. OpenAI-compatible requests currently send
-only `thinking.type`, so any configured budget is ignored by that provider path.
+`--thinking-budget` 只有与 `--thinking enabled` 一起使用时才生效，并且只会在
+Anthropic 线协议路径中发送。OpenAI-compatible 请求目前只发送
+`thinking.type`，因此该提供商路径会忽略配置的预算。
 
 ---
 
 ## AWS Bedrock
 
-Access Claude models via AWS Bedrock with SigV4 authentication.
+通过 AWS Bedrock 和 SigV4 认证访问 Claude 模型。
 
-### Configuration
+### 配置
 
 ```toml
 [default]
@@ -167,35 +171,36 @@ provider = "bedrock"
 
 [bedrock]
 region = "us-east-1"
-# Option 1: Explicit credentials
+# 方式 1：显式凭据
 access_key_id = "AKIA..."
 secret_access_key = "..."
 # session_token = "..."
 
-# Option 2: AWS profile
+# 方式 2：AWS 配置档
 # profile = "my-profile"
 
-# Option 3: Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-# Used automatically when no credentials are configured
+# 方式 3：环境变量（AWS_ACCESS_KEY_ID、AWS_SECRET_ACCESS_KEY）
+# 未配置凭据时自动使用
 
 [profiles.bedrock-claude]
 provider = "bedrock"
 model = "anthropic.claude-sonnet-4-20250514-v1:0"
 ```
 
-### Credential Priority
+### 凭据优先级
 
-1. Explicit credentials in config file
-2. AWS profile
-3. Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`)
+1. 配置文件中的显式凭据
+2. AWS 配置档
+3. 环境变量（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、
+   `AWS_SESSION_TOKEN`）
 
 ---
 
 ## Google Vertex AI
 
-Access Claude models via Google Vertex AI with GCP OAuth2 authentication.
+通过 Google Vertex AI 和 GCP OAuth2 认证访问 Claude 模型。
 
-### Configuration
+### 配置
 
 ```toml
 [default]
@@ -205,38 +210,38 @@ provider = "vertex"
 project_id = "my-gcp-project"
 region = "us-central1"
 
-# Option 1: Service Account key file
+# 方式 1：服务账户密钥文件
 credentials_file = "/path/to/service-account.json"
 
-# Option 2: Application Default Credentials
-# Run: gcloud auth application-default login
+# 方式 2：Application Default Credentials
+# 运行：gcloud auth application-default login
 
-# Option 3: Metadata Server (auto on GCE/GKE/Cloud Run)
-# Used automatically when in GCP environments
+# 方式 3：Metadata Server（在 GCE/GKE/Cloud Run 上自动使用）
+# 位于 GCP 环境时自动使用
 
 [profiles.vertex-claude]
 provider = "vertex"
 model = "claude-sonnet-4@20250514"
 ```
 
-### Auth Methods
+### 认证方式
 
-| Method | Use Case |
-|--------|----------|
-| Service Account Key | CI/CD, server-side apps |
-| Application Default Credentials | Local development (requires gcloud CLI) |
-| Metadata Server | GCE/GKE/Cloud Run and other GCP environments |
+| 方式 | 适用场景 |
+|------|----------|
+| 服务账户密钥 | CI/CD、服务端应用 |
+| Application Default Credentials | 本地开发（需要 gcloud CLI） |
+| Metadata Server | GCE/GKE/Cloud Run 及其他 GCP 环境 |
 
 ---
 
-## OAuth Login (Claude.ai)
+## OAuth 登录（Claude.ai）
 
-Use your Claude.ai subscription (Pro/Team/Enterprise) directly — no API key needed.
+直接使用 Claude.ai Pro、Team 或 Enterprise 订阅，无需 API 密钥。
 
-### Login
+### 登录
 
-Register an OAuth client with the provider, then add its client ID to the
-global configuration file. TjuaeCLI does not bundle or guess a client ID:
+先向提供商注册 OAuth 客户端，再将客户端 ID 添加到全局配置文件。TjuaeCLI
+不会内置或猜测客户端 ID：
 
 ```toml
 [auth]
@@ -247,21 +252,20 @@ client_id = "your-registered-client-id"
 tjuae-cli auth login
 ```
 
-1. Displays an authorization URL and code
-2. Open the URL in your browser and enter the code
-3. Credentials are saved alongside the global config (run `tjuae-cli config path` to find the directory)
-4. Subsequent runs auto-load saved credentials (with auto-refresh)
+1. 命令会显示授权 URL 和代码。
+2. 在浏览器中打开 URL 并输入代码。
+3. 凭据会保存在全局配置旁边（运行 `tjuae-cli config path` 可查找目录）。
+4. 后续运行会自动加载已保存的凭据，并自动刷新。
 
-### Logout
+### 退出登录
 
 ```bash
 tjuae-cli auth logout
 ```
 
-### Configuring OAuth Endpoints
+### 配置 OAuth 端点
 
-The endpoint defaults target Claude.ai. Override them only when your registered
-client uses different endpoints:
+默认端点面向 Claude.ai。仅当已注册客户端使用不同端点时才覆盖它们：
 
 ```toml
 [auth]

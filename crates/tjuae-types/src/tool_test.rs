@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn truncate_short_description_unchanged() {
-        let desc = "Search for issues in Sentry.";
+        let desc = "Search for local project issues.";
         assert_eq!(truncate_deferred_description(desc), desc);
     }
 

@@ -10,11 +10,11 @@ mod tests {
     fn test_format_dropped_tool_call_template() {
         assert_eq!(
             format_dropped_tool_call(DroppedToolCallReason::EmptyName, &json!({})),
-            "[tool call skipped: malformed (empty function name). arguments={}. This call was not executed; re-issue with a valid name if still needed.]"
+            "[已跳过工具调用：格式错误（函数名为空）。arguments={}。该调用未执行；若仍需要，请使用有效的 name 重新发起调用。]"
         );
         assert_eq!(
             format_dropped_tool_call(DroppedToolCallReason::EmptyName, &json!({"a":1})),
-            "[tool call skipped: malformed (empty function name). arguments={\"a\":1}. This call was not executed; re-issue with a valid name if still needed.]"
+            "[已跳过工具调用：格式错误（函数名为空）。arguments={\"a\":1}。该调用未执行；若仍需要，请使用有效的 name 重新发起调用。]"
         );
     }
 
@@ -23,7 +23,7 @@ mod tests {
     fn test_format_dropped_tool_call_empty_id_template() {
         assert_eq!(
             format_dropped_tool_call(DroppedToolCallReason::EmptyId, &json!({"command":"ls"})),
-            "[tool call skipped: malformed (empty tool call id). arguments={\"command\":\"ls\"}. This call was not executed; re-issue with a valid id if still needed.]"
+            "[已跳过工具调用：格式错误（工具调用 ID 为空）。arguments={\"command\":\"ls\"}。该调用未执行；若仍需要，请使用有效的 id 重新发起调用。]"
         );
     }
 
@@ -34,7 +34,7 @@ mod tests {
         let big = "中".repeat(150);
         let out = format_dropped_tool_call(DroppedToolCallReason::EmptyId, &json!({"k": big}));
         assert!(out.contains('…'));
-        assert!(out.starts_with("[tool call skipped:"));
+        assert!(out.starts_with("[已跳过工具调用："));
         // Pin the exact 100-char truncation boundary: the args segment between
         // `arguments=` and the `…` ellipsis must be exactly 100 chars.
         let after = out.split("arguments=").nth(1).unwrap();

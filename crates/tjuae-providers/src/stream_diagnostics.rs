@@ -331,7 +331,7 @@ impl OpenAiStreamDiagnostics {
                     incomplete_stream = assessment.incomplete_stream,
                     malformed_json = assessment.malformed_json,
                     unexpected_finish_reason = assessment.unexpected_finish_reason,
-                    "provider stream response shape"
+                    "提供商流响应结构"
                 );
             };
         }

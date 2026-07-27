@@ -15,7 +15,7 @@ use crate::json_stream;
 /// mode or bootstraps a terminal engine and runs a single prompt / REPL.
 pub(crate) async fn run_main_flow(cli: Cli) -> anyhow::Result<()> {
     if cli.resume.is_some() && cli.session_id.is_some() {
-        anyhow::bail!("Cannot use --resume and --session-id together");
+        anyhow::bail!("--resume 与 --session-id 不能同时使用");
     }
 
     let terminal = Arc::new(TerminalSink::new(cli.no_color));
@@ -36,7 +36,7 @@ pub(crate) async fn run_main_flow(cli: Cli) -> anyhow::Result<()> {
 
     let result = build_engine(config, &cwd, output.clone(), cli.resume.as_deref(), |session| {
         terminal_for_resume.formatter().session_info(&format!(
-            "Resumed session {} ({} messages, {} model)",
+            "已恢复会话 {}（{} 条消息，模型 {}）",
             session.id,
             session.messages.len(),
             session.model

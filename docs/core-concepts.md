@@ -1,19 +1,18 @@
-# Core Concepts
+# 核心概念
 
-This document defines the runtime units used by TjuaeCLI. These terms matter
-because user-facing protocol events, model calls, and tool execution operate at
-different levels.
+本文定义 TjuaeCLI 使用的运行时单位。用户可见的协议事件、模型调用和工具执行工作
+在不同层级，因此必须准确区分这些术语。
 
-## Runtime Units
+## 运行时单位
 
-| Term                        | Meaning                                                                                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Run**                     | One user prompt or host `message` command, from `stream_start` to `stream_end`. This is one `AgentEngine::run(...)` execution.                   |
-| **Turn**                    | One LLM round trip inside a run: build request, call `provider.stream(...)`, consume the stream.                                                  |
-| **Tool round**              | The optional batch of tool work requested by one turn. A turn has either zero or one tool round.                                                  |
-| **Tool call + Tool result** | One tool request and the matching tool result returned to the model.                                                                              |
+| 术语 | 含义 |
+|------|------|
+| **运行（Run）** | 一条用户提示或宿主 `message` 命令，从 `stream_start` 开始，到 `stream_end` 结束，对应一次 `AgentEngine::run(...)` 执行。 |
+| **轮次（Turn）** | 一次运行中的一轮 LLM 往返：构建请求、调用 `provider.stream(...)`、消费响应流。 |
+| **工具轮次（Tool round）** | 一个模型轮次可选请求的一批工具工作。每个轮次包含零个或一个工具轮次。 |
+| **工具调用 + 工具结果** | 一条工具请求和返回给模型的对应工具结果。 |
 
-The multiplicity is:
+数量关系如下：
 
 ```text
 run 1:N turn
@@ -22,122 +21,120 @@ tool_round 1:N tool_call_result_pair
 tool_call_result_pair = tool_call + tool_result
 ```
 
-The internal loop is an implementation detail inside one run. It repeats turns
-until the model produces a final answer, the user aborts, or a runtime guard
-stops the run.
+内部循环是一次运行中的实现细节。它会不断执行模型轮次，直到模型给出最终答案、
+用户中止，或运行时保护条件终止本次运行。
 
-## Diagram
+## 时序图
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant C as Client
+    participant U as 用户
+    participant C as 客户端
     participant E as AgentEngine
-    participant T as Tools
-    participant L as LLM Provider
+    participant T as 工具
+    participant L as LLM 提供商
 
     rect rgb(232, 243, 255)
-    Note over U,L: run: one prompt / message command, from stream_start to stream_end
-    U->>C: prompt
+    Note over U,L: run：一条提示/message 命令，从 stream_start 到 stream_end
+    U->>C: 提示
     C->>E: AgentEngine::run(...)
     E->>C: stream_start
 
-    loop turn: at most max_turns per run
+    loop turn：每次运行最多 max_turns 个
         rect rgb(255, 245, 217)
-            Note over E,L: turn: one provider.stream(request)
+            Note over E,L: turn：一次 provider.stream(request)
             E->>L: stream(request)
 
-            alt model returns final text
-                L-->>E: final text / done(end_turn)
+            alt 模型返回最终文本
+                L-->>E: 最终文本 / done(end_turn)
                 E->>C: text_delta...
                 E->>C: stream_end
-            else model returns tool_calls
+            else 模型返回 tool_calls
                 L-->>E: tool_use call_1, call_2...
                 rect rgb(245, 232, 255)
-                    Note over E,T: tool_round: one batch of tool calls in the same turn
+                    Note over E,T: tool_round：同一轮次中的一批工具调用
                     par tool_call #1
-                        E->>T: call tool #1
-                        T-->>E: result #1
+                        E->>T: 调用工具 #1
+                        T-->>E: 结果 #1
                     and tool_call #2
-                        E->>T: call tool #2
-                        T-->>E: result #2
+                        E->>T: 调用工具 #2
+                        T-->>E: 结果 #2
                     and tool_call #N
-                        E->>T: call tool #N
-                        T-->>E: result #N
+                        E->>T: 调用工具 #N
+                        T-->>E: 结果 #N
                     end
                 end
 
-                E->>E: push Assistant(tool_calls)
-                E->>E: push User(tool_results)
-                Note over E: enter next turn
+                E->>E: 追加 Assistant(tool_calls)
+                E->>E: 追加 User(tool_results)
+                Note over E: 进入下一轮
             end
         end
     end
 
-    Note over U,L: run ends
+    Note over U,L: run 结束
     end
 ```
 
-## Example
+## 示例
 
-If a user asks TjuaeCLI to inspect and edit a file, one run might contain:
-
-```text
-Turn 1:
-  The model asks for Read and Grep.
-  The engine executes one tool round with two tool call/result pairs.
-
-Turn 2:
-  The model asks for Edit.
-  The engine executes one tool round with one tool call/result pair.
-
-Turn 3:
-  The model returns final text with no tool calls.
-  The engine emits stream_end.
-```
-
-That run had:
+若用户要求 TjuaeCLI 检查并编辑一个文件，一次运行可能包含：
 
 ```text
-turns: 3
-tool rounds: 2
-tool call/result pairs: 3
+轮次 1：
+  模型请求 Read 和 Grep。
+  引擎执行一个工具轮次，其中有两组工具调用/结果。
+
+轮次 2：
+  模型请求 Edit。
+  引擎执行一个工具轮次，其中有一组工具调用/结果。
+
+轮次 3：
+  模型返回最终文本，不再调用工具。
+  引擎发出 stream_end。
 ```
 
-## Runtime Limit Semantics
+这次运行共包含：
 
-`max_turns` is the broad non-convergence limit for one run. It is unset by
-default, so runs have no broad model-turn limit unless you configure one:
+```text
+模型轮次：3
+工具轮次：2
+工具调用/结果组：3
+```
+
+## 运行时限制语义
+
+`max_turns` 是一次运行避免无法收敛的总体限制。默认不设置，因此除非显式配置，
+运行不会受到总体模型轮次限制：
 
 ```toml
 max_turns = 20
 ```
 
-means:
+含义是：
 
 ```text
-max model turns per run = 20
+每次运行最多 20 个模型轮次
 ```
 
-Omitting `max_turns` or setting `max_turns = 0` disables this broad turn limit.
+省略 `max_turns` 或设置 `max_turns = 0` 会禁用该总体轮次限制。
 
-The limit applies to turns, not individual tool calls. If one turn requests
-three tools, that consumes:
+该限制作用于模型轮次，而不是单个工具调用。若一个轮次请求三个工具，则消耗：
 
 ```text
-turns: 1
-tool rounds: 1
-tool call/result pairs: 3
+模型轮次：1
+工具轮次：1
+工具调用/结果组：3
 ```
 
-This keeps long but productive tool batches from exhausting the turn budget too
-quickly while still bounding the number of model round trips in one run.
+这样既不会让耗时较长但有效的工具批次过快耗尽轮次预算，又能限制一次运行中的模型
+往返次数。
 
-## Public Names
+## 公共名称
 
-| Name                             | Meaning                                      |
-| -------------------------------- | -------------------------------------------- |
-| `max_turns`                      | Maximum model turns per run.                 |
-| `AgentResult.turns`              | Number of counted normal turns in the run.   |
-| `StopReason::MaxTurns`           | The run hit the turn limit.                  |
-| Terminal output `[turns: N ...]` | Number of model turns completed in the run.  |
+| 名称 | 含义 |
+|------|------|
+| `max_turns` | 每次运行允许的最大模型轮次数。 |
+| `AgentResult.turns` | 本次运行中计数的普通轮次数。 |
+| `StopReason::MaxTurns` | 本次运行达到轮次上限。 |
+| 终端输出 `[轮次：N ...]` | 本次运行已经完成的模型轮次数。 |

@@ -42,11 +42,11 @@ fn tc_5_2_line_truncation() {
     assert!(result.was_truncated);
     assert_eq!(result.line_count, 250);
     // Warning should mention line count
-    assert!(result.content.contains("250 lines"));
-    assert!(result.content.contains("WARNING"));
+    assert!(result.content.contains("250 行"));
+    assert!(result.content.contains("警告"));
 
     // Only first 200 lines should be present (before warning)
-    let before_warning = result.content.split("\n\n> WARNING:").next().unwrap();
+    let before_warning = result.content.split("\n\n> 警告：").next().unwrap();
     let output_lines: Vec<&str> = before_warning.lines().collect();
     assert_eq!(output_lines.len(), 200);
     assert!(output_lines[0].contains("Memory 0"));
@@ -69,7 +69,7 @@ fn tc_5_3_byte_truncation() {
     assert!(result.was_truncated);
     assert_eq!(result.line_count, 100);
     // Warning should mention byte size and "too long"
-    assert!(result.content.contains("index entries are too long"));
+    assert!(result.content.contains("索引条目过长"));
     assert!(result.content.contains("KB"));
 }
 
@@ -89,7 +89,7 @@ fn tc_5_4_both_limits() {
     assert!(result.was_truncated);
     assert_eq!(result.line_count, 300);
     // Warning should mention both
-    assert!(result.content.contains("300 lines"));
+    assert!(result.content.contains("300 行"));
     assert!(result.content.contains("KB"));
 }
 
@@ -161,7 +161,7 @@ fn tc_5_9_single_long_line() {
 
     assert!(result.was_truncated);
     // Should truncate at MAX_INDEX_BYTES since there's no newline
-    let before_warning = result.content.split("\n\n> WARNING:").next().unwrap();
+    let before_warning = result.content.split("\n\n> 警告：").next().unwrap();
     assert_eq!(before_warning.len(), index::MAX_INDEX_BYTES);
 }
 

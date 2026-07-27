@@ -21,7 +21,7 @@ fn make_cache() -> Arc<RwLock<FileStateCache>> {
     Arc::new(RwLock::new(FileStateCache::new(&config)))
 }
 
-const UNCHANGED_MARKER: &str = "File unchanged since last read";
+const UNCHANGED_MARKER: &str = "文件自上次读取后没有变化";
 
 /// TC-5.3-01: First read returns full content with line numbers.
 #[tokio::test]
@@ -167,7 +167,7 @@ async fn tc_5_3_06_nonexistent_file_error_no_cache() {
     let result = tool.execute(input).await;
 
     assert!(result.is_error);
-    assert!(result.content.contains("Failed to read file"));
+    assert!(result.content.contains("读取文件"));
 
     // Cache should remain empty.
     let c = cache.read().unwrap();

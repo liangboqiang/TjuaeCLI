@@ -124,7 +124,7 @@ async fn case_3_full_folds_and_compacts() {
 
     assert!(!content.contains("\x1b"), "Full should strip ANSI");
     assert!(
-        content.contains("similar lines") || content.contains("identical lines"),
+        content.contains("行相似内容") || content.contains("行相同内容"),
         "Full should fold repeated lines: {content}"
     );
     assert!(
@@ -278,7 +278,7 @@ async fn case_6_compressed_content_reaches_llm() {
                 );
                 assert!(!content.contains("\x1b"), "LLM should not see ANSI escapes");
                 assert!(
-                    content.contains("similar lines") || content.contains("identical lines"),
+                    content.contains("行相似内容") || content.contains("行相同内容"),
                     "LLM should see folded lines: {content}"
                 );
                 found_tool_result = true;
@@ -323,7 +323,7 @@ async fn case_7_runtime_compaction_switch() {
     assert!(content_off.contains("\x1b"), "Off should preserve ANSI");
     assert!(!content_full.contains("\x1b"), "Full should strip ANSI");
     assert!(
-        content_full.contains("similar lines") || content_full.contains("identical lines"),
+        content_full.contains("行相似内容") || content_full.contains("行相同内容"),
         "Full should fold lines"
     );
 
@@ -381,7 +381,7 @@ fn case_8_toon_system_prompt_injection() {
         "TOON enabled: system prompt should mention TOON"
     );
     assert!(
-        prompt_on.contains("Token-Oriented Object Notation"),
+        prompt_on.contains("面向 token 的对象表示法"),
         "should contain full TOON description"
     );
 

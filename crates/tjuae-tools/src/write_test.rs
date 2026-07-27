@@ -70,7 +70,7 @@ mod tests {
         });
         let result1 = tool.execute(input1).await;
         assert!(!result1.is_error);
-        assert!(result1.content.contains("Created"));
+        assert!(result1.content.contains("已创建"));
 
         let input2 = json!({
             "file_path": file_path.to_str().unwrap(),
@@ -78,7 +78,7 @@ mod tests {
         });
         let result2 = tool.execute(input2).await;
         assert!(!result2.is_error);
-        assert!(result2.content.contains("Updated"));
+        assert!(result2.content.contains("已更新"));
 
         assert_eq!(std::fs::read_to_string(&file_path).unwrap(), "replaced");
     }

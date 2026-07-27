@@ -104,21 +104,18 @@ impl SkillPermissionChecker {
 fn build_ask_reason(skill: &SkillMetadata) -> String {
     match (skill.hooks_raw.is_some(), !skill.allowed_tools.is_empty()) {
         (true, true) => format!(
-            "Skill '{}' declares hooks and allowed-tools which grant elevated privileges.",
+            "技能 '{}' 声明了 hooks 和 allowed-tools，会获得提升的权限。",
             skill.name
         ),
-        (true, false) => format!(
-            "Skill '{}' declares hooks which may run arbitrary shell commands.",
-            skill.name
-        ),
+        (true, false) => format!("技能 '{}' 声明了 hooks，可能运行任意 shell 命令。", skill.name),
         (false, true) => format!(
-            "Skill '{}' declares allowed-tools ({}) which grant elevated tool access.",
+            "技能 '{}' 声明了 allowed-tools（{}），会获得提升的工具访问权限。",
             skill.name,
             skill.allowed_tools.join(", ")
         ),
         (false, false) => {
             // Should not reach here (safe-properties would have allowed), but be defensive.
-            format!("Skill '{}' requires user approval.", skill.name)
+            format!("技能 '{}' 需要用户批准。", skill.name)
         }
     }
 }

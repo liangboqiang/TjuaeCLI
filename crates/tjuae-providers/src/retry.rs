@@ -17,7 +17,7 @@ where
         match f().await {
             Ok(val) => return Ok(val),
             Err(e) if e.is_retryable() && attempt < max_retries => {
-                tracing::warn!(attempt = attempt + 1, max_retries, error = %e, "retrying request");
+                tracing::warn!(attempt = attempt + 1, max_retries, error = %e, "正在重试请求");
                 tokio::time::sleep(backoff).await;
                 backoff = (backoff * 2).min(Duration::from_secs(30));
             }
@@ -56,7 +56,7 @@ where
                     attempt = attempt + 1,
                     max_retries = MAX_INITIAL_CONNECT_RETRIES,
                     error = %e,
-                    "retrying initial provider request after connect failure"
+                    "连接失败后正在重试初始提供商请求"
                 );
                 tokio::time::sleep(backoff).await;
                 backoff = (backoff * 2).min(MAX_INITIAL_CONNECT_BACKOFF);
@@ -91,7 +91,7 @@ where
                         attempt = attempt + 1,
                         max_retries,
                         status,
-                        "retrying initial provider request after server error"
+                        "服务器出错后正在重试初始提供商请求"
                     );
                     tokio::time::sleep(*backoff).await;
                 }
@@ -140,11 +140,7 @@ pub async fn send_and_check(
 /// Sleep with exponential backoff and log the retry attempt.
 /// Returns the next backoff duration.
 pub async fn backoff_sleep(attempt: u32, current_backoff: Duration) -> Duration {
-    tracing::warn!(
-        attempt,
-        max = MAX_STREAM_RETRIES,
-        "retrying stream after mid-stream disconnect"
-    );
+    tracing::warn!(attempt, max = MAX_STREAM_RETRIES, "流传输中途断开后正在重试");
     tokio::time::sleep(current_backoff).await;
     (current_backoff * 2).min(MAX_BACKOFF)
 }

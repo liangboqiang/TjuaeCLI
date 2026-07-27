@@ -25,7 +25,7 @@ mod tests {
         let err = MemoryError::PathValidation("relative path".into());
         let msg = err.to_string();
         assert!(msg.contains("relative path"), "should contain reason: {msg}");
-        assert!(msg.contains("validation"), "should mention validation: {msg}");
+        assert!(msg.contains("路径验证"), "should mention validation: {msg}");
     }
 
     #[test]

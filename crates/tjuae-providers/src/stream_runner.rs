@@ -93,7 +93,7 @@ where
                         attempt,
                         max_stream_retries = policy.max_stream_retries,
                         error = %final_err,
-                        "retrying stream after empty stream failure"
+                        "空流失败后正在重试流传输"
                     );
                     tokio::time::sleep(backoff).await;
                     backoff = (backoff * 2).min(Duration::from_secs(15));

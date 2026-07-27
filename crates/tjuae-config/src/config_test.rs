@@ -104,7 +104,7 @@ mod tests {
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("my-service"));
         assert!(msg.contains("provider"));
-        assert!(msg.contains("built-in type"));
+        assert!(msg.contains("内置类型"));
     }
 
     // -------------------------------------------------------------------------
@@ -264,7 +264,7 @@ mod tests {
 
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("Circular profile inheritance"));
+        assert!(msg.contains("检测到配置档循环继承"));
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod tests {
         // We can only assert the error path reliably when the OAuth file is absent.
         if let Err(e) = result {
             let msg = e.to_string();
-            assert!(msg.contains("No API key found") || msg.contains("OAuth"));
+            assert!(msg.contains("未找到 API 密钥") || msg.contains("OAuth"));
         }
         // If OAuth credentials exist on the test machine, the function returns Ok("").
         // Both outcomes are correct; the important invariant is no panic.
@@ -798,7 +798,7 @@ base_url = "https://my-service.example.com/api/openai"
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("my-db"));
         assert!(msg.contains("mysql"));
-        assert!(msg.contains("not a built-in provider"));
+        assert!(msg.contains("不是内置提供商"));
     }
 
     #[test]
@@ -809,7 +809,7 @@ base_url = "https://my-service.example.com/api/openai"
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("nonexistent"));
-        assert!(msg.contains("built-in provider"));
+        assert!(msg.contains("内置提供商"));
         assert!(msg.contains("[providers.nonexistent]"));
     }
 
@@ -1338,7 +1338,7 @@ supports_thinking = false
 
         let err = Config::resolve(&cli).unwrap_err().to_string();
 
-        assert!(err.contains("Invalid --thinking value"));
+        assert!(err.contains("无效的 --thinking 值"));
     }
 
     #[test]

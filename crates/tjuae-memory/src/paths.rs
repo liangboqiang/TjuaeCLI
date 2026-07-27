@@ -115,22 +115,22 @@ pub fn validate_memory_path(path: &Path) -> Result<PathBuf> {
     let path_str = path.to_string_lossy();
 
     if !path.is_absolute() {
-        return Err(MemoryError::PathValidation("path must be absolute".into()));
+        return Err(MemoryError::PathValidation("路径必须是绝对路径".into()));
     }
 
     // Count only Normal segments (skip Prefix, RootDir) so the threshold is
     // consistent across platforms: Unix `/a` → 1 Normal, Windows `C:\a` → 1 Normal.
     let depth = path.components().filter(|c| matches!(c, Component::Normal(_))).count();
     if depth < 2 {
-        return Err(MemoryError::PathValidation("path is too short".into()));
+        return Err(MemoryError::PathValidation("路径过短".into()));
     }
 
     if path_str.contains('\0') {
-        return Err(MemoryError::PathValidation("path contains null byte".into()));
+        return Err(MemoryError::PathValidation("路径包含空字节".into()));
     }
 
     if contains_traversal(&path_str) {
-        return Err(MemoryError::PathValidation("path contains traversal (..)".into()));
+        return Err(MemoryError::PathValidation("路径包含目录穿越（..）".into()));
     }
 
     Ok(normalize_lexical(path))

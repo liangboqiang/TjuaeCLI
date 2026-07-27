@@ -41,7 +41,7 @@ async fn rejects_file_with_image_extension_but_invalid_content() {
     let output = tool.execute_with_follow_up(json!({ "file_path": path })).await;
 
     assert!(output.result.is_error);
-    assert!(output.result.content.contains("File content is not a supported"));
+    assert!(output.result.content.contains("文件内容不是受支持的"));
     assert!(output.follow_up_blocks.is_empty());
 }
 
@@ -55,7 +55,7 @@ async fn rejects_image_content_that_does_not_match_extension() {
     let output = tool.execute_with_follow_up(json!({ "file_path": path })).await;
 
     assert!(output.result.is_error);
-    assert!(output.result.content.contains("does not match extension type"));
+    assert!(output.result.content.contains("与扩展名类型"));
     assert!(output.follow_up_blocks.is_empty());
 }
 
@@ -68,7 +68,7 @@ async fn rejects_relative_paths_without_follow_up() {
         .await;
 
     assert!(output.result.is_error);
-    assert!(output.result.content.contains("absolute path"));
+    assert!(output.result.content.contains("必须是绝对路径"));
     assert!(output.follow_up_blocks.is_empty());
 }
 
@@ -82,6 +82,6 @@ async fn rejects_unsupported_image_extensions() {
     let output = tool.execute_with_follow_up(json!({ "file_path": path })).await;
 
     assert!(output.result.is_error);
-    assert!(output.result.content.contains("Unsupported image extension"));
+    assert!(output.result.content.contains("不支持的图片扩展名"));
     assert!(output.follow_up_blocks.is_empty());
 }

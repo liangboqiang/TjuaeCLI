@@ -33,7 +33,7 @@ async fn read_file(tool: &ReadTool, path: &Path) {
     assert!(!r.is_error, "read failed: {}", r.content);
 }
 
-const UNCHANGED_MARKER: &str = "File unchanged since last read";
+const UNCHANGED_MARKER: &str = "文件自上次读取后没有变化";
 
 // ==========================================================================
 // TC-5.4: EditTool guard and staleness detection
@@ -82,7 +82,7 @@ async fn tc_5_4_02_edit_without_read() {
 
     assert!(result.is_error, "Edit without Read should fail");
     assert!(
-        result.content.contains("must Read"),
+        result.content.contains("必须先读取"),
         "Error should mention 'must Read': {}",
         result.content
     );
@@ -116,7 +116,7 @@ async fn tc_5_4_03_external_modification_detected() {
 
     assert!(result.is_error, "Edit of externally modified file should fail");
     assert!(
-        result.content.contains("modified externally"),
+        result.content.contains("已被外部修改"),
         "Error should mention external modification: {}",
         result.content
     );

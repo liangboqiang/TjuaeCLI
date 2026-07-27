@@ -7,8 +7,8 @@ pub(crate) enum DroppedToolCallReason {
 impl DroppedToolCallReason {
     fn description(self) -> &'static str {
         match self {
-            DroppedToolCallReason::EmptyName => "empty function name",
-            DroppedToolCallReason::EmptyId => "empty tool call id",
+            DroppedToolCallReason::EmptyName => "函数名为空",
+            DroppedToolCallReason::EmptyId => "工具调用 ID 为空",
         }
     }
 
@@ -28,8 +28,8 @@ impl DroppedToolCallReason {
 
     pub(crate) fn short_placeholder(self) -> &'static str {
         match self {
-            DroppedToolCallReason::EmptyName => "[tool call skipped: malformed (empty function name).]",
-            DroppedToolCallReason::EmptyId => "[tool call skipped: malformed (empty tool call id).]",
+            DroppedToolCallReason::EmptyName => "[已跳过工具调用：格式错误（函数名为空）。]",
+            DroppedToolCallReason::EmptyId => "[已跳过工具调用：格式错误（工具调用 ID 为空）。]",
         }
     }
 }
@@ -42,7 +42,7 @@ pub(crate) fn format_dropped_tool_call(reason: DroppedToolCallReason, input: &se
     let raw = serde_json::to_string(input).unwrap_or_default();
     let args = truncate_chars(&raw, 100);
     format!(
-        "[tool call skipped: malformed ({}). arguments={}. This call was not executed; re-issue with a valid {} if still needed.]",
+        "[已跳过工具调用：格式错误（{}）。arguments={}。该调用未执行；若仍需要，请使用有效的 {} 重新发起调用。]",
         reason.description(),
         args,
         reason.reissue_field()

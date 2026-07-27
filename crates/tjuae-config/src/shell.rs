@@ -80,13 +80,11 @@ fn default_shell_default() -> String {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ShellError {
-    #[error(
-        "unsupported shell '{0}'; supported shells are auto, pwsh, powershell, cmd, bash, zsh, sh, or a path to one of those executables"
-    )]
+    #[error("不支持的 shell '{0}'；支持 auto、pwsh、powershell、cmd、bash、zsh、sh，或这些可执行文件的路径")]
     UnsupportedShell(String),
-    #[error("configured shell '{0}' was recognized as {1}, but no executable was found")]
+    #[error("配置的 shell '{0}' 被识别为 {1}，但未找到可执行文件")]
     ShellUnavailable(String, &'static str),
-    #[error("configured shell path '{0}' does not exist or is not a file")]
+    #[error("配置的 shell 路径 '{0}' 不存在或不是文件")]
     PathUnavailable(String),
 }
 
@@ -97,7 +95,7 @@ pub fn resolve_shell_config(config: &ShellConfig) -> Result<ResolvedShell, Shell
             target: "tjuae_config::shell",
             shell_kind = shell.kind.name(),
             shell_path = %shell.path.display(),
-            "resolved configured shell"
+            "已解析配置的 shell"
         );
     }
     shell
@@ -116,7 +114,7 @@ pub fn resolve_shell(requested: Option<&str>) -> Result<ResolvedShell, ShellErro
                 target: "tjuae_config::shell",
                 requested_shell = requested,
                 shell_kind = kind.name(),
-                "configured shell executable was not found"
+                "未找到配置的 shell 可执行文件"
             );
             ShellError::ShellUnavailable(requested.to_string(), kind.name())
         });
@@ -140,7 +138,7 @@ pub fn default_shell() -> ResolvedShell {
         target: "tjuae_config::shell",
         shell_kind = shell.kind.name(),
         shell_path = %shell.path.display(),
-        "resolved default shell"
+        "已解析默认 shell"
     );
     shell
 }
@@ -169,7 +167,7 @@ pub async fn shell_command(command_str: &str) -> std::io::Result<Output> {
 
 pub fn render_shell_prompt(shell: &ResolvedShell) -> String {
     format!(
-        "Default shell: {}\nShell path: {}\nShell syntax: {}",
+        "默认 shell：{}\nShell 路径：{}\nShell 语法：{}",
         shell.kind.name(),
         shell.path.display(),
         shell.kind.syntax_label()

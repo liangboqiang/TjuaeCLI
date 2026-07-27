@@ -198,7 +198,7 @@ mod tests {
         };
         let message = err.to_string();
         assert!(
-            message.contains(&format!("Hook timed out after {timeout_ms}ms")),
+            message.contains(&format!("钩子在 {timeout_ms} 毫秒后超时")),
             "timeout message missing: {message}"
         );
         assert!(

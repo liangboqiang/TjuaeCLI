@@ -141,7 +141,7 @@ mod tests_set_config {
         let changes = engine.apply_config_update(Some("text-model".into()), None, None, None, None, None);
 
         assert_eq!(engine.compat.image_input(), ImageInputCapability::Unknown);
-        assert!(changes.iter().any(|change| change.contains("image input")));
+        assert!(changes.iter().any(|change| change.contains("图片输入")));
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests_set_config {
 
         assert_eq!(engine.model, "vision-model");
         assert_eq!(engine.compat.image_input(), ImageInputCapability::Supported);
-        assert!(changes.iter().any(|change| change.contains("image input")));
+        assert!(changes.iter().any(|change| change.contains("图片输入")));
     }
 
     // --- Cycle 2: Effort config tests ---
@@ -235,7 +235,7 @@ mod tests_set_config {
             other => panic!("expected Enabled unchanged, got: {other:?}"),
         }
         assert_eq!(changes.len(), 1);
-        assert!(changes[0].contains("invalid") || changes[0].contains("ignored"));
+        assert!(changes[0].contains("无效") || changes[0].contains("忽略"));
     }
 
     // --- Cycle 2: Combined fields test ---
@@ -317,7 +317,7 @@ mod tests_set_config {
             }
             other => panic!("expected Enabled with 16000, got: {other:?}"),
         }
-        assert_eq!(changes, vec!["thinking: enabled (budget: 16000)"]);
+        assert_eq!(changes, vec!["思考模式：已启用（预算：16000）"]);
     }
 
     #[test]
@@ -347,7 +347,7 @@ mod tests_set_config {
     fn set_config_thinking_applies_when_capability_is_false() {
         let mut engine = make_engine_with_compat("m", ProviderCompat::openai_defaults());
         let changes = engine.apply_config_update(None, None, Some("enabled".into()), None, None, None);
-        assert_eq!(changes, vec!["thinking: enabled (budget: 10000)"]);
+        assert_eq!(changes, vec!["思考模式：已启用（预算：10000）"]);
         assert!(matches!(
             engine.thinking,
             Some(tjuae_types::llm::ThinkingConfig::Enabled { budget_tokens: 10000 })
@@ -358,7 +358,7 @@ mod tests_set_config {
     fn set_config_effort_rejected_when_unsupported() {
         let mut engine = make_engine("m"); // anthropic defaults: supports_effort = false
         let changes = engine.apply_config_update(None, None, None, None, Some("high".into()), None);
-        assert!(changes.iter().any(|c| c.contains("not supported")));
+        assert!(changes.iter().any(|c| c.contains("不支持")));
         assert!(engine.reasoning_effort.is_none());
     }
 
@@ -366,7 +366,7 @@ mod tests_set_config {
     fn set_config_effort_rejected_invalid_level() {
         let mut engine = make_engine_with_compat("m", ProviderCompat::openai_defaults());
         let changes = engine.apply_config_update(None, None, None, None, Some("max".into()), None);
-        assert!(changes.iter().any(|c| c.contains("invalid")));
+        assert!(changes.iter().any(|c| c.contains("无效")));
         assert!(engine.reasoning_effort.is_none());
     }
 
@@ -376,7 +376,7 @@ mod tests_set_config {
         engine.reasoning_effort = Some("high".into());
         let changes = engine.apply_config_update(None, None, None, None, Some(String::new()), None);
         assert!(engine.reasoning_effort.is_none());
-        assert!(changes.iter().any(|c| c.contains("cleared")));
+        assert!(changes.iter().any(|c| c.contains("已清除")));
     }
 }
 
@@ -892,7 +892,7 @@ mod tests_compact {
                 .lock()
                 .unwrap()
                 .iter()
-                .any(|msg| msg == "Cache full miss: TtlExpiry"),
+                .any(|msg| msg == "缓存完全未命中：TtlExpiry"),
             "full cache misses should remain visible as diagnostics"
         );
     }
@@ -1136,7 +1136,7 @@ mod tests_compact {
             .messages
             .iter()
             .flat_map(|m| &m.content)
-            .filter(|b| matches!(b, ContentBlock::ToolResult { content, .. } if content == "[Tool result cleared]"))
+            .filter(|b| matches!(b, ContentBlock::ToolResult { content, .. } if content == "[工具结果已清除]"))
             .count();
 
         assert_eq!(cleared_count, 9);
@@ -1186,7 +1186,7 @@ mod tests_compact {
             .filter(|block| {
                 matches!(
                     block,
-                    ContentBlock::ToolResult { content, .. } if content == "[Tool result cleared]"
+                    ContentBlock::ToolResult { content, .. } if content == "[工具结果已清除]"
                 )
             })
             .count();
@@ -1256,7 +1256,7 @@ mod tests_compact {
             .messages
             .iter()
             .flat_map(|m| &m.content)
-            .filter(|b| matches!(b, ContentBlock::ToolResult { content, .. } if content == "[Tool result cleared]"))
+            .filter(|b| matches!(b, ContentBlock::ToolResult { content, .. } if content == "[工具结果已清除]"))
             .count();
 
         assert_eq!(cleared_count, 0, "microcompact should be skipped when disabled");
@@ -1985,7 +1985,7 @@ mod tests_handle_command {
                 matches!(
                     block,
                     ContentBlock::ToolResult { content, is_error: true, .. }
-                        if content.contains("same tool call has failed 2/3 times")
+                        if content.contains("同一个工具调用已失败 2/3 次")
                 )
             })
         }));
@@ -2104,7 +2104,7 @@ mod tests_handle_command {
             request.messages[0]
                 .content
                 .iter()
-                .any(|block| matches!(block, ContentBlock::Text { text } if text.contains("does not support vision")))
+                .any(|block| matches!(block, ContentBlock::Text { text } if text.contains("不支持视觉输入")))
         );
         assert_eq!(engine.messages.len(), 1);
         assert!(
@@ -2242,7 +2242,7 @@ mod tests_loop_helpers {
                 tool_use_id,
                 content,
                 is_error: true,
-            } if tool_use_id == "denied" && content.contains("not available")
+            } if tool_use_id == "denied" && content.contains("不可用")
         ));
         assert!(matches!(
             &results[1],
@@ -2452,7 +2452,7 @@ mod tests_loop_helpers {
         assert!(
             kind.control_prompt()
                 .expect("finalization must have a control prompt")
-                .contains("Do not call any more tools")
+                .contains("不要再调用任何工具")
         );
     }
 
@@ -2464,8 +2464,8 @@ mod tests_loop_helpers {
             .expect("max token continuation must have a prompt");
 
         assert_eq!(kind.diagnostic_phase(), "max_tokens_finalization");
-        assert!(prompt.contains("previous response was cut off"));
-        assert!(prompt.contains("Finish the answer"));
+        assert!(prompt.contains("上一次响应因达到 token 上限而被截断"));
+        assert!(prompt.contains("完成回答"));
     }
 
     #[test]
@@ -2477,9 +2477,9 @@ mod tests_loop_helpers {
 
         assert!(kind.disable_tools());
         assert_eq!(kind.diagnostic_phase(), "tool_failure_finalization");
-        assert!(prompt.contains("Do not call any more tools"));
-        assert!(prompt.contains("concrete blocker"));
-        assert!(prompt.contains("Do not mention internal retry counters"));
+        assert!(prompt.contains("不要再调用任何工具"));
+        assert!(prompt.contains("具体阻塞原因"));
+        assert!(prompt.contains("不要提及内部重试计数"));
     }
 
     #[test]
@@ -2488,8 +2488,8 @@ mod tests_loop_helpers {
         let prompt = kind.control_prompt().expect("empty final nudge must have a prompt");
 
         assert_eq!(kind.diagnostic_phase(), "empty_final_retry");
-        assert!(prompt.contains("visible answer text"));
-        assert!(prompt.contains("Do not send reasoning only"));
+        assert!(prompt.contains("可见的回答文本"));
+        assert!(prompt.contains("不要只发送推理过程"));
     }
 
     fn stream_outcome(assistant_text: &str, stop_reason: StopReason, tool_calls: Vec<ContentBlock>) -> StreamOutcome {
@@ -2741,7 +2741,7 @@ mod tests_tool_policy_enforcement {
         assert_eq!(read_executions.load(Ordering::SeqCst), 1);
         assert!(matches!(
             &output.tool_results[0],
-            ContentBlock::ToolResult { is_error: true, content, .. } if content.contains("not available")
+            ContentBlock::ToolResult { is_error: true, content, .. } if content.contains("不可用")
         ));
         assert!(matches!(
             &output.tool_results[1],

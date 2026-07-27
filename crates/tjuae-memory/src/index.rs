@@ -91,20 +91,20 @@ pub fn truncate_index(raw: &str) -> IndexTruncation {
 
     // Build the warning message
     let reason = match (was_line_truncated, was_byte_truncated) {
-        (true, false) => format!("{line_count} lines (limit: {MAX_INDEX_LINES})"),
+        (true, false) => format!("{line_count} 行（上限：{MAX_INDEX_LINES}）"),
         (false, true) => format!(
-            "{} (limit: {}) \u{2014} index entries are too long",
+            "{}（上限：{}）——索引条目过长",
             format_size(byte_count),
             format_size(MAX_INDEX_BYTES),
         ),
-        _ => format!("{line_count} lines and {}", format_size(byte_count),),
+        _ => format!("{line_count} 行，大小为 {}", format_size(byte_count),),
     };
 
     truncated.push_str(&format!(
-        "\n\n> WARNING: MEMORY.md is {reason}. \
-         Only part of it was loaded. \
-         Keep index entries to one line under ~200 chars; \
-         move detail into topic files."
+        "\n\n> 警告：MEMORY.md 已达到{reason}。\
+         当前只加载了其中一部分。\
+         请将每条索引控制在一行且不超过约 200 个字符，\
+         并把详细内容移入主题文件。"
     ));
 
     IndexTruncation {

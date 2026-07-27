@@ -85,7 +85,7 @@ fn user_message_is_actionable() {
         "emergency message should mention /compact"
     );
     assert!(
-        EMERGENCY_USER_MESSAGE.contains("new conversation"),
+        EMERGENCY_USER_MESSAGE.contains("新对话"),
         "emergency message should mention starting a new conversation"
     );
 }

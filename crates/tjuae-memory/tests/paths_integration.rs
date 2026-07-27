@@ -124,7 +124,7 @@ fn tc_2_4_reject_relative_path() {
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("absolute"),
+        err_msg.contains("绝对路径"),
         "error should mention 'absolute': {err_msg}"
     );
 }
@@ -138,7 +138,7 @@ fn tc_2_5_reject_null_byte() {
     let result = paths::validate_memory_path(&bad_path);
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
-    assert!(err_msg.contains("null"), "error should mention null: {err_msg}");
+    assert!(err_msg.contains("空字节"), "error should mention null: {err_msg}");
 }
 
 #[cfg(windows)]
@@ -148,7 +148,7 @@ fn tc_2_5_reject_null_byte() {
     let result = paths::validate_memory_path(&bad_path);
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
-    assert!(err_msg.contains("null"), "error should mention null: {err_msg}");
+    assert!(err_msg.contains("空字节"), "error should mention null: {err_msg}");
 }
 
 // -- TC-2.6: Reject path traversal --------------------------------------------
@@ -160,7 +160,7 @@ fn tc_2_6_reject_traversal() {
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("traversal"),
+        err_msg.contains("目录穿越"),
         "error should mention traversal: {err_msg}"
     );
 }
@@ -172,7 +172,7 @@ fn tc_2_6_reject_traversal() {
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("traversal"),
+        err_msg.contains("目录穿越"),
         "error should mention traversal: {err_msg}"
     );
 }

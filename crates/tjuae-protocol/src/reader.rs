@@ -29,12 +29,12 @@ pub fn spawn_stdin_reader() -> mpsc::UnboundedReceiver<ProtocolCommand> {
                             }
                         }
                         Err(e) => {
-                            tracing::debug!(target: "tjuae_protocol", error = %e, "invalid protocol command");
+                            tracing::debug!(target: "tjuae_protocol", error = %e, "协议命令无效");
                         }
                     }
                 }
                 Err(e) => {
-                    tracing::debug!(target: "tjuae_protocol", error = %e, "stdin read error");
+                    tracing::debug!(target: "tjuae_protocol", error = %e, "读取标准输入失败");
                     break;
                 }
             }

@@ -22,7 +22,7 @@ fn tc_6_1_prompt_contains_all_required_parts() {
 
     // Memory system introduction
     assert!(
-        prompt.contains("persistent, file-based memory system"),
+        prompt.contains("基于文件的持久记忆系统"),
         "should contain memory system introduction"
     );
 
@@ -36,21 +36,15 @@ fn tc_6_1_prompt_contains_all_required_parts() {
 
     // What not to save
     assert!(
-        prompt.contains("What NOT to save"),
+        prompt.contains("不应保存到记忆中的内容"),
         "should contain what-not-to-save section"
     );
 
     // Save steps
-    assert!(
-        prompt.contains("How to save memories"),
-        "should contain save instructions"
-    );
+    assert!(prompt.contains("如何保存记忆"), "should contain save instructions");
 
     // When to access
-    assert!(
-        prompt.contains("When to access memories"),
-        "should contain access guidance"
-    );
+    assert!(prompt.contains("何时访问记忆"), "should contain access guidance");
 
     // MEMORY.md content or empty-state message
     assert!(prompt.contains("MEMORY.md"), "should reference MEMORY.md entrypoint");
@@ -118,7 +112,7 @@ fn tc_6_4_no_memory_md_shows_empty_message() {
     let prompt = build_memory_prompt(&mem_dir);
 
     assert!(
-        prompt.contains("currently empty"),
+        prompt.contains("当前为空"),
         "should indicate MEMORY.md is empty when file doesn't exist"
     );
 }
@@ -133,7 +127,7 @@ fn tc_6_4_empty_memory_md_shows_empty_message() {
     let prompt = build_memory_prompt(&mem_dir);
 
     assert!(
-        prompt.contains("currently empty"),
+        prompt.contains("当前为空"),
         "should indicate MEMORY.md is empty when file is blank"
     );
 }
@@ -148,7 +142,7 @@ fn tc_6_4_whitespace_only_memory_md_shows_empty_message() {
     let prompt = build_memory_prompt(&mem_dir);
 
     assert!(
-        prompt.contains("currently empty"),
+        prompt.contains("当前为空"),
         "should indicate MEMORY.md is empty when file is whitespace-only"
     );
 }
@@ -244,13 +238,10 @@ fn prompt_with_large_index_includes_truncation_warning() {
     let prompt = build_memory_prompt(&mem_dir);
 
     assert!(
-        prompt.contains("WARNING"),
+        prompt.contains("警告"),
         "should include truncation warning for large index"
     );
-    assert!(
-        prompt.contains("250 lines"),
-        "warning should mention original line count"
-    );
+    assert!(prompt.contains("250 行"), "warning should mention original line count");
 }
 
 #[test]
@@ -280,7 +271,7 @@ fn prompt_nonexistent_dir_succeeds() {
     // build_memory_prompt should not panic even if the directory doesn't exist
     // (read_index returns empty string for missing files)
     let result = build_memory_prompt(Path::new("/nonexistent/path/memory"));
-    assert!(result.contains("currently empty"));
+    assert!(result.contains("当前为空"));
 }
 
 #[test]
@@ -294,13 +285,13 @@ fn prompt_sections_appear_in_correct_order() {
 
     // Verify section ordering
     let positions = [
-        ("# auto memory", prompt.find("# auto memory")),
-        ("## Types of memory", prompt.find("## Types of memory")),
-        ("## What NOT to save", prompt.find("## What NOT to save")),
-        ("## How to save", prompt.find("## How to save")),
-        ("## When to access", prompt.find("## When to access")),
-        ("## Before recommending", prompt.find("## Before recommending")),
-        ("## Memory and other forms", prompt.find("## Memory and other forms")),
+        ("# 自动记忆", prompt.find("# 自动记忆")),
+        ("## 记忆类型", prompt.find("## 记忆类型")),
+        ("## 不应保存到记忆中的内容", prompt.find("## 不应保存到记忆中的内容")),
+        ("## 如何保存记忆", prompt.find("## 如何保存记忆")),
+        ("## 何时访问记忆", prompt.find("## 何时访问记忆")),
+        ("## 根据记忆提出建议前", prompt.find("## 根据记忆提出建议前")),
+        ("## 记忆与其他持久化方式", prompt.find("## 记忆与其他持久化方式")),
         ("## MEMORY.md", prompt.find("## MEMORY.md")),
     ];
 

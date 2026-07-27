@@ -141,7 +141,7 @@ async fn drain_reader_with_result(reader: Option<JoinHandle<Result<()>>>, drain:
             }
             result = &mut reader => {
                 result
-                    .map_err(|error| Error::other(format!("process output reader failed: {error}")))?
+                    .map_err(|error| Error::other(format!("读取进程输出失败：{error}")))?
             }
         }
     } else {

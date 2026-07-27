@@ -1,22 +1,22 @@
-# Release Please workflow
-# Runs on push to main to create/update release PRs.
-# When a release PR is merged, creates a GitHub Release + tag,
-# then calls the Release workflow to build and upload assets.
+# Release Please 工作流
+# 推送到 main 时创建或更新发布 PR。
+# 发布 PR 合并后，创建 GitHub Release 和标签，
+# 然后调用 Release 工作流构建并上传产物。
 #
-# Design: Two-job approach (mirrors loonghao/vx) to avoid duplicate-PR bug.
+# 设计：采用双任务方案（与 loonghao/vx 一致），避免 PR 重复创建问题。
 #
-# Job 1 "release" — runs ONLY on release commits ("chore: release vX.Y.Z"):
-#   Creates the tag + GitHub Release. Uses skip-github-pull-request to
-#   prevent creating a new PR on the same run.
-#   Then calls release.yml via workflow_call to build and upload binaries.
+# 任务 1 “release”——仅在发布提交（“chore: release vX.Y.Z”）上运行：
+#   创建标签和 GitHub Release。使用 skip-github-pull-request，
+#   防止同一次运行再次创建 PR。
+#   然后通过 workflow_call 调用 release.yml 构建并上传二进制文件。
 #
-# Job 2 "update-pr" — runs on EVERY OTHER commit:
-#   Creates/updates the release PR. Skipped on release commits to avoid
-#   the duplicate PR problem (googleapis/release-please#713).
-#   After release-please updates Cargo.toml, refreshes Cargo.lock on the
-#   release PR branch because this workspace uses version.workspace = true.
+# 任务 2 “update-pr”——在其他所有提交上运行：
+#   创建或更新发布 PR。在发布提交上跳过，以避免 PR 重复问题
+#   （googleapis/release-please#713）。
+#   release-please 更新 Cargo.toml 后，在发布 PR 分支刷新 Cargo.lock，
+#   因为本工作区使用 version.workspace = true。
 
-name: Release Please
+name: 自动发布（Release Please）
 
 on:
   push:
@@ -29,7 +29,7 @@ permissions:
   actions: write
 
 jobs:
-  # ─── Job 1: Tag + GitHub Release (release commits only) ───────────────────
+  # ─── 任务 1：标签与 GitHub Release（仅发布提交）─────────────────────────
   release:
     runs-on: ubuntu-latest
     if: "startsWith(github.event.head_commit.message, 'chore: release') || startsWith(github.event.head_commit.message, 'chore(main): release')"
@@ -45,17 +45,17 @@ jobs:
           manifest-file: .release-please-manifest.json
           skip-github-pull-request: true
 
-      - name: Trigger Release build workflow
+      - name: 触发 Release 构建工作流
         if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Release created: ${{ steps.release.outputs.tag_name }}"
+          echo "已创建发布：${{ steps.release.outputs.tag_name }}"
           gh workflow run release.yml \
             --repo "${{ github.repository }}" \
             --field "tag_name=${{ steps.release.outputs.tag_name }}"
 
-  # ─── Job 2: Create/update release PR (non-release commits) ────────────────
+  # ─── 任务 2：创建或更新发布 PR（非发布提交）─────────────────────────────
   update-pr:
     runs-on: ubuntu-latest
     if: "!startsWith(github.event.head_commit.message, 'chore: release') && !startsWith(github.event.head_commit.message, 'chore(main): release')"
@@ -67,7 +67,7 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - name: Resolve release PR branch
+      - name: 解析发布 PR 分支
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         id: release-pr
         env:
@@ -75,27 +75,27 @@ jobs:
         run: |
           branch="$(jq -r '.headBranchName' <<<"${RELEASE_PR}")"
           if [[ -z "${branch}" || "${branch}" == "null" ]]; then
-            echo "release-please did not expose a PR branch" >&2
+            echo "release-please 未提供 PR 分支" >&2
             exit 1
           fi
           echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
 
-      - name: Checkout release PR branch
+      - name: 检出发布 PR 分支
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         uses: actions/checkout@v7
         with:
           ref: ${{ steps.release-pr.outputs.branch }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sync Cargo.lock versions
+      - name: 同步 Cargo.lock 版本
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         run: cargo update --workspace
 
-      - name: Commit Cargo.lock if changed
+      - name: Cargo.lock 发生变化时提交
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         run: |
           if git diff --quiet -- Cargo.lock; then
-            echo "Cargo.lock already matches Cargo.toml"
+            echo "Cargo.lock 已与 Cargo.toml 一致"
             exit 0
           fi
 

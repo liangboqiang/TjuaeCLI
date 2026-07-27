@@ -186,7 +186,7 @@ impl AgentBootstrap {
         info!(
             target: "tjuae_agent",
             workspace = %self.workspace.display(),
-            "agent bootstrap: workspace cwd resolved",
+            "智能体引导：已解析工作区当前目录",
         );
 
         self.workspace.clone()
@@ -238,7 +238,7 @@ impl AgentBootstrap {
         let manager = match McpManager::connect_all(&server_configs).await {
             Ok(manager) => Arc::new(manager),
             Err(err) => {
-                self.output.emit_error(&format!("MCP initialization error: {err}"));
+                self.output.emit_error(&format!("MCP 初始化错误：{err}"));
                 return McpBootstrap::default();
             }
         };

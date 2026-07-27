@@ -39,7 +39,7 @@ impl ToolConfirmer {
         }
 
         eprint!(
-            "\n[tool] {}({})\nAllow? [y]es / [n]o / [a]lways / [q]uit > ",
+            "\n[工具] {}({})\n是否允许？[y]是 / [n]否 / [a]始终允许 / [q]退出 > ",
             tool_name, tool_input_display
         );
         io::stderr().flush().unwrap();
@@ -50,12 +50,12 @@ impl ToolConfirmer {
         }
 
         match input.trim().to_lowercase().as_str() {
-            "y" | "yes" | "" => ConfirmResult::Approved,
-            "a" | "always" => {
+            "y" | "yes" | "是" | "" => ConfirmResult::Approved,
+            "a" | "always" | "始终" | "始终允许" => {
                 self.allow_list.insert(tool_name.to_string());
                 ConfirmResult::Approved
             }
-            "q" | "quit" => ConfirmResult::Quit,
+            "q" | "quit" | "退出" => ConfirmResult::Quit,
             _ => ConfirmResult::Denied,
         }
     }

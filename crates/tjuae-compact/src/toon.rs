@@ -112,10 +112,10 @@ pub fn try_toon_encode(text: &str) -> String {
 
 pub fn toon_format_instructions() -> &'static str {
     "\
-# TOON Format
+# TOON 格式
 
-Tool results may contain data in TOON (Token-Oriented Object Notation) tabular format \
-for token efficiency. Format:
+为提高 token 效率，工具结果可能包含采用 TOON（面向 token 的对象表示法）表格格式的数据。\
+格式如下：
 
 ```
 [N]{field1,field2,...}:
@@ -123,18 +123,18 @@ for token efficiency. Format:
   value1,value2,...
 ```
 
-- `[N]` is the array length
-- `{fields}` are column headers
-- Each indented line is one row, values comma-separated
-- String values containing commas are quoted
+- `[N]` 表示数组长度
+- `{fields}` 表示列标题
+- 每个缩进行是一条记录，各值以逗号分隔
+- 含逗号的字符串值会用引号包裹
 
-This is equivalent to a JSON array of objects. Example:
+这等价于 JSON 对象数组。例如：
 ```
 [2]{id,name,role}:
   1,Alice,admin
   2,Bob,user
 ```
-equals `[{\"id\":1,\"name\":\"Alice\",\"role\":\"admin\"},{\"id\":2,\"name\":\"Bob\",\"role\":\"user\"}]`"
+等价于 `[{\"id\":1,\"name\":\"Alice\",\"role\":\"admin\"},{\"id\":2,\"name\":\"Bob\",\"role\":\"user\"}]`"
 }
 
 #[cfg(test)]

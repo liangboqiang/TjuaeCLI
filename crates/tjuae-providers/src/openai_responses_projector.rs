@@ -42,7 +42,7 @@ impl OpenAiResponsesProjector {
         } else if !request.tools.is_empty() {
             tracing::warn!(
                 target: "tjuae_providers",
-                "OpenAI Responses outgoing tools omitted because compat.emit_tools is disabled"
+                "compat.emit_tools 已禁用，OpenAI Responses 传出工具已省略"
             );
         }
 
@@ -52,7 +52,7 @@ impl OpenAiResponsesProjector {
             } else {
                 tracing::warn!(
                     target: "tjuae_providers",
-                    "OpenAI Responses reasoning effort omitted because compat.supports_effort is disabled"
+                    "compat.supports_effort 已禁用，OpenAI Responses 推理强度已省略"
                 );
             }
         }
@@ -133,7 +133,7 @@ fn project_user_message(
                     tracing::warn!(
                         target: "tjuae_providers",
                         error = %error,
-                        "skipping invalid image block in OpenAI Responses projection"
+                        "OpenAI Responses 投影中的图片块无效，已跳过"
                     );
                     continue;
                 }
@@ -152,7 +152,7 @@ fn project_user_message(
                         target: "tjuae_providers",
                         tool_call_id = %tool_use_id,
                         reason = "orphan_result",
-                        "dropped orphan function_call_output in OpenAI Responses request"
+                        "已丢弃 OpenAI Responses 请求中孤立的 function_call_output"
                     );
                     continue;
                 }
@@ -207,7 +207,7 @@ fn project_assistant_message(
                 target: "tjuae_providers",
                 tool_call_id = %id,
                 reason = "empty_name",
-                "dropped malformed function_call in OpenAI Responses request"
+                "已丢弃 OpenAI Responses 请求中格式错误的 function_call"
             );
             continue;
         }
@@ -216,7 +216,7 @@ fn project_assistant_message(
                 target: "tjuae_providers",
                 tool_call_id = %id,
                 reason = "orphan_call",
-                "dropped orphan function_call in OpenAI Responses request"
+                "已丢弃 OpenAI Responses 请求中孤立的 function_call"
             );
             continue;
         }

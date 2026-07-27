@@ -34,18 +34,18 @@ pub(super) fn handle(cmd: ProtocolCommand, engine: &mut AgentEngine, ctx: &Strea
                 .resolve(&call_id, ToolApprovalResult::Denied { reason });
         }
         ProtocolCommand::InitHistory { text } => {
-            tracing::debug!(target: "tjuae_protocol", chars = text.len(), "InitHistory received");
+            tracing::debug!(target: "tjuae_protocol", chars = text.len(), "已收到 InitHistory");
         }
         ProtocolCommand::SetMode { mode } => {
             let mode_str = format!("{mode:?}").to_lowercase();
             ctx.approval_manager.set_mode(mode);
             let _ = ctx.writer.emit(&ProtocolEvent::Info {
                 msg_id: String::new(),
-                message: format!("mode updated: {}", ctx.approval_manager.current_mode()),
+                message: format!("模式已更新：{}", ctx.approval_manager.current_mode()),
             });
             ctx.protocol_sink
                 .emit_config_changed(engine.compat(), ctx.has_mcp, &ctx.approval_manager.current_mode());
-            tracing::debug!(target: "tjuae_protocol", mode = %mode_str, "SetMode applied");
+            tracing::debug!(target: "tjuae_protocol", mode = %mode_str, "已应用 SetMode");
         }
         ProtocolCommand::SetConfig {
             model,
@@ -57,9 +57,9 @@ pub(super) fn handle(cmd: ProtocolCommand, engine: &mut AgentEngine, ctx: &Strea
         } => {
             let changes = engine.apply_config_update(model, image_input, thinking, thinking_budget, effort, compaction);
             let message = if changes.is_empty() {
-                "set_config: no changes".to_string()
+                "set_config：没有变更".to_string()
             } else {
-                format!("config updated: {}", changes.join(", "))
+                format!("配置已更新：{}", changes.join(", "))
             };
             let _ = ctx.writer.emit(&ProtocolEvent::Info {
                 msg_id: String::new(),
@@ -70,7 +70,7 @@ pub(super) fn handle(cmd: ProtocolCommand, engine: &mut AgentEngine, ctx: &Strea
         }
         ProtocolCommand::AddMcpServer { name, .. } => {
             ctx.output.emit_error(&format!(
-                "AddMcpServer '{name}': rejected — only allowed before first Message"
+                "AddMcpServer '{name}'：已拒绝——只允许在第一条 Message 之前调用"
             ));
         }
         ProtocolCommand::Ping => {
@@ -82,7 +82,7 @@ pub(super) fn handle(cmd: ProtocolCommand, engine: &mut AgentEngine, ctx: &Strea
             // routing changed; log and ignore rather than panic.
             tracing::warn!(
                 target: "tjuae_protocol",
-                "Message reached dispatch::handle; expected routing to message::handle"
+                "Message 到达 dispatch::handle；预期应路由到 message::handle"
             );
         }
     }

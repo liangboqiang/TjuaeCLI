@@ -139,15 +139,14 @@ impl Tool for EditTool {
     }
 
     fn description(&self) -> &str {
-        "Performs exact string replacements in files.\n\n\
-         Usage:\n\
-         - You must use the Read tool first before editing a file.\n\
-         - The old_string must be unique in the file. If multiple matches exist, \
-         the edit will fail. Provide more surrounding context to make it unique, \
-         or use replace_all to change every occurrence.\n\
-         - Use replace_all for renaming variables or replacing all instances of a string.\n\
-         - Prefer Edit over Write for modifying existing files — Edit only sends the diff.\n\
-         - When matching text from Read output, preserve the exact indentation (tabs/spaces)."
+        "在文件中执行精确字符串替换。\n\n\
+         用法：\n\
+         - 编辑文件前必须先使用 Read 工具。\n\
+         - old_string 在文件中必须唯一。如果存在多个匹配项，编辑会失败。\
+         请提供更多上下文使其唯一，或使用 replace_all 修改所有匹配项。\n\
+         - 重命名变量或替换字符串的所有实例时使用 replace_all。\n\
+         - 修改现有文件时优先使用 Edit，因为 Edit 只发送差异。\n\
+         - 匹配 Read 输出中的文本时，必须保留精确缩进（制表符或空格）。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -156,19 +155,19 @@ impl Tool for EditTool {
             "properties": {
                 "file_path": {
                     "type": "string",
-                    "description": "The absolute path to the file to modify"
+                    "description": "待修改文件的绝对路径"
                 },
                 "old_string": {
                     "type": "string",
-                    "description": "The text to replace"
+                    "description": "待替换文本"
                 },
                 "new_string": {
                     "type": "string",
-                    "description": "The replacement text"
+                    "description": "替换后的文本"
                 },
                 "replace_all": {
                     "type": "boolean",
-                    "description": "Replace all occurrences (default false)"
+                    "description": "是否替换所有匹配项（默认 false）"
                 }
             },
             "required": ["file_path", "old_string", "new_string"]
@@ -182,19 +181,19 @@ impl Tool for EditTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(file_path) = input["file_path"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: file_path".to_string(),
+                content: "缺少必需参数：file_path".to_string(),
                 is_error: true,
             };
         };
         let Some(old_string) = input["old_string"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: old_string".to_string(),
+                content: "缺少必需参数：old_string".to_string(),
                 is_error: true,
             };
         };
         let Some(new_string) = input["new_string"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: new_string".to_string(),
+                content: "缺少必需参数：new_string".to_string(),
                 is_error: true,
             };
         };
@@ -210,8 +209,8 @@ impl Tool for EditTool {
             if cached.is_none() {
                 return ToolResult {
                     content: format!(
-                        "You must Read {} before editing. Use the Read tool first \
-                         so the file content is loaded into context.",
+                        "编辑前必须先读取 {}。请先使用 Read 工具，\
+                         将文件内容加载到上下文中。",
                         file_path
                     ),
                     is_error: true,
@@ -225,8 +224,8 @@ impl Tool for EditTool {
             {
                 return ToolResult {
                     content: format!(
-                        "File {} has been modified externally since last read. \
-                         Read the file again to see the current content before editing.",
+                        "文件 {} 自上次读取后已被外部修改。\
+                         编辑前请重新读取文件以查看当前内容。",
                         file_path
                     ),
                     is_error: true,
@@ -238,7 +237,7 @@ impl Tool for EditTool {
             Ok(c) => c,
             Err(e) => {
                 return ToolResult {
-                    content: format!("Failed to read file {}: {}", file_path, e),
+                    content: format!("读取文件 {} 失败：{}", file_path, e),
                     is_error: true,
                 };
             }
@@ -250,14 +249,14 @@ impl Tool for EditTool {
             Ok(selected) => selected,
             Err(MatchSelectionError::NotFound) => {
                 return ToolResult {
-                    content: "old_string not found in file".to_string(),
+                    content: "文件中未找到 old_string".to_string(),
                     is_error: true,
                 };
             }
             Err(MatchSelectionError::AmbiguousLineEndings) => {
                 return ToolResult {
-                    content: "Ambiguous line-ending match: old_string matches both LF and CRLF text. \
-                              Provide more surrounding context."
+                    content: "换行符匹配不明确：old_string 同时匹配 LF 和 CRLF 文本。\
+                              请提供更多上下文。"
                         .to_string(),
                     is_error: true,
                 };
@@ -269,7 +268,7 @@ impl Tool for EditTool {
         if match_count > 1 && !replace_all {
             return ToolResult {
                 content: format!(
-                    "Multiple matches found ({}). Use replace_all or provide more context.",
+                    "找到多个匹配项（{} 个）。请使用 replace_all 或提供更多上下文。",
                     match_count
                 ),
                 is_error: true,
@@ -284,7 +283,7 @@ impl Tool for EditTool {
 
         if let Err(e) = std::fs::write(file_path, &new_content) {
             return ToolResult {
-                content: format!("Failed to write file: {}", e),
+                content: format!("写入文件失败：{}", e),
                 is_error: true,
             };
         }
@@ -295,7 +294,7 @@ impl Tool for EditTool {
         }
 
         ToolResult {
-            content: format!("Edited {}: replaced {} occurrence(s)", file_path, match_count),
+            content: format!("已编辑 {}：替换了 {} 处", file_path, match_count),
             is_error: false,
         }
     }
@@ -309,8 +308,8 @@ impl Tool for EditTool {
     }
 
     fn describe(&self, input: &Value) -> String {
-        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("unknown");
-        format!("Edit {}", path)
+        let path = input.get("file_path").and_then(|v| v.as_str()).unwrap_or("未知");
+        format!("编辑 {}", path)
     }
 }
 

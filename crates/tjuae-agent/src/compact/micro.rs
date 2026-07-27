@@ -11,7 +11,7 @@ use tjuae_config::compact::CompactConfig;
 use tjuae_types::message::{ContentBlock, Message, Role};
 
 /// Placeholder that replaces cleared tool result content.
-pub const CLEARED_TOOL_RESULT: &str = "[Tool result cleared]";
+pub const CLEARED_TOOL_RESULT: &str = "[工具结果已清除]";
 
 /// Statistics returned after a microcompact pass.
 #[derive(Debug, Clone, PartialEq, Eq)]

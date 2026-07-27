@@ -323,7 +323,7 @@ async fn test_aio_140_anthropic_tools_wire_shape_mismatch_error_is_readable_and_
     match result.unwrap_err() {
         ProviderError::Api { status, message } => {
             assert_eq!(status, 400);
-            assert!(message.contains("tools wire shape mismatch"));
+            assert!(message.contains("工具 wire shape 不匹配"));
             assert!(message.contains("anthropic_input_schema"));
         }
         other => panic!("expected Api error, got: {other:?}"),

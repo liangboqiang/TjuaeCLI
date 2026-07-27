@@ -68,12 +68,12 @@ impl McpManager {
         while let Some((name, result)) = pending.next().await {
             match result {
                 Ok(server) => {
-                    tracing::info!(target: "tjuae_mcp", server = %name, tools = server.tools.len(), resources = server.supports_resources, "mcp server connected");
+                    tracing::info!(target: "tjuae_mcp", server = %name, tools = server.tools.len(), resources = server.supports_resources, "MCP 服务器已连接");
                     servers.insert(name, server);
                 }
                 Err(e) => {
                     // Non-fatal: continue with other servers
-                    tracing::warn!(target: "tjuae_mcp", server = %name, error = %e, "mcp server connection failed");
+                    tracing::warn!(target: "tjuae_mcp", server = %name, error = %e, "MCP 服务器连接失败");
                 }
             }
         }
@@ -100,7 +100,7 @@ impl McpManager {
         match tokio::time::timeout(timeout, connect).await {
             Ok(result) => result,
             Err(_) => Err(McpError::Transport(format!(
-                "MCP server '{name}' startup timed out after {}ms; set startup_timeout_ms to increase it",
+                "MCP 服务器 '{name}' 启动在 {} 毫秒后超时；可增大 startup_timeout_ms",
                 timeout.as_millis()
             ))),
         }
@@ -111,7 +111,7 @@ impl McpManager {
     pub async fn connect_one(&mut self, name: String, config: &McpServerConfig) -> Result<Vec<String>, McpError> {
         let server = Self::with_startup_timeout(&name, config, Self::connect_server(&name, config)).await?;
         let tool_names: Vec<String> = server.tools.iter().map(|t| t.name.clone()).collect();
-        tracing::info!(target: "tjuae_mcp", server = %name, tools = server.tools.len(), resources = server.supports_resources, "mcp server connected");
+        tracing::info!(target: "tjuae_mcp", server = %name, tools = server.tools.len(), resources = server.supports_resources, "MCP 服务器已连接");
         self.servers.insert(name, server);
         Ok(tool_names)
     }
@@ -126,7 +126,7 @@ impl McpManager {
                 let command = config
                     .command
                     .as_deref()
-                    .ok_or_else(|| McpError::InitFailed("stdio transport requires 'command'".into()))?;
+                    .ok_or_else(|| McpError::InitFailed("stdio 传输需要 'command'".into()))?;
                 let args = config.args.as_deref().unwrap_or(&[]);
                 let env = config.env.as_ref().unwrap_or(&empty_map);
                 Box::new(StdioTransport::spawn(command, args, env).await?)
@@ -135,7 +135,7 @@ impl McpManager {
                 let url = config
                     .url
                     .as_deref()
-                    .ok_or_else(|| McpError::InitFailed("SSE transport requires 'url'".into()))?;
+                    .ok_or_else(|| McpError::InitFailed("SSE 传输需要 'url'".into()))?;
                 let headers = config.headers.as_ref().unwrap_or(&empty_map);
                 Box::new(SseTransport::connect(url, headers).await?)
             }
@@ -143,7 +143,7 @@ impl McpManager {
                 let url = config
                     .url
                     .as_deref()
-                    .ok_or_else(|| McpError::InitFailed("streamable-http transport requires 'url'".into()))?;
+                    .ok_or_else(|| McpError::InitFailed("streamable-http 传输需要 'url'".into()))?;
                 let headers = config.headers.as_ref().unwrap_or(&empty_map);
                 Box::new(StreamableHttpTransport::connect(url, headers).await?)
             }
@@ -164,7 +164,7 @@ impl McpManager {
             "initialize",
             Some(
                 serde_json::to_value(&init_params)
-                    .map_err(|e| McpError::InitFailed(format!("Failed to serialize init params: {}", e)))?,
+                    .map_err(|e| McpError::InitFailed(format!("序列化初始化参数失败：{}", e)))?,
             ),
         );
 
@@ -172,9 +172,9 @@ impl McpManager {
         let init_result: InitializeResult = serde_json::from_value(
             init_response
                 .result
-                .ok_or_else(|| McpError::InitFailed("No result in initialize response".into()))?,
+                .ok_or_else(|| McpError::InitFailed("initialize 响应中没有 result".into()))?,
         )
-        .map_err(|e| McpError::InitFailed(format!("Failed to parse init result: {}", e)))?;
+        .map_err(|e| McpError::InitFailed(format!("解析初始化结果失败：{}", e)))?;
 
         // Check whether server declared resources capability
         let supports_resources = init_result
@@ -193,9 +193,9 @@ impl McpManager {
         let tools_result: ToolsListResult = serde_json::from_value(
             list_response
                 .result
-                .ok_or_else(|| McpError::InitFailed("No result in tools/list response".into()))?,
+                .ok_or_else(|| McpError::InitFailed("tools/list 响应中没有 result".into()))?,
         )
-        .map_err(|e| McpError::InitFailed(format!("Failed to parse tools list: {}", e)))?;
+        .map_err(|e| McpError::InitFailed(format!("解析工具列表失败：{}", e)))?;
 
         Ok(McpServer {
             name: name.to_string(),
@@ -254,21 +254,21 @@ impl McpManager {
 
         let result_value = response
             .result
-            .ok_or_else(|| McpError::Transport("No result in tool call response".into()))?;
+            .ok_or_else(|| McpError::Transport("工具调用响应中没有 result".into()))?;
 
         // Parse result and concatenate text content
         let tool_result: McpToolResult = serde_json::from_value(result_value)
-            .map_err(|e| McpError::Transport(format!("Failed to parse tool result: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("解析工具结果失败：{}", e)))?;
 
         let mut text_parts = Vec::new();
         for content in &tool_result.content {
             match content {
                 super::protocol::McpContent::Text { text } => text_parts.push(text.clone()),
                 super::protocol::McpContent::Image { mime_type, .. } => {
-                    text_parts.push(format!("[image: {}]", mime_type));
+                    text_parts.push(format!("[图片：{}]", mime_type));
                 }
                 super::protocol::McpContent::Resource { .. } => {
-                    text_parts.push("[resource]".to_string());
+                    text_parts.push("[资源]".to_string());
                 }
             }
         }
@@ -302,10 +302,10 @@ impl McpManager {
 
         let result_value = response
             .result
-            .ok_or_else(|| McpError::Transport("No result in resources/list response".into()))?;
+            .ok_or_else(|| McpError::Transport("resources/list 响应中没有 result".into()))?;
 
         let list_result: ResourcesListResult = serde_json::from_value(result_value)
-            .map_err(|e| McpError::Transport(format!("Failed to parse resources/list: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("解析 resources/list 失败：{}", e)))?;
 
         Ok(list_result.resources)
     }
@@ -323,24 +323,24 @@ impl McpManager {
 
         let result_value = response
             .result
-            .ok_or_else(|| McpError::Transport("No result in resources/read response".into()))?;
+            .ok_or_else(|| McpError::Transport("resources/read 响应中没有 result".into()))?;
 
         let read_result: ResourcesReadResult = serde_json::from_value(result_value)
-            .map_err(|e| McpError::Transport(format!("Failed to parse resources/read: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("解析 resources/read 失败：{}", e)))?;
 
         // Return the first text content found
         read_result
             .contents
             .into_iter()
             .find_map(|c| c.text)
-            .ok_or_else(|| McpError::Transport(format!("No text content in resource '{}'", uri)))
+            .ok_or_else(|| McpError::Transport(format!("资源 '{}' 中没有文本内容", uri)))
     }
 
     /// Gracefully shutdown all servers
     pub async fn shutdown(&self) {
         for (name, server) in &self.servers {
             if let Err(e) = server.transport.close().await {
-                tracing::warn!(target: "tjuae_mcp", server = %name, error = %e, "error closing mcp server");
+                tracing::warn!(target: "tjuae_mcp", server = %name, error = %e, "关闭 MCP 服务器时出错");
             }
         }
     }

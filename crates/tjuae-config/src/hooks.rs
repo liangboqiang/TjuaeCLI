@@ -111,7 +111,7 @@ impl HookEngine {
                     }
                 }
                 Err(e) => {
-                    messages.push(format!("[hook:{}] error: {}", hook.name, e));
+                    messages.push(format!("[钩子：{}] 错误：{}", hook.name, e));
                 }
             }
         }
@@ -129,7 +129,7 @@ impl HookEngine {
                     }
                 }
                 Err(e) => {
-                    messages.push(format!("[hook:{}] error: {}", hook.name, e));
+                    messages.push(format!("[钩子：{}] 错误：{}", hook.name, e));
                 }
             }
         }
@@ -254,7 +254,7 @@ async fn run_hook_command(
         cwd = %cwd.display(),
         shell_kind = shell.kind.name(),
         shell_path = %shell.path.display(),
-        "hook executing"
+        "正在执行 hook"
     );
 
     let mut command_builder = shell_command_builder(&shell, &interpolated, false);
@@ -278,11 +278,11 @@ async fn run_hook_command(
 
 #[derive(Debug, thiserror::Error)]
 pub enum HookError {
-    #[error("Hook '{hook_name}' blocked execution: {output}")]
+    #[error("钩子 '{hook_name}' 已阻止执行：{output}")]
     Blocked { hook_name: String, output: String },
-    #[error("Hook execution failed: {0}")]
+    #[error("钩子执行失败：{0}")]
     ExecutionFailed(String),
-    #[error("Hook timed out after {timeout_ms}ms\n{output}")]
+    #[error("钩子在 {timeout_ms} 毫秒后超时\n{output}")]
     Timeout { timeout_ms: u64, output: String },
 }
 

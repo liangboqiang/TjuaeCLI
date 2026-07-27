@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(messages[0].role, Role::User);
         // Second message should be the summary
         if let ContentBlock::Text { text } = &messages[1].content[0] {
-            assert!(text.contains("summary"));
+            assert!(text.contains("摘要"));
         }
     }
 
@@ -78,7 +78,7 @@ mod tests {
             "system prompt should contain the model name"
         );
         assert!(
-            prompt.contains("You are powered by the model deepseek-chat"),
+            prompt.contains("当前使用的模型：deepseek-chat"),
             "system prompt should contain the model identity line"
         );
     }
@@ -216,7 +216,7 @@ mod tests {
             false,
         );
         assert!(
-            !result.contains("The following skills are available"),
+            !result.contains("以下技能可通过 Skill 工具使用"),
             "empty skills should not inject skill reminder"
         );
     }
@@ -243,7 +243,7 @@ mod tests {
             "result should contain <system-reminder>"
         );
         assert!(
-            result.contains("The following skills are available for use with the Skill tool:"),
+            result.contains("以下技能可通过 Skill 工具使用："),
             "result should contain skills header"
         );
         assert!(
@@ -293,7 +293,7 @@ mod tests {
             false,
         );
         assert!(
-            !result.contains("The following skills are available"),
+            !result.contains("以下技能可通过 Skill 工具使用"),
             "all-hidden skills should not inject reminder"
         );
     }
@@ -317,7 +317,7 @@ mod tests {
             "custom prompt should appear"
         );
         assert!(
-            result.contains("The following skills are available for use with the Skill tool:"),
+            result.contains("以下技能可通过 Skill 工具使用："),
             "skills reminder should also appear"
         );
     }
@@ -408,14 +408,14 @@ mod tests {
             false,
         );
 
-        assert!(result.contains("Operating system:"));
+        assert!(result.contains("操作系统："));
         assert!(
-            result.contains(&format!("Architecture: {}", std::env::consts::ARCH)),
+            result.contains(&format!("系统架构：{}", std::env::consts::ARCH)),
             "system prompt should include current CPU architecture"
         );
-        assert!(result.contains("Default shell: powershell"));
-        assert!(result.contains(r"Shell path: C:\Program Files\PowerShell\7\pwsh.exe"));
-        assert!(result.contains("Shell syntax: powershell"));
+        assert!(result.contains("默认 shell：powershell"));
+        assert!(result.contains(r"Shell 路径：C:\Program Files\PowerShell\7\pwsh.exe"));
+        assert!(result.contains("Shell 语法：powershell"));
     }
 
     #[test]
@@ -445,7 +445,7 @@ mod tests {
             "should NOT load CLAUDE.md content"
         );
         assert!(
-            result.contains("(project instructions)"),
+            result.contains("（项目指令）"),
             "header should indicate project instructions"
         );
         assert!(result.contains("AGENTS.md"), "header should contain AGENTS.md filename");
@@ -473,7 +473,7 @@ mod tests {
 
         assert!(!result.contains("SHOULD_NOT_APPEAR"), "CLAUDE.md should be ignored");
         assert!(
-            !result.contains("(project instructions)"),
+            !result.contains("（项目指令）"),
             "no project instructions should be injected"
         );
     }
@@ -494,7 +494,7 @@ mod tests {
             false,
         );
         assert!(
-            !result.contains("auto memory"),
+            !result.contains("自动记忆"),
             "no memory content when memory_dir is None"
         );
     }
@@ -522,12 +522,9 @@ mod tests {
             false,
         );
 
+        assert!(result.contains("自动记忆"), "should contain memory system display name");
         assert!(
-            result.contains("auto memory"),
-            "should contain memory system display name"
-        );
-        assert!(
-            result.contains("Memory types:"),
+            result.contains("记忆类型"),
             "should contain compact memory type summary"
         );
         assert!(result.contains("user_role.md"), "should contain MEMORY.md content");
@@ -549,7 +546,7 @@ mod tests {
 
         // Should not panic and should show empty state
         assert!(
-            result.contains("currently empty"),
+            result.contains("当前为空"),
             "nonexistent memory dir should show empty state"
         );
     }
@@ -573,10 +570,7 @@ mod tests {
             false,
         );
 
-        assert!(
-            result.contains("currently empty"),
-            "empty memory dir should show empty state"
-        );
+        assert!(result.contains("当前为空"), "empty memory dir should show empty state");
     }
 
     #[test]
@@ -607,7 +601,7 @@ mod tests {
         );
 
         let agents_pos = result.find("PROJECT_RULES_HERE").unwrap();
-        let memory_pos = result.find("auto memory").unwrap();
+        let memory_pos = result.find("自动记忆").unwrap();
         let skills_pos = result.find("test-skill").unwrap();
 
         assert!(agents_pos < memory_pos, "AGENTS.md should appear before memory");
@@ -653,7 +647,7 @@ mod tests {
             false,
         );
         assert!(
-            result.contains("# Using your tools"),
+            result.contains("# 使用工具"),
             "system prompt should contain the tool guidance heading"
         );
     }
@@ -697,11 +691,8 @@ mod tests {
             false,
             false,
         );
-        assert!(result.contains("parallel"), "should contain parallel call guidance");
-        assert!(
-            result.contains("sequentially"),
-            "should explain when to run sequentially"
-        );
+        assert!(result.contains("并行"), "should contain parallel call guidance");
+        assert!(result.contains("按顺序执行"), "should explain when to run sequentially");
     }
 
     #[test]
@@ -718,7 +709,7 @@ mod tests {
             false,
         );
         assert!(
-            result.contains("Prefer Edit over Write"),
+            result.contains("优先使用 Edit，而不是 Write"),
             "should contain Edit-over-Write preference"
         );
     }
@@ -737,7 +728,7 @@ mod tests {
             false,
         );
         assert!(
-            result.contains("Read a file before editing"),
+            result.contains("编辑文件前始终先使用 Read"),
             "should contain Read-before-Edit rule"
         );
     }
@@ -755,8 +746,8 @@ mod tests {
             false,
             false,
         );
-        let intro_pos = result.find("Working directory").unwrap();
-        let guidance_pos = result.find("# Using your tools").unwrap();
+        let intro_pos = result.find("工作目录").unwrap();
+        let guidance_pos = result.find("# 使用工具").unwrap();
         let custom_pos = result.find("CUSTOM_MARKER_43").unwrap();
         assert!(guidance_pos > intro_pos, "tool guidance should appear after intro");
         assert!(
@@ -779,7 +770,7 @@ mod tests {
             false,
             false,
         );
-        let guidance_pos = result.find("# Using your tools").unwrap();
+        let guidance_pos = result.find("# 使用工具").unwrap();
         let skills_pos = result.find("guide-test-skill").unwrap();
         assert!(
             guidance_pos < skills_pos,
@@ -801,7 +792,7 @@ mod tests {
             false,
         );
         assert!(
-            result.contains("# Using your tools"),
+            result.contains("# 使用工具"),
             "tool guidance should be present in plan mode"
         );
     }
@@ -820,7 +811,7 @@ mod tests {
             false,
         );
         assert!(
-            result.contains("deferred"),
+            result.contains("延迟加载"),
             "tool guidance should mention deferred tools"
         );
         assert!(result.contains("ToolSearch"), "tool guidance should mention ToolSearch");
@@ -844,10 +835,16 @@ mod tests {
             &policy,
         );
 
-        assert!(result.contains("File search: Glob"));
-        assert!(result.contains("Content search: Grep"));
-        assert!(result.contains("Read files: Read"));
-        for unavailable in ["ExecCommand", "Edit files", "Write files", "ToolSearch", "Skill tool"] {
+        assert!(result.contains("搜索文件：Glob"));
+        assert!(result.contains("搜索内容：Grep"));
+        assert!(result.contains("读取文件：Read"));
+        for unavailable in [
+            "ExecCommand",
+            "编辑文件：Edit",
+            "写入文件：Write",
+            "ToolSearch",
+            "Skill 工具",
+        ] {
             assert!(
                 !result.contains(unavailable),
                 "restricted prompt should not mention unavailable tool guidance: {unavailable}"
@@ -910,8 +907,8 @@ mod tests {
             false,
             false,
         );
-        let guidance_pos = result.find("# Using your tools").unwrap();
-        let memory_pos = result.find("auto memory").unwrap();
+        let guidance_pos = result.find("# 使用工具").unwrap();
+        let memory_pos = result.find("自动记忆").unwrap();
         assert!(
             guidance_pos < memory_pos,
             "tool guidance should appear before memory section"
@@ -1015,7 +1012,7 @@ mod tests {
             "toon_enabled should inject TOON format instructions"
         );
         assert!(
-            result.contains("Token-Oriented Object Notation"),
+            result.contains("面向 token 的对象表示法"),
             "should contain full TOON description"
         );
     }

@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-types"
-description = "Shared provider-neutral data types for TjuaeCLI (LLM, message, tool)"
+description = "TjuaeCLI 的提供商无关共享数据类型（LLM、消息、工具）"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

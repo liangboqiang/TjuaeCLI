@@ -287,9 +287,9 @@ async fn tc_2_6_05_session_save_after_compact() {
 
     // Verify at least one message contains compact boundary marker
     let has_boundary = session.messages.iter().any(|m| {
-        m.content.iter().any(|b| {
-            matches!(b, tjuae_types::message::ContentBlock::Text { text } if text.contains("[Conversation compacted]"))
-        })
+        m.content
+            .iter()
+            .any(|b| matches!(b, tjuae_types::message::ContentBlock::Text { text } if text.contains("[对话已压缩]")))
     });
     assert!(has_boundary, "session should contain compact boundary marker");
 }

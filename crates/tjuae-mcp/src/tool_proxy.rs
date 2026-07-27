@@ -79,7 +79,7 @@ impl Tool for McpToolProxy {
                 is_error: false,
             },
             Err(e) => ToolResult {
-                content: format!("MCP tool error: {}", e),
+                content: format!("MCP 工具错误：{}", e),
                 is_error: true,
             },
         }

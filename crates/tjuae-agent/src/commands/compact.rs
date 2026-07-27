@@ -14,12 +14,12 @@ impl SlashCommand for CompactCommand {
     }
 
     fn description(&self) -> &str {
-        "Compress conversation context"
+        "压缩对话上下文"
     }
 
     async fn execute(&self, ctx: &mut CommandContext<'_>, _args: &str) -> anyhow::Result<CommandResult> {
         if ctx.messages.len() <= 2 {
-            ctx.output.emit_info("Context is already compact");
+            ctx.output.emit_info("上下文已经足够紧凑");
             return Ok(CommandResult::Continue);
         }
 
@@ -61,7 +61,7 @@ impl SlashCommand for CompactCommand {
                 }
 
                 ctx.output.emit_info(&format!(
-                    "Context compacted: {}k → compact ({} messages summarized)",
+                    "上下文已压缩：{}k → compact（已总结 {} 条消息）",
                     pre_tokens / 1000,
                     msgs_summarized
                 ));
@@ -69,7 +69,7 @@ impl SlashCommand for CompactCommand {
                 return Ok(CommandResult::ContextChanged);
             }
             Err(e) => {
-                ctx.output.emit_error(&format!("Compact failed: {}", e));
+                ctx.output.emit_error(&format!("压缩失败：{}", e));
             }
         }
 

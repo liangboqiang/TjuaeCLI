@@ -88,11 +88,11 @@ mod tests {
         assert!(result.was_truncated);
         assert_eq!(result.line_count, 250);
         // Content should contain only first 200 lines (before warning)
-        let content_before_warning = result.content.split("\n\n> WARNING:").next().unwrap();
+        let content_before_warning = result.content.split("\n\n> 警告：").next().unwrap();
         let output_lines: Vec<&str> = content_before_warning.split('\n').collect();
         assert_eq!(output_lines.len(), 200);
-        assert!(result.content.contains("250 lines"));
-        assert!(result.content.contains("WARNING"));
+        assert!(result.content.contains("250 行"));
+        assert!(result.content.contains("警告"));
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
         assert!(result.was_truncated);
         assert_eq!(result.line_count, 100);
         // Warning should mention byte size, not line count
-        assert!(result.content.contains("index entries are too long"));
+        assert!(result.content.contains("索引条目过长"));
     }
 
     #[test]
@@ -133,7 +133,7 @@ mod tests {
         assert!(result.was_truncated);
 
         // Content before warning should end at a line boundary
-        let before_warning = result.content.split("\n\n> WARNING:").next().unwrap();
+        let before_warning = result.content.split("\n\n> 警告：").next().unwrap();
         // Every line should be complete (not cut mid-content)
         for line in before_warning.lines() {
             assert!(
@@ -157,7 +157,7 @@ mod tests {
         assert!(result.was_truncated);
         assert_eq!(result.line_count, 300);
         // Warning should mention both lines and bytes
-        assert!(result.content.contains("300 lines"));
+        assert!(result.content.contains("300 行"));
         assert!(result.content.contains("KB"));
     }
 
@@ -170,7 +170,7 @@ mod tests {
 
         assert!(result.was_truncated);
         // Should truncate at MAX_INDEX_BYTES
-        let before_warning = result.content.split("\n\n> WARNING:").next().unwrap();
+        let before_warning = result.content.split("\n\n> 警告：").next().unwrap();
         assert_eq!(before_warning.len(), MAX_INDEX_BYTES);
     }
 

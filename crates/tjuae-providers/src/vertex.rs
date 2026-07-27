@@ -119,7 +119,7 @@ impl VertexTransportState {
             let cached = self
                 .cached_token
                 .lock()
-                .map_err(|_| ProviderError::Connection("Vertex token cache lock poisoned".to_string()))?;
+                .map_err(|_| ProviderError::Connection("Vertex token 缓存锁已损坏".to_string()))?;
             if let Some(token) = cached.as_ref() {
                 let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                 if token.expires_at > now + 60 {
@@ -139,7 +139,7 @@ impl VertexTransportState {
         let mut cached = self
             .cached_token
             .lock()
-            .map_err(|_| ProviderError::Connection("Vertex token cache lock poisoned".to_string()))?;
+            .map_err(|_| ProviderError::Connection("Vertex token 缓存锁已损坏".to_string()))?;
         *cached = Some(CachedToken {
             token: token.clone(),
             expires_at: now + expires_in,
@@ -149,11 +149,11 @@ impl VertexTransportState {
     }
 
     async fn get_service_account_token(&self, key_file: &str) -> Result<(String, u64), ProviderError> {
-        let key_json = read_to_string(key_file)
-            .map_err(|e| ProviderError::Connection(format!("Failed to read key file: {}", e)))?;
+        let key_json =
+            read_to_string(key_file).map_err(|e| ProviderError::Connection(format!("读取密钥文件失败：{}", e)))?;
 
         let sa: ServiceAccountKey = serde_json::from_str(&key_json)
-            .map_err(|e| ProviderError::Connection(format!("Failed to parse key file: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("解析密钥文件失败：{}", e)))?;
 
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
@@ -166,11 +166,11 @@ impl VertexTransportState {
         };
 
         let encoding_key = EncodingKey::from_rsa_pem(sa.private_key.as_bytes())
-            .map_err(|e| ProviderError::Connection(format!("Invalid RSA key: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("无效的 RSA 密钥：{}", e)))?;
 
         let header = Header::new(Algorithm::RS256);
         let jwt = jsonwebtoken::encode(&header, &claims, &encoding_key)
-            .map_err(|e| ProviderError::Connection(format!("JWT encode error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("JWT 编码错误：{}", e)))?;
 
         // Exchange JWT for access token
         let resp = self
@@ -182,12 +182,12 @@ impl VertexTransportState {
             ])
             .send()
             .await
-            .map_err(|e| ProviderError::Connection(format!("Token exchange error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("token 交换错误：{}", e)))?;
 
         let token_resp: GoogleTokenResponse = resp
             .json()
             .await
-            .map_err(|e| ProviderError::Connection(format!("Token parse error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("token 解析错误：{}", e)))?;
 
         Ok((token_resp.access_token, token_resp.expires_in))
     }
@@ -195,19 +195,19 @@ impl VertexTransportState {
     async fn get_adc_token(&self) -> Result<(String, u64), ProviderError> {
         // Read Application Default Credentials
         let adc_path = dirs::home_dir()
-            .ok_or_else(|| ProviderError::Connection("Cannot determine home dir".into()))?
+            .ok_or_else(|| ProviderError::Connection("无法确定主目录".into()))?
             .join(".config/gcloud/application_default_credentials.json");
 
         let adc_json = read_to_string(&adc_path).map_err(|e| {
             ProviderError::Connection(format!(
-                "Failed to read ADC at {}: {}. Run 'gcloud auth application-default login'.",
+                "读取 {} 中的 ADC 失败：{}。请运行 'gcloud auth application-default login'。",
                 adc_path.display(),
                 e
             ))
         })?;
 
-        let adc: AdcCredentials = serde_json::from_str(&adc_json)
-            .map_err(|e| ProviderError::Connection(format!("Failed to parse ADC: {}", e)))?;
+        let adc: AdcCredentials =
+            serde_json::from_str(&adc_json).map_err(|e| ProviderError::Connection(format!("解析 ADC 失败：{}", e)))?;
 
         // Use refresh token to get access token
         let resp = self
@@ -221,12 +221,12 @@ impl VertexTransportState {
             ])
             .send()
             .await
-            .map_err(|e| ProviderError::Connection(format!("ADC token refresh error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("ADC token 刷新错误：{}", e)))?;
 
         let token_resp: GoogleTokenResponse = resp
             .json()
             .await
-            .map_err(|e| ProviderError::Connection(format!("Token parse error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("token 解析错误：{}", e)))?;
 
         Ok((token_resp.access_token, token_resp.expires_in))
     }
@@ -238,12 +238,12 @@ impl VertexTransportState {
             .header("Metadata-Flavor", "Google")
             .send()
             .await
-            .map_err(|e| ProviderError::Connection(format!("Metadata server error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("元数据服务器错误：{}", e)))?;
 
         let token_resp: GoogleTokenResponse = resp
             .json()
             .await
-            .map_err(|e| ProviderError::Connection(format!("Token parse error: {}", e)))?;
+            .map_err(|e| ProviderError::Connection(format!("token 解析错误：{}", e)))?;
 
         Ok((token_resp.access_token, token_resp.expires_in))
     }
@@ -272,7 +272,7 @@ impl VertexTransportState {
         headers.insert(
             AUTHORIZATION,
             HeaderValue::from_str(&format!("Bearer {}", access_token))
-                .map_err(|e| ProviderError::Connection(format!("Header error: {}", e)))?,
+                .map_err(|e| ProviderError::Connection(format!("请求头错误：{}", e)))?,
         );
 
         let response = self.client.post(url).headers(headers).json(body).send().await?;

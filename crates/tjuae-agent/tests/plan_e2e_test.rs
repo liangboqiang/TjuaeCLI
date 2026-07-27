@@ -305,20 +305,20 @@ fn system_prompt_tracks_plan_mode_transitions() {
 
     // Normal mode: no plan instructions
     assert!(
-        !base_prompt.contains("Plan Mode"),
+        !base_prompt.contains("# 计划模式"),
         "base prompt should not mention plan mode"
     );
 
     // Enter plan mode: instructions appended
     let active_prompt = format!("{}\n\n{}", base_prompt, instructions);
-    assert!(active_prompt.contains("# Plan Mode"));
-    assert!(active_prompt.contains("MUST NOT"));
+    assert!(active_prompt.contains("# 计划模式"));
+    assert!(active_prompt.contains("严禁"));
     assert!(active_prompt.contains("ExitPlanMode"));
     assert!(active_prompt.contains(base_prompt));
 
     // Exit plan mode: back to base prompt only
     let exited_prompt = base_prompt.to_string();
-    assert!(!exited_prompt.contains("# Plan Mode"));
+    assert!(!exited_prompt.contains("# 计划模式"));
 }
 
 // ---------------------------------------------------------------------------

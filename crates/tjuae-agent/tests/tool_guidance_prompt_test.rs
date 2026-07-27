@@ -54,7 +54,7 @@ fn tc_4_3_01_tool_guidance_section_exists() {
         false,
     );
     assert!(
-        result.contains("# Using your tools"),
+        result.contains("# 使用工具"),
         "system prompt should contain the tool guidance section heading"
     );
 }
@@ -121,9 +121,9 @@ fn tc_4_3_03_parallel_call_guidance() {
         false,
         false,
     );
-    assert!(result.contains("parallel"), "should contain parallel call guidance");
+    assert!(result.contains("并行"), "should contain parallel call guidance");
     assert!(
-        result.contains("sequentially"),
+        result.contains("按顺序执行"),
         "should explain when to run sequentially (dependencies)"
     );
 }
@@ -146,11 +146,11 @@ fn tc_4_3_04_edit_write_read_rules() {
         false,
     );
     assert!(
-        result.contains("Prefer Edit over Write"),
+        result.contains("优先使用 Edit，而不是 Write"),
         "should contain Edit-over-Write preference"
     );
     assert!(
-        result.contains("Read a file before editing"),
+        result.contains("编辑文件前始终先使用 Read"),
         "should contain Read-before-Edit rule"
     );
 }
@@ -174,11 +174,9 @@ fn tc_4_3_05_order_after_intro_before_custom() {
     );
 
     let intro_pos = result
-        .find("Working directory")
+        .find("工作目录")
         .expect("intro should contain 'Working directory'");
-    let guidance_pos = result
-        .find("# Using your tools")
-        .expect("tool guidance section should exist");
+    let guidance_pos = result.find("# 使用工具").expect("tool guidance section should exist");
     let custom_pos = result.find("CUSTOM_PROMPT_MARKER").expect("custom prompt should exist");
 
     assert!(
@@ -210,7 +208,7 @@ fn tc_4_3_06_order_before_skills() {
         false,
     );
 
-    let guidance_pos = result.find("# Using your tools").expect("tool guidance should exist");
+    let guidance_pos = result.find("# 使用工具").expect("tool guidance should exist");
     let skills_pos = result.find("order-test-skill").expect("skill should be listed");
 
     assert!(
@@ -238,8 +236,8 @@ fn tc_4_3_06_order_before_memory() {
         false,
     );
 
-    let guidance_pos = result.find("# Using your tools").expect("tool guidance should exist");
-    let memory_pos = result.find("auto memory").expect("memory section should exist");
+    let guidance_pos = result.find("# 使用工具").expect("tool guidance should exist");
+    let memory_pos = result.find("自动记忆").expect("memory section should exist");
 
     assert!(
         guidance_pos < memory_pos,
@@ -279,19 +277,19 @@ fn tc_4_3_07_all_sections_coexist() {
     );
 
     // All sections should exist
-    assert!(result.contains("Working directory"), "intro should exist");
-    assert!(result.contains("# Using your tools"), "tool guidance should exist");
+    assert!(result.contains("工作目录"), "intro should exist");
+    assert!(result.contains("# 使用工具"), "tool guidance should exist");
     assert!(result.contains("CUSTOM_COEXIST"), "custom prompt should exist");
     assert!(result.contains("PROJECT_RULES_COEXIST"), "AGENTS.md should exist");
-    assert!(result.contains("auto memory"), "memory section should exist");
+    assert!(result.contains("自动记忆"), "memory section should exist");
     assert!(result.contains("coexist-skill"), "skills listing should exist");
 
     // Verify ordering: intro < guidance < custom < agents.md < memory < skills
-    let intro_pos = result.find("Working directory").unwrap();
-    let guidance_pos = result.find("# Using your tools").unwrap();
+    let intro_pos = result.find("工作目录").unwrap();
+    let guidance_pos = result.find("# 使用工具").unwrap();
     let custom_pos = result.find("CUSTOM_COEXIST").unwrap();
     let agents_pos = result.find("PROJECT_RULES_COEXIST").unwrap();
-    let memory_pos = result.find("auto memory").unwrap();
+    let memory_pos = result.find("自动记忆").unwrap();
     let skills_pos = result.find("coexist-skill").unwrap();
 
     assert!(guidance_pos > intro_pos, "guidance after intro");
@@ -319,12 +317,12 @@ fn tc_4_3_08_guidance_in_plan_mode() {
         false,
     );
     assert!(
-        result.contains("# Using your tools"),
+        result.contains("# 使用工具"),
         "tool guidance should be present even in plan mode"
     );
     // Plan mode instructions should also be present
     assert!(
-        result.contains("plan") || result.contains("Plan"),
+        result.contains("计划"),
         "plan mode instructions should coexist with tool guidance"
     );
 }

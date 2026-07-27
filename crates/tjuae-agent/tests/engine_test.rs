@@ -439,7 +439,7 @@ async fn test_engine_max_tokens_handling() {
     assert!(
         matches!(
             &last_message.content[..],
-            [ContentBlock::Text { text }] if text.contains("previous response was cut off")
+            [ContentBlock::Text { text }] if text.contains("上一次响应因达到 token 上限而被截断")
         ),
         "finalization prompt should explain the max tokens continuation"
     );
@@ -489,7 +489,7 @@ async fn empty_final_gets_one_visible_answer_nudge() {
     assert!(
         matches!(
             &last_message.content[..],
-            [ContentBlock::Text { text }] if text.contains("visible answer text")
+            [ContentBlock::Text { text }] if text.contains("可见的回答文本")
         ),
         "empty finalization prompt should ask for visible answer text"
     );
@@ -526,7 +526,7 @@ async fn empty_final_falls_back_after_one_empty_retry() {
 
     assert_eq!(result.stop_reason, StopReason::EndTurn);
     assert_eq!(result.turns, 1);
-    assert!(result.text.contains("finished without visible answer text"));
+    assert!(result.text.contains("未生成可见的回答文本"));
 
     let session = SessionManager::new(dir.path().to_path_buf(), 10)
         .load("latest")
@@ -663,7 +663,7 @@ async fn max_tokens_finalization_tool_call_falls_back_without_persisting_tool_us
             .flat_map(|message| &message.content)
             .any(|block| matches!(
                 block,
-                ContentBlock::Text { text } if text.contains("previous response was cut off")
+                ContentBlock::Text { text } if text.contains("上一次响应因达到 token 上限而被截断")
             )),
         "temporary finalization control prompt must not be persisted"
     );
@@ -889,7 +889,7 @@ async fn test_engine_max_turns_runs_one_grace_finalization() {
     assert!(
         matches!(
             &last_message.content[..],
-            [ContentBlock::Text { text }] if text.contains("Do not call any more tools")
+            [ContentBlock::Text { text }] if text.contains("不要再调用任何工具")
         ),
         "grace finalization prompt should forbid more tool calls"
     );
@@ -1056,7 +1056,7 @@ async fn repeated_tool_call_failure_disabled_runs_grace_finalization() {
     assert!(
         matches!(
             &last_message.content[..],
-            [ContentBlock::Text { text }] if text.contains("Do not call any more tools")
+            [ContentBlock::Text { text }] if text.contains("不要再调用任何工具")
         ),
         "grace finalization prompt should forbid more tool calls"
     );
@@ -1137,7 +1137,7 @@ async fn repeated_tool_call_malformed_stops_on_default_third_turn() {
     assert_eq!(tool_results.len(), 3);
     assert!(
         tool_results.iter().all(|(id, content, is_error)| {
-            id.as_str() == "bad" && **is_error && content.contains("Malformed tool call: empty function name")
+            id.as_str() == "bad" && **is_error && content.contains("工具调用格式错误：函数名称为空")
         }),
         "tool-call malformed uses should have paired synthetic error results"
     );
@@ -1217,7 +1217,7 @@ async fn repeated_tool_call_malformed_disabled_runs_grace_finalization() {
     assert!(
         matches!(
             &last_message.content[..],
-            [ContentBlock::Text { text }] if text.contains("Do not call any more tools")
+            [ContentBlock::Text { text }] if text.contains("不要再调用任何工具")
         ),
         "grace finalization prompt should forbid more tool calls"
     );

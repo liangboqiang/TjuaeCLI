@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-agent"
-description = "Agent engine, session management, output sinks, and orchestration for TjuaeCLI"
+description = "TjuaeCLI 的智能体引擎、会话管理、输出接收器和编排能力"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

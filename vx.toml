@@ -3,9 +3,9 @@ just = "1.48.1"
 rust = "1.95.0"
 
 [settings]
-# Automatically install missing tools when entering dev environment
+# 进入开发环境时自动安装缺失工具
 auto_install = true
-# Cache duration for version checks
+# 版本检查缓存时长
 cache_duration = "7d"
 
 [scripts]

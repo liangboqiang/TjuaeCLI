@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn test_missing_client_id_is_rejected() {
         let error = AuthConfig::default().require_client_id().unwrap_err();
-        assert!(error.to_string().contains("OAuth client_id is not configured"));
+        assert!(error.to_string().contains("尚未配置 OAuth client_id"));
     }
 
     #[test]

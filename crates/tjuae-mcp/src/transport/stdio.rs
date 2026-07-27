@@ -30,16 +30,16 @@ impl StdioTransport {
 
         let mut child = cmd
             .spawn()
-            .map_err(|e| McpError::Transport(format!("Failed to spawn '{}': {}", command, e)))?;
+            .map_err(|e| McpError::Transport(format!("启动 '{}' 失败：{}", command, e)))?;
 
         let stdin = child
             .stdin
             .take()
-            .ok_or_else(|| McpError::Transport("Failed to capture child stdin".into()))?;
+            .ok_or_else(|| McpError::Transport("捕获子进程标准输入失败".into()))?;
         let stdout = child
             .stdout
             .take()
-            .ok_or_else(|| McpError::Transport("Failed to capture child stdout".into()))?;
+            .ok_or_else(|| McpError::Transport("捕获子进程标准输出失败".into()))?;
 
         Ok(Self {
             stdin: Mutex::new(BufWriter::new(stdin)),
@@ -56,22 +56,21 @@ impl StdioTransport {
 
     /// Send a JSON-RPC message (request or notification) via stdin
     async fn send(&self, req: &JsonRpcRequest) -> Result<(), McpError> {
-        let json =
-            serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON serialize error: {}", e)))?;
+        let json = serde_json::to_string(req).map_err(|e| McpError::Transport(format!("JSON 序列化错误：{}", e)))?;
 
         let mut stdin = self.stdin.lock().await;
         stdin
             .write_all(json.as_bytes())
             .await
-            .map_err(|e| McpError::Transport(format!("Write to stdin failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("写入标准输入失败：{}", e)))?;
         stdin
             .write_all(b"\n")
             .await
-            .map_err(|e| McpError::Transport(format!("Write newline failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("写入换行符失败：{}", e)))?;
         stdin
             .flush()
             .await
-            .map_err(|e| McpError::Transport(format!("Flush stdin failed: {}", e)))?;
+            .map_err(|e| McpError::Transport(format!("刷新标准输入失败：{}", e)))?;
         Ok(())
     }
 
@@ -86,16 +85,16 @@ impl StdioTransport {
             let bytes_read = stdout
                 .read_line(&mut line)
                 .await
-                .map_err(|e| McpError::Transport(format!("Read from stdout failed: {}", e)))?;
+                .map_err(|e| McpError::Transport(format!("读取标准输出失败：{}", e)))?;
 
             if bytes_read == 0 {
-                return Err(McpError::Transport("Child process stdout closed".into()));
+                return Err(McpError::Transport("子进程标准输出已关闭".into()));
             }
 
             let trimmed = line.trim();
             if !trimmed.is_empty() {
                 let response: JsonRpcResponse = serde_json::from_str(trimmed).map_err(|e| {
-                    McpError::Transport(format!("Failed to parse JSON-RPC response: {} — raw: {}", e, trimmed))
+                    McpError::Transport(format!("解析 JSON-RPC 响应失败：{}——原始内容：{}", e, trimmed))
                 })?;
                 return Ok(response);
             }

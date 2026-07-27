@@ -458,7 +458,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            ProviderError::Parse(message) if message.contains("without an HTTP status")
+            ProviderError::Parse(message) if message.contains("不含 HTTP 状态")
         ));
     }
 
@@ -545,7 +545,7 @@ mod tests {
         assert!(matches!(
             error,
             ProviderError::Api { status: 400, message }
-                if message.contains("tools wire shape mismatch")
+                if message.contains("工具 wire shape 不匹配")
                     && message.contains("anthropic_input_schema")
                     && message.contains("openai_function")
         ));
@@ -638,7 +638,7 @@ mod tests {
         assert!(matches!(
             bedrock_error,
             ProviderError::Connection(message)
-                if message == "Bedrock projected request missing signed request body bytes"
+                if message == "Bedrock 投影请求缺少已签名的请求正文字节"
         ));
     }
 

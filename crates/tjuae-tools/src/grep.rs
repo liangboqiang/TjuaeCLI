@@ -26,13 +26,12 @@ impl Tool for GrepTool {
     }
 
     fn description(&self) -> &str {
-        "Searches file contents using regex patterns (powered by ripgrep).\n\n\
-         IMPORTANT: ALWAYS use this Grep tool for content search. \
-         NEVER run grep or rg as a ExecCommand command.\n\n\
-         - Supports full regex syntax (e.g., \"log.*Error\", \"fn\\\\s+\\\\w+\").\n\
-         - Use the glob parameter to filter by file pattern (e.g., \"*.rs\").\n\
-         - Output is truncated to 250 lines.\n\
-         - Set case_insensitive to true for case-insensitive search."
+        "使用正则表达式搜索文件内容（由 ripgrep 驱动）。\n\n\
+         重要：搜索内容时始终使用 Grep 工具。绝不要通过 ExecCommand 运行 grep 或 rg。\n\n\
+         - 支持完整的正则表达式语法（例如 \"log.*Error\"、\"fn\\\\s+\\\\w+\"）。\n\
+         - 使用 glob 参数按文件模式筛选（例如 \"*.rs\"）。\n\
+         - 输出最多保留 250 行。\n\
+         - 将 case_insensitive 设为 true 可执行不区分大小写的搜索。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -41,19 +40,19 @@ impl Tool for GrepTool {
             "properties": {
                 "pattern": {
                     "type": "string",
-                    "description": "The regex pattern to search for"
+                    "description": "要搜索的正则表达式"
                 },
                 "path": {
                     "type": "string",
-                    "description": "Directory to search in (default: cwd)"
+                    "description": "搜索目录（默认：当前工作目录）"
                 },
                 "glob": {
                     "type": "string",
-                    "description": "File filter pattern, e.g. \"*.rs\""
+                    "description": "文件筛选模式，例如 \"*.rs\""
                 },
                 "case_insensitive": {
                     "type": "boolean",
-                    "description": "Case insensitive search"
+                    "description": "是否执行不区分大小写的搜索"
                 }
             },
             "required": ["pattern"]
@@ -67,7 +66,7 @@ impl Tool for GrepTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(pattern) = input["pattern"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: pattern".to_string(),
+                content: "缺少必需参数：pattern".to_string(),
                 is_error: true,
             };
         };
@@ -79,7 +78,7 @@ impl Tool for GrepTool {
             raw_path.to_owned()
         };
 
-        tracing::debug!(cwd = %self.cwd.display(), resolved_path = %path, pattern = %pattern, "GrepTool searching");
+        tracing::debug!(cwd = %self.cwd.display(), resolved_path = %path, pattern = %pattern, "GrepTool 正在搜索");
 
         let glob_pattern = input["glob"].as_str();
         let case_insensitive = input["case_insensitive"].as_bool().unwrap_or(false);
@@ -107,7 +106,7 @@ impl Tool for GrepTool {
     fn describe(&self, input: &Value) -> String {
         let pattern = input.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
         let raw_path = input.get("path").and_then(|v| v.as_str()).unwrap_or(".");
-        format!("Grep '{}' in {}", pattern, raw_path)
+        format!("在 {} 中搜索 '{}'", raw_path, pattern)
     }
 }
 
@@ -133,14 +132,14 @@ async fn try_ripgrep(
 
     if output.status.code() == Some(1) && stdout.is_empty() {
         return Ok(ToolResult {
-            content: "No matches found".to_string(),
+            content: "未找到匹配项".to_string(),
             is_error: false,
         });
     }
 
     if !output.status.success() && output.status.code() != Some(1) {
         return Ok(ToolResult {
-            content: format!("rg error: {}", stderr),
+            content: format!("rg 错误：{}", stderr),
             is_error: true,
         });
     }
@@ -179,7 +178,7 @@ async fn try_grep(pattern: &str, path: &str, case_insensitive: bool) -> ToolResu
             let stdout = String::from_utf8_lossy(&output.stdout);
             if stdout.is_empty() {
                 ToolResult {
-                    content: "No matches found".to_string(),
+                    content: "未找到匹配项".to_string(),
                     is_error: false,
                 }
             } else {
@@ -191,7 +190,7 @@ async fn try_grep(pattern: &str, path: &str, case_insensitive: bool) -> ToolResu
             }
         }
         Err(e) => ToolResult {
-            content: format!("grep failed: {}", e),
+            content: format!("grep 执行失败：{}", e),
             is_error: true,
         },
     }

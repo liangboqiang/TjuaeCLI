@@ -21,11 +21,11 @@ pub struct ResolvedLogging {
 
 #[derive(Debug, thiserror::Error)]
 pub enum LoggingError {
-    #[error("failed to create log directory '{path}': {source}")]
+    #[error("创建日志目录 '{path}' 失败：{source}")]
     CreateDir { path: PathBuf, source: std::io::Error },
-    #[error("failed to build log file appender: {0}")]
+    #[error("创建日志文件追加器失败：{0}")]
     AppenderInit(String),
-    #[error("invalid log level filter '{filter}': {reason}")]
+    #[error("无效的日志级别过滤器 '{filter}'：{reason}")]
     InvalidFilter { filter: String, reason: String },
 }
 

@@ -73,7 +73,7 @@ mod tests {
         let result = tool.execute(input).await;
 
         assert!(result.is_error);
-        assert!(result.content.contains("Failed to read file"));
+        assert!(result.content.contains("读取文件"));
     }
 
     #[tokio::test]

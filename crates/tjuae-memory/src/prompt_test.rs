@@ -76,8 +76,8 @@ mod tests {
     #[test]
     fn how_to_save_describes_two_steps() {
         let section = how_to_save_section();
-        assert!(section.contains("Step 1"));
-        assert!(section.contains("Step 2"));
+        assert!(section.contains("步骤 1"));
+        assert!(section.contains("步骤 2"));
     }
 
     // -- build_memory_instructions -------------------------------------------
@@ -100,19 +100,19 @@ mod tests {
     fn instructions_contain_dir_exists_guidance() {
         let lines = build_memory_instructions(Path::new("/test/memory"));
         let joined = lines.join("\n");
-        assert!(joined.contains("already exists"));
+        assert!(joined.contains("已经存在"));
     }
 
     #[test]
     fn instructions_contain_all_sections() {
         let lines = build_memory_instructions(Path::new("/test/memory"));
         let joined = lines.join("\n");
-        assert!(joined.contains("## Types of memory"));
-        assert!(joined.contains("## What NOT to save"));
-        assert!(joined.contains("## How to save memories"));
-        assert!(joined.contains("## When to access memories"));
-        assert!(joined.contains("## Before recommending from memory"));
-        assert!(joined.contains("## Memory and other forms of persistence"));
+        assert!(joined.contains("## 记忆类型"));
+        assert!(joined.contains("## 不应保存到记忆中的内容"));
+        assert!(joined.contains("## 如何保存记忆"));
+        assert!(joined.contains("## 何时访问记忆"));
+        assert!(joined.contains("## 根据记忆提出建议前"));
+        assert!(joined.contains("## 记忆与其他持久化方式"));
     }
 
     #[test]
@@ -138,7 +138,7 @@ mod tests {
     fn prompt_with_nonexistent_dir_shows_empty_state() {
         let result = build_memory_prompt(Path::new("/nonexistent/memory/dir"));
         assert!(result.contains(ENTRYPOINT_NAME));
-        assert!(result.contains("currently empty"));
+        assert!(result.contains("当前为空"));
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod tests {
         let result = build_memory_prompt(&mem_dir);
         assert!(result.contains("user_role.md"));
         assert!(result.contains("user role info"));
-        assert!(!result.contains("currently empty"));
+        assert!(!result.contains("当前为空"));
     }
 
     #[test]
@@ -164,7 +164,7 @@ mod tests {
         std::fs::write(&index_path, "").unwrap();
 
         let result = build_memory_prompt(&mem_dir);
-        assert!(result.contains("currently empty"));
+        assert!(result.contains("当前为空"));
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
         let result = build_memory_prompt(&mem_dir);
 
         // Instructions (type descriptions) should appear before the index content
-        let types_pos = result.find("## Types of memory").unwrap();
+        let types_pos = result.find("## 记忆类型").unwrap();
         let index_pos = result.find(&format!("## {ENTRYPOINT_NAME}")).unwrap();
         assert!(
             types_pos < index_pos,
@@ -200,7 +200,7 @@ mod tests {
         std::fs::write(&index_path, &content).unwrap();
 
         let result = build_memory_prompt(&mem_dir);
-        assert!(result.contains("WARNING"));
+        assert!(result.contains("警告"));
     }
 
     // -- build_memory_prompt_minimal -------------------------------------------
@@ -220,18 +220,15 @@ mod tests {
     #[test]
     fn minimal_prompt_contains_compact_rules() {
         let result = build_memory_prompt_minimal(Path::new("/test/memory"));
-        assert!(result.contains("Memory types:"), "should list memory types compactly");
-        assert!(
-            result.contains("MEMORY.md is the index"),
-            "should mention MEMORY.md role"
-        );
+        assert!(result.contains("记忆类型包括"), "should list memory types compactly");
+        assert!(result.contains("MEMORY.md 是索引"), "should mention MEMORY.md role");
     }
 
     #[test]
     fn minimal_prompt_omits_full_type_taxonomy() {
         let result = build_memory_prompt_minimal(Path::new("/test/memory"));
         assert!(
-            !result.contains("## Types of memory"),
+            !result.contains("## 记忆类型"),
             "minimal prompt should NOT contain full type taxonomy heading"
         );
         assert!(
@@ -239,11 +236,11 @@ mod tests {
             "minimal prompt should NOT contain XML type definitions"
         );
         assert!(
-            !result.contains("## What NOT to save"),
+            !result.contains("## 不应保存到记忆中的内容"),
             "minimal prompt should NOT contain what-not-to-save section"
         );
         assert!(
-            !result.contains("## How to save memories"),
+            !result.contains("## 如何保存记忆"),
             "minimal prompt should NOT contain detailed save instructions"
         );
     }
@@ -251,7 +248,7 @@ mod tests {
     #[test]
     fn minimal_prompt_nonexistent_dir_shows_empty_state() {
         let result = build_memory_prompt_minimal(Path::new("/nonexistent/memory/dir"));
-        assert!(result.contains("currently empty"));
+        assert!(result.contains("当前为空"));
     }
 
     #[test]
@@ -268,7 +265,7 @@ mod tests {
         let result = build_memory_prompt_minimal(&mem_dir);
         assert!(result.contains("user_role.md"));
         assert!(result.contains("senior engineer"));
-        assert!(!result.contains("currently empty"));
+        assert!(!result.contains("当前为空"));
     }
 
     #[test]
@@ -293,7 +290,7 @@ mod tests {
     fn full_prompt_contains_full_taxonomy() {
         let result = build_memory_prompt(Path::new("/test/memory"));
         assert!(
-            result.contains("## Types of memory"),
+            result.contains("## 记忆类型"),
             "full prompt should contain type taxonomy"
         );
         assert!(
@@ -301,11 +298,11 @@ mod tests {
             "full prompt should contain XML type definitions"
         );
         assert!(
-            result.contains("## What NOT to save"),
+            result.contains("## 不应保存到记忆中的内容"),
             "full prompt should contain what-not-to-save"
         );
         assert!(
-            result.contains("## How to save memories"),
+            result.contains("## 如何保存记忆"),
             "full prompt should contain save instructions"
         );
     }

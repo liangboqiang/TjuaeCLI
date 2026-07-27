@@ -284,7 +284,7 @@ mod tests {
         let any_text = result
             .iter()
             .flat_map(|m| m["content"].as_array().cloned().unwrap_or_default())
-            .any(|b| b["type"] == "text" && b["text"].as_str().unwrap_or("").contains("[tool call skipped:"));
+            .any(|b| b["type"] == "text" && b["text"].as_str().unwrap_or("").contains("[已跳过工具调用："));
         assert!(any_text);
     }
 
@@ -306,7 +306,7 @@ mod tests {
             .unwrap();
         assert!(content.iter().any(|b| {
             b["type"] == "text"
-                && b["text"].as_str().unwrap_or("").contains("[tool call skipped:")
+                && b["text"].as_str().unwrap_or("").contains("[已跳过工具调用：")
                 && b["text"].as_str().unwrap_or("").contains("arguments={}")
         }));
         assert!(!content.iter().any(|b| b["type"] == "tool_use" && b["name"] == ""));
@@ -317,7 +317,7 @@ mod tests {
         let mut compat = anthropic_compat();
         compat.messages.strip_patterns = Some(vec![
             "REMOVE_ME".into(),
-            "[tool call skipped:".into(),
+            "[已跳过工具调用：".into(),
             "arguments={}".into(),
         ]);
         let messages = vec![Message::new(
@@ -346,7 +346,7 @@ mod tests {
         );
         assert!(content.iter().any(|b| {
             b["type"] == "text"
-                && b["text"].as_str().unwrap_or("").contains("[tool call skipped:")
+                && b["text"].as_str().unwrap_or("").contains("[已跳过工具调用：")
                 && b["text"].as_str().unwrap_or("").contains("arguments={}")
         }));
     }
@@ -395,8 +395,7 @@ mod tests {
                 && m["content"].as_array().is_some_and(|blocks| {
                     blocks.iter().any(|b| {
                         b["type"] == "text"
-                            && b["text"].as_str().unwrap_or("")
-                                == "[tool call skipped: malformed (orphan tool result).]"
+                            && b["text"].as_str().unwrap_or("") == "[已跳过工具调用：格式错误（孤立的工具结果）。]"
                     })
                 })
         }));
@@ -455,7 +454,7 @@ mod tests {
         assert!(!blocks.iter().any(|b| b["type"] == "tool_result"));
         assert!(blocks.iter().any(|b| {
             b["type"] == "text"
-                && b["text"].as_str().unwrap_or("").contains("empty tool call id")
+                && b["text"].as_str().unwrap_or("").contains("工具调用 ID 为空")
                 && b["text"]
                     .as_str()
                     .unwrap_or("")
@@ -654,8 +653,7 @@ mod tests {
                 && m["content"].as_array().is_some_and(|blocks| {
                     blocks.iter().any(|b| {
                         b["type"] == "text"
-                            && b["text"].as_str().unwrap_or("")
-                                == "[tool call skipped: malformed (empty function name).]"
+                            && b["text"].as_str().unwrap_or("") == "[已跳过工具调用：格式错误（函数名为空）。]"
                     })
                 })
         });

@@ -50,7 +50,7 @@ async fn read_dedup_returns_stub_on_second_read() {
     let r2 = read_tool.execute(input).await;
     assert!(!r2.is_error, "second read should succeed: {}", r2.content);
     assert!(
-        r2.content.contains("unchanged since last read"),
+        r2.content.contains("自上次读取后没有变化"),
         "second read should return dedup stub, got: {}",
         r2.content
     );

@@ -93,6 +93,6 @@ mod tests {
 
     #[test]
     fn user_message_mentions_new_conversation() {
-        assert!(EMERGENCY_USER_MESSAGE.contains("new conversation"));
+        assert!(EMERGENCY_USER_MESSAGE.contains("新对话"));
     }
 }

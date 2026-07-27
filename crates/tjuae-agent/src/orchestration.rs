@@ -134,7 +134,7 @@ fn confirm_call(
         ConfirmResult::Approved => Ok(None),
         ConfirmResult::Denied => Ok(Some(ContentBlock::ToolResult {
             tool_use_id: id.clone(),
-            content: "Tool execution denied by user".to_string(),
+            content: "用户已拒绝执行工具".to_string(),
             is_error: true,
         })),
         ConfirmResult::Quit => Err(ExecutionControl::Quit),
@@ -153,7 +153,7 @@ async fn execute_single(
     };
 
     let start = std::time::Instant::now();
-    tracing::info!(target: "tjuae_agent", tool = %name, call_id = %id, "tool execution started");
+    tracing::info!(target: "tjuae_agent", tool = %name, call_id = %id, "工具开始执行");
 
     // Run pre-tool-use hooks
     if let Some(hook_engine) = hooks
@@ -162,7 +162,7 @@ async fn execute_single(
         return (
             ContentBlock::ToolResult {
                 tool_use_id: id.clone(),
-                content: format!("Blocked by hook: {}", e),
+                content: format!("已被钩子阻止：{}", e),
                 is_error: true,
             },
             None,
@@ -208,7 +208,7 @@ async fn execute_single(
         }
         None => (
             ToolResult {
-                content: format!("Unknown tool: {}", name),
+                content: format!("未知工具：{}", name),
                 is_error: true,
             },
             None,
@@ -220,12 +220,12 @@ async fn execute_single(
     if let Some(hook_engine) = hooks {
         let messages = hook_engine.run_post_tool_use(name, input, &result.content).await;
         for msg in messages {
-            tracing::info!(target: "tjuae_agent", hook_message = %msg, "post-tool-use hook output");
+            tracing::info!(target: "tjuae_agent", hook_message = %msg, "工具使用后 hook 输出");
         }
     }
 
     let duration_ms = start.elapsed().as_millis() as u64;
-    tracing::info!(target: "tjuae_agent", duration_ms, success = !result.is_error, "tool execution completed");
+    tracing::info!(target: "tjuae_agent", duration_ms, success = !result.is_error, "工具执行完成");
 
     (
         ContentBlock::ToolResult {
@@ -294,7 +294,7 @@ pub async fn execute_tool_calls_with_approval(
                     });
                     results.push(ContentBlock::ToolResult {
                         tool_use_id: id.clone(),
-                        content: format!("Tool denied: {reason}"),
+                        content: format!("工具已被拒绝：{reason}"),
                         is_error: true,
                     });
                     modifiers.push(None);
@@ -407,8 +407,8 @@ fn maybe_append_deferred_hint(original_error: &str, schema: serde_json::Value, i
     }
 
     format!(
-        "{}\n\nThis is a deferred tool — its full parameter schema was not loaded. \
-         Call ToolSearch to load the schema, then retry.",
+        "{}\n\n这是一个延迟加载工具，其完整参数 schema 尚未加载。\
+         请调用 ToolSearch 加载 schema 后重试。",
         original_error
     )
 }
@@ -428,7 +428,7 @@ fn truncate_result(content: &str, max_chars: usize) -> String {
     let head = &content[..head_end];
     let tail = &content[tail_start..];
     format!(
-        "{}\n\n... [truncated {} chars] ...\n\n{}",
+        "{}\n\n……[已截断 {} 个字符]……\n\n{}",
         head,
         content.len() - max_chars,
         tail

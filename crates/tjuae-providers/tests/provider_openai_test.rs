@@ -656,7 +656,7 @@ async fn test_aio_140_openai_tools_wire_shape_mismatch_error_is_readable_and_not
     match result.unwrap_err() {
         tjuae_providers::ProviderError::Api { status, message } => {
             assert_eq!(status, 400);
-            assert!(message.contains("tools wire shape mismatch"));
+            assert!(message.contains("工具 wire shape 不匹配"));
             assert!(message.contains("openai_function"));
         }
         e => panic!("expected Api error, got: {:?}", e),

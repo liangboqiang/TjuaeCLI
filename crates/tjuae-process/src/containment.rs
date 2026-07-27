@@ -41,13 +41,13 @@ fn configure_command(_command: &mut Command) {}
 
 #[cfg(windows)]
 fn attach_child(child: &mut Child) -> Result<ChildContainment> {
-    let pid = child.id().ok_or_else(|| Error::other("spawned child has no pid"))?;
+    let pid = child.id().ok_or_else(|| Error::other("已启动的子进程没有 pid"))?;
     let raw_handle = child
         .raw_handle()
-        .ok_or_else(|| Error::other("spawned child has no raw handle"))?;
+        .ok_or_else(|| Error::other("已启动的子进程没有原始句柄"))?;
 
     let job = JobObject::assign_and_resume(raw_handle, pid)
-        .map_err(|error| Error::other(format!("windows job containment failed: {error}")))?;
+        .map_err(|error| Error::other(format!("Windows 作业隔离失败：{error}")))?;
 
     Ok(ChildContainment { job })
 }

@@ -27,14 +27,14 @@ impl OutputFormatter {
                 stderr,
                 SetForegroundColor(Color::Cyan),
                 SetAttribute(Attribute::Bold),
-                Print(format!("\n[tool] {}", name)),
+                Print(format!("\n[工具] {}", name)),
                 ResetColor,
                 SetForegroundColor(Color::DarkGrey),
                 Print(format!("({})\n", truncate_display(input, 200))),
                 ResetColor,
             );
         } else {
-            eprintln!("\n[tool] {}({})", name, truncate_display(input, 200));
+            eprintln!("\n[工具] {}({})", name, truncate_display(input, 200));
         }
     }
 
@@ -52,7 +52,7 @@ impl OutputFormatter {
                 ResetColor,
             );
         } else {
-            let prefix = if is_error { "ERROR" } else { "OK" };
+            let prefix = if is_error { "错误" } else { "成功" };
             eprintln!("[{} {}] {}", name, prefix, truncate_display(content, 500));
         }
     }
@@ -82,16 +82,13 @@ impl OutputFormatter {
         cache_read_tokens: u64,
     ) {
         let cache_info = if cache_creation_tokens > 0 || cache_read_tokens > 0 {
-            format!(
-                " | cache: {} created, {} read",
-                cache_creation_tokens, cache_read_tokens
-            )
+            format!(" | 缓存：新建 {}，读取 {}", cache_creation_tokens, cache_read_tokens)
         } else {
             String::new()
         };
 
         let cached_suffix = if cache_read_tokens > 0 {
-            format!(" ({} cached)", cache_read_tokens)
+            format!("（已缓存 {}）", cache_read_tokens)
         } else {
             String::new()
         };
@@ -103,14 +100,14 @@ impl OutputFormatter {
                 SetForegroundColor(Color::Yellow),
                 SetAttribute(Attribute::Dim),
                 Print(format!(
-                    "\n[turns: {} | tokens: {} in{} / {} out{}]\n",
+                    "\n[轮次：{} | token：输入 {}{} / 输出 {}{}]\n",
                     turns, input_tokens, cached_suffix, output_tokens, cache_info
                 )),
                 ResetColor,
             );
         } else {
             eprintln!(
-                "\n[turns: {} | tokens: {} in{} / {} out{}]",
+                "\n[轮次：{} | token：输入 {}{} / 输出 {}{}]",
                 turns, input_tokens, cached_suffix, output_tokens, cache_info
             );
         }
@@ -141,11 +138,11 @@ impl OutputFormatter {
             let _ = execute!(
                 stderr,
                 SetForegroundColor(Color::Red),
-                Print(format!("[error] {}\n", msg)),
+                Print(format!("[错误] {}\n", msg)),
                 ResetColor,
             );
         } else {
-            eprintln!("[error] {}", msg);
+            eprintln!("[错误] {}", msg);
         }
     }
 

@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-config"
-description = "Configuration layer for TjuaeCLI: Config struct, ProviderCompat, auth, hooks, session config"
+description = "TjuaeCLI 配置层：Config 结构、ProviderCompat、认证、钩子和会话配置"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

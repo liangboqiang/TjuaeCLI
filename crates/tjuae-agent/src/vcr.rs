@@ -71,7 +71,7 @@ impl VcrLayer {
         let name = path
             .file_stem()
             .and_then(|s| s.to_str())
-            .unwrap_or("unnamed")
+            .unwrap_or("未命名")
             .to_string();
 
         Self {
@@ -164,7 +164,10 @@ impl VcrLayer {
     /// Save the cassette to disk (only in record mode)
     pub fn save(&self) -> anyhow::Result<()> {
         if let VcrMode::Record(path) = &self.mode {
-            let cassette = self.cassette.lock().map_err(|e| anyhow::anyhow!("Lock error: {}", e))?;
+            let cassette = self
+                .cassette
+                .lock()
+                .map_err(|e| anyhow::anyhow!("锁定 VCR 磁带失败：{}", e))?;
 
             if cassette.interactions.is_empty() {
                 return Ok(()); // nothing to save
@@ -176,7 +179,7 @@ impl VcrLayer {
 
             let json = serde_json::to_string_pretty(&*cassette)?;
             std::fs::write(path, json)?;
-            tracing::info!(target: "tjuae_agent", interactions = cassette.interactions.len(), path = %path.display(), "vcr cassette saved");
+            tracing::info!(target: "tjuae_agent", interactions = cassette.interactions.len(), path = %path.display(), "VCR 磁带已保存");
         }
         Ok(())
     }
@@ -185,7 +188,7 @@ impl VcrLayer {
 impl Drop for VcrLayer {
     fn drop(&mut self) {
         if let Err(e) = self.save() {
-            tracing::warn!(target: "tjuae_agent", error = %e, "failed to save vcr cassette");
+            tracing::warn!(target: "tjuae_agent", error = %e, "保存 VCR 磁带失败");
         }
     }
 }
@@ -194,7 +197,7 @@ impl Drop for VcrLayer {
 fn load_cassette(path: &Path) -> anyhow::Result<Cassette> {
     let content = std::fs::read_to_string(path)?;
     let cassette: Cassette = serde_json::from_str(&content)?;
-    tracing::info!(target: "tjuae_agent", name = %cassette.name, interactions = cassette.interactions.len(), "vcr cassette loaded");
+    tracing::info!(target: "tjuae_agent", name = %cassette.name, interactions = cassette.interactions.len(), "VCR 磁带已加载");
     Ok(cassette)
 }
 

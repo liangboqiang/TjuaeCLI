@@ -39,40 +39,40 @@ impl ViewImageTool {
             .get("file_path")
             .and_then(Value::as_str)
             .filter(|path| !path.trim().is_empty())
-            .ok_or_else(|| "Missing required parameter: file_path".to_owned())?;
+            .ok_or_else(|| "缺少必需参数：file_path".to_owned())?;
         let path = Path::new(file_path);
         if !path.is_absolute() {
-            return Err("file_path must be an absolute path".to_owned());
+            return Err("file_path 必须是绝对路径".to_owned());
         }
 
         let extension = path
             .extension()
             .and_then(|extension| extension.to_str())
-            .ok_or_else(|| "Image path must have a supported extension".to_owned())?;
-        let mime_type = extension_to_image_media_type(extension)
-            .ok_or_else(|| format!("Unsupported image extension: {extension}"))?;
+            .ok_or_else(|| "图片路径必须包含受支持的扩展名".to_owned())?;
+        let mime_type =
+            extension_to_image_media_type(extension).ok_or_else(|| format!("不支持的图片扩展名：{extension}"))?;
 
         let metadata = tokio::fs::metadata(path)
             .await
-            .map_err(|error| format!("Failed to read image metadata: {error}"))?;
+            .map_err(|error| format!("读取图片元数据失败：{error}"))?;
         if !metadata.is_file() {
-            return Err("Image path is not a regular file".to_owned());
+            return Err("图片路径不是普通文件".to_owned());
         }
         if metadata.len() > MAX_IMAGE_SIZE_BYTES {
-            return Err(format!("Image exceeds the {} byte size limit", MAX_IMAGE_SIZE_BYTES));
+            return Err(format!("图片超过 {} 字节的大小限制", MAX_IMAGE_SIZE_BYTES));
         }
 
         let bytes = tokio::fs::read(path)
             .await
-            .map_err(|error| format!("Failed to read image: {error}"))?;
+            .map_err(|error| format!("读取图片失败：{error}"))?;
         if bytes.len() as u64 > MAX_IMAGE_SIZE_BYTES {
-            return Err(format!("Image exceeds the {} byte size limit", MAX_IMAGE_SIZE_BYTES));
+            return Err(format!("图片超过 {} 字节的大小限制", MAX_IMAGE_SIZE_BYTES));
         }
         let detected_mime_type = detect_image_media_type(&bytes)
-            .ok_or_else(|| "File content is not a supported JPEG, PNG, GIF, or WebP image".to_owned())?;
+            .ok_or_else(|| "文件内容不是受支持的 JPEG、PNG、GIF 或 WebP 图片".to_owned())?;
         if detected_mime_type != mime_type {
             return Err(format!(
-                "Image content type {detected_mime_type} does not match extension type {mime_type}"
+                "图片内容类型 {detected_mime_type} 与扩展名类型 {mime_type} 不匹配"
             ));
         }
 
@@ -81,13 +81,13 @@ impl ViewImageTool {
         };
         image_url
             .validate()
-            .map_err(|error| format!("Failed to prepare image input: {error}"))?;
+            .map_err(|error| format!("准备图片输入失败：{error}"))?;
         Ok(image_url)
     }
 
     fn success_result(file_path: &str) -> ToolResult {
         ToolResult {
-            content: format!("Image loaded from {file_path} and attached to the next model turn."),
+            content: format!("已从 {file_path} 加载图片，并将其附加到下一轮模型输入。"),
             is_error: false,
         }
     }
@@ -113,7 +113,7 @@ impl Tool for ViewImageTool {
     }
 
     fn description(&self) -> &str {
-        "Loads an image from an absolute local file path and attaches it to the next model turn. Use this when you need to inspect an image attachment."
+        "从本地绝对路径加载图片，并将其附加到下一轮模型输入。需要检查图片附件时使用此工具。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -122,7 +122,7 @@ impl Tool for ViewImageTool {
             "properties": {
                 "file_path": {
                     "type": "string",
-                    "description": "Absolute path to a JPEG, PNG, GIF, or WebP image"
+                    "description": "JPEG、PNG、GIF 或 WebP 图片的绝对路径"
                 }
             },
             "required": ["file_path"]
@@ -134,7 +134,7 @@ impl Tool for ViewImageTool {
     }
 
     async fn execute(&self, input: Value) -> ToolResult {
-        let file_path = input.get("file_path").and_then(Value::as_str).unwrap_or("unknown");
+        let file_path = input.get("file_path").and_then(Value::as_str).unwrap_or("未知");
         match self.load_image(&input).await {
             Ok(_) => Self::success_result(file_path),
             Err(error) => Self::error_result(error),
@@ -142,7 +142,7 @@ impl Tool for ViewImageTool {
     }
 
     async fn execute_with_follow_up(&self, input: Value) -> ToolExecutionOutput {
-        let file_path = input.get("file_path").and_then(Value::as_str).unwrap_or("unknown");
+        let file_path = input.get("file_path").and_then(Value::as_str).unwrap_or("未知");
         match self.load_image(&input).await {
             Ok(image_url) => ToolExecutionOutput {
                 result: Self::success_result(file_path),
@@ -161,8 +161,8 @@ impl Tool for ViewImageTool {
     }
 
     fn describe(&self, input: &Value) -> String {
-        let path = input.get("file_path").and_then(Value::as_str).unwrap_or("unknown");
-        format!("View image {path}")
+        let path = input.get("file_path").and_then(Value::as_str).unwrap_or("未知");
+        format!("查看图片 {path}")
     }
 }
 

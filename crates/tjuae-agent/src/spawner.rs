@@ -71,7 +71,7 @@ impl AgentSpawner {
         config.session.enabled = false;
         config.tools.auto_approve = true;
 
-        tracing::info!(target: "tjuae_agent", cwd = %self.cwd.display(), "sub-agent spawned with workspace cwd");
+        tracing::info!(target: "tjuae_agent", cwd = %self.cwd.display(), "已使用工作区当前目录生成子智能体");
 
         let child_policy = effective_child_tool_policy(&self.tool_policy, &[]);
         let tools = build_tool_registry(&child_policy, &self.cwd, &self.runtime_env);
@@ -96,7 +96,7 @@ impl AgentSpawner {
             },
             Err(e) => SubAgentResult {
                 name: sub_config.name,
-                text: format!("Sub-agent error: {}", e),
+                text: format!("子智能体错误：{}", e),
                 usage: TokenUsage::default(),
                 turns: 0,
                 is_error: true,
@@ -119,8 +119,8 @@ impl AgentSpawner {
             match future.await {
                 Ok(result) => results.push(result),
                 Err(e) => results.push(SubAgentResult {
-                    name: "unknown".to_string(),
-                    text: format!("Task join error: {}", e),
+                    name: "未知".to_string(),
+                    text: format!("任务合并错误：{}", e),
                     usage: TokenUsage::default(),
                     turns: 0,
                     is_error: true,
@@ -180,7 +180,7 @@ impl Spawner for AgentSpawner {
             },
             Err(e) => SubAgentResult {
                 name: sub_config.name,
-                text: format!("Sub-agent error: {}", e),
+                text: format!("子智能体错误：{}", e),
                 usage: TokenUsage::default(),
                 turns: 0,
                 is_error: true,

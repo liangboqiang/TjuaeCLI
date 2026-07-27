@@ -57,7 +57,7 @@ pub(crate) async fn process_openai_responses_sse_stream(
         };
         let text = decoder.push(&chunk);
         for frame in framer.push_text(&text, "[DONE]") {
-            tracing::debug!(target: "tjuae_providers", event_type = ?frame.event, "OpenAI Responses SSE event received");
+            tracing::debug!(target: "tjuae_providers", event_type = ?frame.event, "已收到 OpenAI Responses SSE 事件");
             let events = parser.parse_frame(&frame, &mut state);
             for event in events {
                 if matches!(
@@ -82,7 +82,7 @@ pub(crate) async fn process_openai_responses_sse_stream(
     // Flush any bytes left over at the true end of the stream.
     let text = decoder.flush();
     for frame in framer.push_text(&text, "[DONE]") {
-        tracing::debug!(target: "tjuae_providers", event_type = ?frame.event, "OpenAI Responses SSE event received");
+        tracing::debug!(target: "tjuae_providers", event_type = ?frame.event, "已收到 OpenAI Responses SSE 事件");
         let events = parser.parse_frame(&frame, &mut state);
         for event in events {
             if matches!(
@@ -103,7 +103,7 @@ pub(crate) async fn process_openai_responses_sse_stream(
         }
     }
 
-    let error = ProviderError::Connection("OpenAI Responses stream ended without a terminal event".to_string());
+    let error = ProviderError::Connection("OpenAI Responses 流结束时没有终止事件".to_string());
     if emitted_content {
         StreamOutcome::FailedPartial(error)
     } else {

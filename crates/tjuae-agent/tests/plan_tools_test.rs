@@ -42,7 +42,7 @@ async fn tc_3_3_02_enter_plan_mode_succeeds_when_not_active() {
 
     assert!(!result.is_error, "should succeed when not in plan mode");
     assert!(
-        result.content.contains("plan mode"),
+        result.content.contains("计划模式"),
         "confirmation message should mention plan mode"
     );
 }
@@ -60,7 +60,7 @@ async fn tc_3_3_03_enter_plan_mode_rejects_when_already_active() {
 
     assert!(result.is_error, "should fail when already in plan mode");
     assert!(
-        result.content.contains("Already in plan mode"),
+        result.content.contains("已处于计划模式"),
         "error message should indicate already in plan mode"
     );
 }
@@ -78,7 +78,7 @@ async fn tc_3_3_04_exit_plan_mode_succeeds_when_active() {
 
     assert!(!result.is_error, "should succeed when in plan mode");
     assert!(
-        result.content.contains("Exited plan mode"),
+        result.content.contains("已退出计划模式"),
         "confirmation message should mention exiting"
     );
 }
@@ -96,7 +96,7 @@ async fn tc_3_3_05_exit_plan_mode_rejects_when_not_active() {
 
     assert!(result.is_error, "should fail when not in plan mode");
     assert!(
-        result.content.contains("Not in plan mode"),
+        result.content.contains("不在计划模式"),
         "error message should indicate not in plan mode"
     );
 }

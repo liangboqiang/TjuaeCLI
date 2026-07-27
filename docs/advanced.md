@@ -1,217 +1,226 @@
-# Advanced Features
+# 高级功能
 
-## Sub-Agent Spawning
+## 子智能体
 
-The LLM can use the Spawn tool to create independent sub-agents that run tasks in parallel. Each sub-agent has its own conversation context, inherits the parent agent's runtime tool policy, and shares the parent agent's LLM provider (connection pool reuse). Fork-mode overrides can further restrict inherited tools but cannot restore tools denied to the parent.
+LLM 可以使用 Spawn 工具创建独立的子智能体，并行执行任务。每个子智能体都有自己
+的对话上下文，继承父智能体的运行时工具策略，并与父智能体共用 LLM 提供商
+（复用连接池）。fork 模式覆盖可以进一步限制继承的工具，但不能恢复父智能体已经
+禁止的工具。
 
-### Use Cases
+### 适用场景
 
-- "Search these 3 files simultaneously and summarize each"
-- "Run tests and lint in parallel"
-- "Search for X in the codebase while reading Y"
+- “同时搜索这 3 个文件并分别总结”
+- “并行运行测试和 lint”
+- “读取 Y 的同时，在代码库中搜索 X”
 
-### Limits
+### 限制
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Max parallel sub-agents | 5 | Prevents resource exhaustion |
-| Sub-agent max turns | 10 | Per sub-agent run turn limit |
-| Sub-agent max tokens | 4096 | Per sub-agent response token limit |
+| 设置 | 默认值 | 说明 |
+|------|--------|------|
+| 最大并行子智能体数 | 5 | 防止资源耗尽 |
+| 子智能体最大轮次数 | 10 | 每次子智能体运行的轮次上限 |
+| 子智能体最大 token 数 | 4096 | 每次子智能体响应的 token 上限 |
 
-### Behavior
+### 行为
 
-- Sub-agents auto-approve all tool calls (no confirmation prompts)
-- Sub-agents cannot exceed the parent agent's runtime tool policy
-- Sub-agents do not save sessions
-- Sub-agents run silently (no stdout output)
-- All results are merged and returned to the parent agent
+- 子智能体自动批准所有工具调用，不显示确认提示。
+- 子智能体不能超出父智能体的运行时工具策略。
+- 子智能体不保存会话。
+- 子智能体静默运行，不向标准输出写入内容。
+- 所有结果会合并后返回父智能体。
 
 ---
 
-## Hook System
+## 钩子系统
 
-Event-driven hooks execute shell commands at specific points in the tool lifecycle, enabling auto-formatting, linting, auditing, and more.
+事件驱动的钩子会在工具生命周期的特定阶段执行 shell 命令，可用于自动格式化、
+lint、审计等操作。
 
-### Hook Types
+### 钩子类型
 
-| Type | Trigger | Behavior |
-|------|---------|----------|
-| `pre_tool_use` | Before tool execution | Non-zero exit blocks the tool |
-| `post_tool_use` | After tool execution | Non-blocking; errors are logged |
-| `stop` | When agent session ends | Non-blocking |
+| 类型 | 触发时机 | 行为 |
+|------|----------|------|
+| `pre_tool_use` | 工具执行前 | 非零退出码会阻止工具执行 |
+| `post_tool_use` | 工具执行后 | 不阻塞；错误会写入日志 |
+| `stop` | 智能体会话结束时 | 不阻塞 |
 
-### Configuration
+### 配置
 
 ```toml
-# Auto-format Rust files after modification
+# 修改 Rust 文件后自动格式化
 [[hooks.post_tool_use]]
 name = "rustfmt"
 tool_match = ["Write", "Edit"]
 file_match = ["*.rs"]
 command = "rustfmt ${TOOL_INPUT_FILE_PATH}"
 
-# Auto-format TypeScript files after modification
+# 修改 TypeScript 文件后自动格式化
 [[hooks.post_tool_use]]
 name = "prettier"
 tool_match = ["Write", "Edit"]
 file_match = ["*.ts", "*.tsx"]
 command = "npx prettier --write ${TOOL_INPUT_FILE_PATH}"
 
-# Audit ExecCommand commands
+# 审计 ExecCommand 命令
 [[hooks.post_tool_use]]
 name = "audit-log"
 tool_match = ["ExecCommand"]
 command = "echo \"$(date): ${TOOL_INPUT_COMMAND}\" >> .tjuae/audit.log"
 
-# Run lint on session end
+# 会话结束时运行 lint
 [[hooks.stop]]
 name = "final-lint"
 command = "cargo clippy --quiet 2>&1 | tail -5"
 ```
 
-### Environment Variables
+### 环境变量
 
-Hook commands can reference these variables via `${VAR}` syntax:
+钩子命令可以通过 `${VAR}` 语法引用以下变量：
 
-| Variable | Description |
-|----------|-------------|
-| `TOOL_NAME` | Tool name |
-| `TOOL_INPUT` | Full tool input JSON |
-| `TOOL_INPUT_FILE_PATH` | File path (if the tool has a file_path parameter) |
-| `TOOL_INPUT_COMMAND` | Command (if the tool has a command parameter) |
-| `TOOL_INPUT_PATTERN` | Search pattern (if the tool has a pattern parameter) |
-| `TOOL_OUTPUT` | Tool output (post_tool_use only) |
+| 变量 | 说明 |
+|------|------|
+| `TOOL_NAME` | 工具名称 |
+| `TOOL_INPUT` | 完整的工具输入 JSON |
+| `TOOL_INPUT_FILE_PATH` | 文件路径（若工具具有 `file_path` 参数） |
+| `TOOL_INPUT_COMMAND` | 命令（若工具具有 `command` 参数） |
+| `TOOL_INPUT_PATTERN` | 搜索模式（若工具具有 `pattern` 参数） |
+| `TOOL_OUTPUT` | 工具输出（仅用于 `post_tool_use`） |
 
-### Matching Rules
+### 匹配规则
 
-- `tool_match`: glob patterns matching tool names; empty = match all
-- `file_match`: glob patterns matching file paths; empty = match all
-- Default timeout: 30 seconds, configurable via `timeout_ms`
+- `tool_match`：匹配工具名称的 Glob 模式；为空时匹配所有工具。
+- `file_match`：匹配文件路径的 Glob 模式；为空时匹配所有文件。
+- 默认超时时间为 30 秒，可通过 `timeout_ms` 配置。
 
 ---
 
-## Prompt Caching (Anthropic)
+## 提示词缓存（Anthropic）
 
-Prompt caching stores system prompts and tool definitions on Anthropic's servers, so subsequent requests only process the changed parts.
+提示词缓存会将系统提示词和工具定义存储在 Anthropic 服务器上，使后续请求只需
+处理发生变化的部分。
 
-- **First request**: full input token cost + 25% write premium
-- **Subsequent requests**: cached portion costs only 10%
-- **Cache TTL**: 5 minutes (auto-renewed on each hit)
+- **首次请求**：完整输入 token 成本，另加 25% 写入费用。
+- **后续请求**：缓存部分只需 10% 的费用。
+- **缓存 TTL**：5 分钟，每次命中时自动续期。
 
-### Configuration
+### 配置
 
 ```toml
 [providers.anthropic]
 api_key = "sk-ant-xxx"
-prompt_caching = true   # default true (Anthropic only)
+prompt_caching = true   # 默认为 true（仅适用于 Anthropic）
 ```
 
-### Token Stats
+### Token 统计
 
-With caching enabled, stats show cache data:
+启用缓存后，统计信息会显示缓存数据：
 
-```
-[turns: 3 | tokens: 100 in (5000 cached) / 200 out | cache: 5000 created, 5000 read]
+```text
+[轮次：3 | token：输入 100（缓存 5000）/ 输出 200 | 缓存：创建 5000，读取 5000]
 ```
 
 ---
 
-## VCR Recording & Replay
+## VCR 录制与重放
 
-Record real API interactions and replay them in tests — no API key or network needed.
+录制真实 API 交互并在测试中重放，无需 API 密钥或网络连接。
 
-### Usage
+### 用法
 
 ```bash
-# Record mode
+# 录制模式
 VCR_MODE=record VCR_CASSETTE=tests/cassettes/my_test.json \
-  tjuae-cli -k sk-ant-xxx "Read Cargo.toml"
+  tjuae-cli -k sk-ant-xxx "读取 Cargo.toml"
 
-# Replay mode (in tests)
+# 重放模式（用于测试）
 VCR_MODE=replay VCR_CASSETTE=tests/cassettes/my_test.json \
-  tjuae-cli "Read Cargo.toml"
+  tjuae-cli "读取 Cargo.toml"
 ```
 
-### Features
+### 功能
 
-- Auto-sanitization: sensitive headers (api-key, auth, token) are replaced with `[REDACTED]` during recording
-- JSON-formatted cassette files, editable by hand
-- Supports recording/replay of SSE streaming responses
+- 自动脱敏：录制时将敏感请求头（api-key、auth、token）替换为 `[REDACTED]`。
+- 录像带文件采用 JSON 格式，可以手动编辑。
+- 支持录制和重放 SSE 流式响应。
 
 ---
 
-## Logging
+## 日志
 
-Structured JSON file logging with daily rotation, powered by the `tracing` crate. All internal events (LLM requests/responses, tool execution, MCP connections, compaction) are captured with structured fields.
+基于 `tracing` crate 提供按天轮转的结构化 JSON 文件日志。所有内部事件，包括
+LLM 请求/响应、工具执行、MCP 连接和压缩，都会以结构化字段记录。
 
-### Enabling
+### 启用方式
 
-Three ways to enable logging, from highest to lowest priority:
+可以通过以下三种方式启用日志，优先级从高到低排列：
 
-1. **CLI parameter**: `--log-dir /path/to/logs` (automatically enables logging)
-2. **Config file**: add a `[logging]` section (global or project-level)
-3. **Default**: logging is disabled unless explicitly configured
+1. **CLI 参数**：`--log-dir /path/to/logs`，会自动启用日志。
+2. **配置文件**：在全局或项目配置中添加 `[logging]`。
+3. **默认行为**：除非显式配置，否则禁用日志。
 
 ```bash
-# CLI — logs to /tmp/tjuae-logs at debug level
-tjuae-cli --log-dir /tmp/tjuae-logs --log-level debug "Read Cargo.toml"
+# CLI——以 debug 级别将日志写入 /tmp/tjuae-logs
+tjuae-cli --log-dir /tmp/tjuae-logs --log-level debug "读取 Cargo.toml"
 ```
 
-### Configuration
+### 配置
 
 ```toml
 [logging]
-enabled = true       # enable file logging (default: false; auto-enabled when dir is set)
-level = "info"       # tracing filter directives (default: "info")
-dir = "/path/to/logs"  # log directory (default: platform-specific, see below)
+enabled = true         # 启用文件日志（默认：false；设置 dir 时自动启用）
+level = "info"         # tracing 过滤指令（默认："info"）
+dir = "/path/to/logs"  # 日志目录（默认：平台专属位置，见下文）
 ```
 
-The `level` field accepts standard tracing filter directives:
+`level` 字段接受标准的 tracing 过滤指令：
 
-| Value | Effect |
-|-------|--------|
-| `"info"` | Info and above for all targets |
-| `"debug"` | Debug and above for all targets |
-| `"tjuae_providers=debug,info"` | Debug for providers, info for everything else |
+| 值 | 效果 |
+|----|------|
+| `"info"` | 所有 target 记录 info 及以上级别 |
+| `"debug"` | 所有 target 记录 debug 及以上级别 |
+| `"tjuae_providers=debug,info"` | 提供商记录 debug，其余 target 记录 info |
 
-### Default Log Directory
+### 默认日志目录
 
-When `dir` is not set, logs go to the platform-specific location:
+未设置 `dir` 时，日志会写入各平台的默认位置：
 
-| Platform | Path |
-|----------|------|
+| 平台 | 路径 |
+|------|------|
 | macOS | `~/Library/Logs/tjuae/` |
-| Linux | `$XDG_STATE_HOME/tjuae/logs/` or `~/.local/state/tjuae/logs/` |
+| Linux | `$XDG_STATE_HOME/tjuae/logs/` 或 `~/.local/state/tjuae/logs/` |
 | Windows | `{data_local_dir}/tjuae/logs/` |
 
-### Log Format
+### 日志格式
 
-Each line is a JSON object with structured fields:
+每一行都是带有结构化字段的 JSON 对象：
 
 ```json
-{"timestamp":"2026-05-13T12:12:52.431Z","level":"INFO","fields":{"message":"mcp server connected","server":"sentry","tools":20},"target":"tjuae_mcp","spans":[{"name":"agent_run","session_id":"abc-123","msg_id":"msg-456"}]}
+{"timestamp":"2026-05-13T12:12:52.431Z","level":"INFO","fields":{"message":"mcp server connected","server":"local-tools","tools":20},"target":"tjuae_mcp","spans":[{"name":"agent_run","session_id":"abc-123","msg_id":"msg-456"}]}
 ```
 
-Key fields:
+主要字段：
 
-| Field | Description |
-|-------|-------------|
-| `target` | Source crate (`tjuae_agent`, `tjuae_providers`, `tjuae_mcp`, etc.) |
-| `spans[].session_id` | Session ID for correlating events within a conversation |
-| `spans[].msg_id` | Message ID for correlating events within a single turn |
+| 字段 | 说明 |
+|------|------|
+| `target` | 来源 crate，例如 `tjuae_agent`、`tjuae_providers`、`tjuae_mcp` |
+| `spans[].session_id` | 用于关联同一对话中事件的会话 ID |
+| `spans[].msg_id` | 用于关联同一轮次中事件的消息 ID |
 
-### Session Correlation
+### 会话关联
 
-All events during `engine.run()` — LLM streaming, tool execution, compaction — are wrapped in an `agent_run` span carrying `session_id` and `msg_id`. This allows filtering all logs for a specific conversation:
+`engine.run()` 期间的所有事件，包括 LLM 流式输出、工具执行和压缩，都会封装在
+携带 `session_id` 与 `msg_id` 的 `agent_run` span 中。借助这些字段，可以筛选
+指定对话的全部日志：
 
 ```bash
-# Find all events for a specific session
+# 查找指定会话的全部事件
 grep '"session_id":"abc-123"' 2026-05-13.tjuae.log | jq .
 ```
 
-### Library Integration
+### 库集成
 
-When TjuaeCLI is used as a library (e.g. embedded in a backend server), the `create_file_layer()` API provides a composable tracing layer:
+将 TjuaeCLI 作为库使用时，例如嵌入后端服务器，`create_file_layer()` API
+会提供可组合的 tracing layer：
 
 ```rust
 use tjuae_config::logging::{ResolvedLogging, create_file_layer};
@@ -223,232 +232,251 @@ let resolved = ResolvedLogging {
 };
 let (layer, guard) = create_file_layer(&resolved)?;
 
-// Compose with your existing subscriber
+// 与现有 subscriber 组合
 tracing_subscriber::registry()
     .with(your_app_layer)
-    .with(layer)  // TjuaeCLI logs → separate tjuae-cli.log file
+    .with(layer)  // TjuaeCLI 日志 → 独立的 tjuae-cli.log 文件
     .init();
 ```
 
-The host application owns the global subscriber; TjuaeCLI library crates only emit tracing events and never initialize a subscriber themselves.
+宿主应用负责创建全局 subscriber；TjuaeCLI 的库 crate 只发出 tracing 事件，
+不会自行初始化 subscriber。
 
 ---
 
-## AGENTS.md Hierarchical Loading
+## AGENTS.md 分层加载
 
-AGENTS.md files provide project-specific instructions that are automatically injected into the system prompt. Files are discovered hierarchically and merged from remote to near:
+AGENTS.md 文件提供项目专属指令，并自动注入系统提示词。系统会按层级发现这些文件，
+再从最外层到最靠近工作目录的顺序合并：
 
-1. **Global**: `<config_dir>/tjuae/AGENTS.md` — user-level instructions for all projects
-2. **Project hierarchy**: Walk up from cwd to the git root (or home directory), collecting every `AGENTS.md` found along the way
+1. **全局**：`<config_dir>/tjuae/AGENTS.md`，适用于所有项目的用户级指令。
+2. **项目层级**：从当前工作目录向上遍历到 Git 根目录（或主目录），收集沿途发现的
+   每个 `AGENTS.md`。
 
-Files closer to the working directory appear later in the prompt and take precedence (via LLM recency bias). Each file is annotated with its absolute path for traceability.
+越靠近工作目录的文件在提示词中出现得越晚，因此会通过 LLM 的近因偏好获得更高
+优先级。每个文件都会标注其绝对路径，方便追踪来源。
 
-### @include Directive
+### `@include` 指令
 
-AGENTS.md files can include other files using `@` syntax:
+AGENTS.md 文件可以使用 `@` 语法包含其他文件：
 
-- `@FILENAME` or `@./relative/path` — relative to the AGENTS.md file's directory
-- `@~/path` — relative to home directory
-- `@/absolute/path` — absolute path
+- `@FILENAME` 或 `@./relative/path`：相对于 AGENTS.md 所在目录。
+- `@~/path`：相对于主目录。
+- `@/absolute/path`：绝对路径。
 
-Paths inside fenced code blocks are ignored. Includes are recursive (up to depth 5) with circular reference detection. Non-existent files and non-text files are silently skipped.
+围栏代码块中的路径会被忽略。包含操作可递归执行，最大深度为 5，并会检测循环
+引用。不存在的文件和非文本文件会被静默跳过。
 
-### Example
+### 示例
 
-Given this structure:
+给定以下目录结构：
 
-```
+```text
 my-workspace/
 ├── .git/
-├── AGENTS.md          ← workspace rules
+├── AGENTS.md          ← 工作区规则
 └── packages/
     └── server/
-        └── AGENTS.md  ← server-specific rules
+        └── AGENTS.md  ← 服务器专属规则
 ```
 
-Running tjuae in `packages/server/` produces a system prompt containing both files, workspace first, then server.
+在 `packages/server/` 中运行 TjuaeCLI 时，系统提示词会同时包含两个文件：
+先包含工作区规则，再包含服务器专属规则。
 
 ---
 
-## Memory System
+## 记忆系统
 
-Persistent, file-based memory that allows the agent to retain project-specific knowledge across sessions. Memory is automatically loaded into the system prompt at conversation start.
+基于文件的持久记忆使智能体能够跨会话保留项目专属知识。对话开始时，记忆会自动
+加载到系统提示词中。
 
-### Memory Types
+### 记忆类型
 
-| Type | Purpose |
-|------|---------|
-| `user` | User's role, goals, preferences, knowledge |
-| `feedback` | Corrections and confirmations on work approach |
-| `project` | Ongoing work context not derivable from code/git |
-| `reference` | Pointers to external systems and resources |
+| 类型 | 用途 |
+|------|------|
+| `user` | 用户的角色、目标、偏好和知识 |
+| `feedback` | 对工作方式的纠正和确认 |
+| `project` | 无法从代码或 Git 推导出的持续工作上下文 |
+| `reference` | 指向外部系统和资源的引用 |
 
-### Storage
+### 存储位置
 
-Memory files live in a per-project directory under the global config:
+记忆文件位于全局配置下按项目划分的目录中：
 
-```
+```text
 <config_dir>/tjuae/projects/<sanitized-project-path>/memory/
-├── MEMORY.md              # Index (auto-loaded into prompt, max 200 lines)
+├── MEMORY.md              # 索引（自动载入提示词，最多 200 行）
 ├── user_role.md
 ├── feedback_testing.md
 └── project_auth_rewrite.md
 ```
 
-Each memory file uses YAML frontmatter:
+每个记忆文件都使用 YAML front matter：
 
 ```markdown
 ---
-name: auth rewrite
-description: Auth middleware rewrite driven by compliance
+name: 认证重写
+description: 由合规要求推动的认证中间件重写
 type: project
 ---
 
-Auth middleware rewrite is driven by legal/compliance requirements.
+认证中间件重写由法律与合规要求推动。
 ```
 
-### Configuration
+### 配置
 
-Memory is enabled by default with no configuration required. The memory directory is auto-resolved from the current working directory.
+记忆默认启用，无需任何配置。记忆目录会根据当前工作目录自动解析。
 
-Override the base directory via environment variable:
+可通过环境变量覆盖基础目录：
 
 ```bash
 export TJUAE_MEMORY_DIR=/custom/path
 ```
 
-### How It Works
+### 工作原理
 
-1. Agent starts → memory directory resolved from project path
-2. `MEMORY.md` index loaded into system prompt (truncated at 200 lines / 25 KB)
-3. Agent reads/writes memory files using standard Read/Write tools
-4. Agent maintains the `MEMORY.md` index as memories are added or removed
+1. 智能体启动，根据项目路径解析记忆目录。
+2. 将 `MEMORY.md` 索引载入系统提示词，最多 200 行或 25 KB。
+3. 智能体使用标准 Read/Write 工具读写记忆文件。
+4. 添加或删除记忆时，智能体会维护 `MEMORY.md` 索引。
 
 ---
 
-## Plan Mode
+## 计划模式
 
-A read-only exploration mode where the agent focuses on understanding the codebase and producing an implementation plan before making any changes.
+计划模式是一种只读探索模式。智能体会先理解代码库并制定实施计划，再进行任何
+修改。
 
-### How It Works
+### 工作原理
 
-1. Agent calls `EnterPlanMode` → tool access restricted to read-only (Read, Grep, Glob)
-2. Agent explores code, designs approach, writes a structured plan in its response
-3. Agent calls `ExitPlanMode` → full tool access restored, plan optionally saved to disk
+1. 智能体调用 `EnterPlanMode`，工具访问被限制为只读工具（Read、Grep、Glob）。
+2. 智能体探索代码、设计方案，并在响应中编写结构化计划。
+3. 智能体调用 `ExitPlanMode`，恢复完整工具访问；计划可选择保存到磁盘。
 
-### Configuration
+### 配置
 
 ```toml
 [plan]
-enabled = true                    # Register Plan Mode tools (default: true)
-plan_directory = ".tjuae/plans"  # Where plan files are saved
+enabled = true                    # 注册计划模式工具（默认：true）
+plan_directory = ".tjuae/plans"  # 保存计划文件的位置
 ```
 
-### Workflow Phases
+### 工作流阶段
 
-When in plan mode, the agent follows a structured 4-phase process:
+进入计划模式后，智能体遵循四个阶段：
 
-1. **Understand** — Explore the codebase with read-only tools
-2. **Design** — Identify files to modify, code to reuse
-3. **Write the plan** — Compose a clear, actionable implementation plan
-4. **Submit** — Call `ExitPlanMode` to restore full tool access
+1. **理解**：使用只读工具探索代码库。
+2. **设计**：确定要修改的文件和可复用的代码。
+3. **编写计划**：形成清晰、可执行的实施计划。
+4. **提交**：调用 `ExitPlanMode` 恢复完整工具访问。
 
 ---
 
-## Context Compression
+## 上下文压缩
 
-A three-tier automatic compaction strategy that prevents context window overflow during long conversations.
+三级自动压缩策略可防止长对话超出上下文窗口。
 
-### Tiers
+### 层级
 
-| Tier | Trigger | Method | LLM Call |
-|------|---------|--------|----------|
-| **Microcompact** | Tool result count exceeds threshold or time gap | Clears old tool result content, keeping the N most recent | No |
-| **Autocompact** | Input tokens approach context limit | LLM summarizes the conversation | Yes |
-| **Emergency** | Input tokens near absolute limit | Blocks further API calls, asks user to start fresh | No |
+| 层级 | 触发条件 | 方法 | 调用 LLM |
+|------|----------|------|----------|
+| **Microcompact** | 工具结果数量超过阈值，或时间间隔过长 | 清除旧工具结果内容，保留最近 N 条 | 否 |
+| **Autocompact** | 输入 token 接近上下文上限 | 由 LLM 总结对话 | 是 |
+| **Emergency** | 输入 token 接近绝对上限 | 阻止后续 API 调用，要求用户重新开始 | 否 |
 
-### How It Works
+### 工作原理
 
-- **Microcompact** runs automatically: replaces old Read/ExecCommand/Grep/Glob/Write/Edit results with `[Tool result cleared]`, keeping the 5 most recent results intact. Triggered by count (>10 compactable results) or time (>1 hour since last assistant message).
+- **Microcompact** 自动运行：将旧的 Read、ExecCommand、Grep、Glob、Write 和
+  Edit 结果替换为 `[工具结果已清除]`，保留最近 5 条结果。可压缩结果数量超过 10，
+  或距离上一条助手消息超过 1 小时时触发。
 
-- **Autocompact** triggers when input tokens reach a threshold. By default this is `context_window - output_reserve - autocompact_buffer` (200,000 - 20,000 - 13,000 = 167,000 tokens). Alternatively, set `autocompact_threshold_pct` to trigger at a percentage of the context window (e.g. `50` = 50% of 200k = 100k tokens). The agent calls the LLM to produce a conversation summary, then replaces history with a compact boundary marker. A circuit breaker stops retrying after 3 consecutive failures.
+- **Autocompact** 在输入 token 达到阈值时触发。默认阈值为
+  `context_window - output_reserve - autocompact_buffer`
+  （200,000 - 20,000 - 13,000 = 167,000 token）。也可以设置
+  `autocompact_threshold_pct`，按上下文窗口百分比触发，例如 `50` 表示在 200k
+  上下文窗口达到 50%，即 100k token 时触发。智能体会调用 LLM 生成对话摘要，
+  再用压缩边界标记替换历史记录。连续失败 3 次后，熔断器会停止重试。
 
-- **Emergency** is the last safety net at `context_window - emergency_buffer` (default: 197,000 tokens). Always active regardless of config. Blocks API calls and prompts the user to compact or start a new conversation.
+- **Emergency** 是最后一道保护，阈值为
+  `context_window - emergency_buffer`，默认即 197,000 token。无论配置如何，
+  该机制始终启用。它会阻止 API 调用，并提示用户压缩上下文或开始新对话。
 
-### Configuration
+### 配置
 
 ```toml
 [compact]
-enabled = true              # Enable compaction system (default: true)
-context_window = 200000     # Context window in tokens
-output_reserve = 20000      # Reserved for output generation
-autocompact_buffer = 13000  # Buffer before autocompact triggers
-emergency_buffer = 3000     # Buffer before emergency block
-max_failures = 3            # Circuit breaker threshold
-micro_keep_recent = 5       # Keep N most recent tool results
-# autocompact_threshold_pct = 50  # Override: trigger at N% of context_window
+enabled = true              # 启用压缩系统（默认：true）
+context_window = 200000     # 上下文窗口 token 数
+output_reserve = 20000      # 为输出生成预留的 token 数
+autocompact_buffer = 13000  # 触发自动压缩前的缓冲区
+emergency_buffer = 3000     # 触发紧急阻断前的缓冲区
+max_failures = 3            # 熔断阈值
+micro_keep_recent = 5       # 保留最近 N 条工具结果
+# autocompact_threshold_pct = 50  # 覆盖默认值：在上下文窗口达到 N% 时触发
 ```
 
 ---
 
-## File State Cache
+## 文件状态缓存
 
-An LRU cache that tracks files the agent has recently accessed, enabling read deduplication and automatic cache updates on writes.
+LRU 缓存会跟踪智能体最近访问的文件，实现读取去重，并在写入后自动更新缓存。
 
-- **Read dedup**: When the agent reads a file it has already seen (and the file hasn't changed), the cache provides the content without re-reading from disk.
-- **Write/Edit auto-update**: After Write or Edit operations, the cache is updated immediately with the new content.
-- **Dual eviction**: Entries are evicted when either the entry count limit or the total byte size limit is reached.
+- **读取去重**：智能体再次读取已经查看且未发生变化的文件时，直接由缓存提供内容，
+  不再从磁盘读取。
+- **Write/Edit 自动更新**：执行 Write 或 Edit 后，缓存会立即更新为最新内容。
+- **双重淘汰**：条目数量或总字节数达到上限时，都会淘汰旧条目。
 
-### Configuration
+### 配置
 
 ```toml
 [file_cache]
-enabled = true                # Enable file state caching (default: true)
-max_entries = 100             # Maximum cached files
-max_size_bytes = 26214400     # Max total cache size (25 MB)
+enabled = true                # 启用文件状态缓存（默认：true）
+max_entries = 100             # 最大缓存文件数
+max_size_bytes = 26214400     # 缓存总大小上限（25 MB）
 ```
 
 ---
 
-## Output Compaction
+## 输出压缩
 
-Post-processes tool output to reduce token usage. Three levels from lightest to heaviest:
+工具输出经过后处理以减少 token 用量。压缩分为从轻到重的三个级别：
 
-| Level | Transformations |
-|-------|----------------|
-| `off` | No transformation |
-| `safe` (default) | Strip ANSI escape codes, merge consecutive blank lines, collapse carriage-return progress bars |
-| `full` | Everything in `safe`, plus: fold repeated lines, compact JSON indentation |
+| 级别 | 转换 |
+|------|------|
+| `off` | 不进行转换 |
+| `safe`（默认） | 删除 ANSI 转义码、合并连续空行、折叠以回车刷新的进度条 |
+| `full` | 包含 `safe` 的全部操作，并折叠重复行、压缩 JSON 缩进 |
 
-### TOON Encoding
+### TOON 编码
 
-When enabled alongside `full` compaction, TOON (Token-Oriented Object Notation) encodes uniform JSON arrays as compact tables:
+在 `full` 压缩下启用 TOON（Token-Oriented Object Notation）时，结构一致的
+JSON 数组会编码成紧凑表格：
 
-```
+```text
 [2]{id,name,role}:
   1,Alice,admin
   2,Bob,user
 ```
 
-This is equivalent to:
+它等价于：
 
 ```json
 [{"id":1,"name":"Alice","role":"admin"},{"id":2,"name":"Bob","role":"user"}]
 ```
 
-TOON instructions are injected into the system prompt so the LLM understands the format.
+系统提示词会注入 TOON 说明，使 LLM 能够理解该格式。
 
-### Configuration
+### 配置
 
 ```toml
 [compact]
-compaction = "safe"   # off | safe | full (default: safe)
-toon = false          # Enable TOON encoding (default: false)
+compaction = "safe"   # off | safe | full（默认：safe）
+toon = false          # 启用 TOON 编码（默认：false）
 ```
 
-### Runtime Control
+### 运行时控制
 
-In `--json-stream` mode, the compaction level can be changed at runtime via `set_config`:
+在 `--json-stream` 模式中，可以通过 `set_config` 在运行时修改压缩级别：
 
 ```json
 {"type": "set_config", "compaction": "full"}

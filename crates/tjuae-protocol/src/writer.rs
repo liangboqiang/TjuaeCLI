@@ -33,12 +33,8 @@ impl ProtocolWriter {
 
 impl ProtocolEmitter for ProtocolWriter {
     fn emit(&self, event: &ProtocolEvent) -> io::Result<()> {
-        let mut w = self
-            .writer
-            .lock()
-            .map_err(|_| io::Error::other("protocol writer lock poisoned"))?;
-        serde_json::to_writer(&mut *w, event)
-            .map_err(|e| io::Error::other(format!("failed to serialize protocol event: {}", e)))?;
+        let mut w = self.writer.lock().map_err(|_| io::Error::other("协议写入器锁已损坏"))?;
+        serde_json::to_writer(&mut *w, event).map_err(|e| io::Error::other(format!("序列化协议事件失败：{}", e)))?;
         writeln!(&mut *w)?;
         w.flush()
     }

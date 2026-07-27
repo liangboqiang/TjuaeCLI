@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-mcp"
-description = "MCP (Model Context Protocol) client implementation for TjuaeCLI"
+description = "TjuaeCLI 的 MCP（模型上下文协议）客户端实现"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

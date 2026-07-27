@@ -65,10 +65,10 @@ pub async fn execute_shell_commands(
 /// Errors that can occur during shell command execution.
 #[derive(Debug, thiserror::Error)]
 pub enum ShellExecutionError {
-    #[error("Shell command failed for pattern \"{pattern}\": {output}")]
+    #[error("匹配模式 \"{pattern}\" 的 shell 命令执行失败：{output}")]
     CommandFailed { pattern: String, output: String },
 
-    #[error("Shell execution blocked for MCP skill")]
+    #[error("MCP 技能禁止执行 shell")]
     McpBlocked,
 }
 
@@ -206,9 +206,9 @@ async fn execute_command(command: &str, cwd: &Path) -> Result<String, ShellExecu
 
     if result.timed_out {
         let output = if formatted.is_empty() {
-            format!("timed out after {}ms", DEFAULT_TIMEOUT.as_millis())
+            format!("在 {} 毫秒后超时", DEFAULT_TIMEOUT.as_millis())
         } else {
-            format!("timed out after {}ms\n{formatted}", DEFAULT_TIMEOUT.as_millis())
+            format!("在 {} 毫秒后超时\n{formatted}", DEFAULT_TIMEOUT.as_millis())
         };
         return Err(ShellExecutionError::CommandFailed {
             pattern: command.to_owned(),
@@ -219,7 +219,7 @@ async fn execute_command(command: &str, cwd: &Path) -> Result<String, ShellExecu
     if result.exit_code != Some(0) && stdout.is_empty() && stderr.is_empty() {
         return Err(ShellExecutionError::CommandFailed {
             pattern: command.to_owned(),
-            output: format!("exit code {}", result.exit_code.unwrap_or(-1)),
+            output: format!("退出码 {}", result.exit_code.unwrap_or(-1)),
         });
     }
 
@@ -230,9 +230,9 @@ async fn execute_command(command: &str, cwd: &Path) -> Result<String, ShellExecu
 /// stderr is prefixed with `[stderr]\n` when non-empty.
 fn format_output(stdout: &str, stderr: &str) -> String {
     match (stdout.is_empty(), stderr.is_empty()) {
-        (false, false) => format!("{stdout}\n[stderr]\n{stderr}"),
+        (false, false) => format!("{stdout}\n[标准错误]\n{stderr}"),
         (false, true) => stdout.to_owned(),
-        (true, false) => format!("[stderr]\n{stderr}"),
+        (true, false) => format!("[标准错误]\n{stderr}"),
         (true, true) => String::new(),
     }
 }

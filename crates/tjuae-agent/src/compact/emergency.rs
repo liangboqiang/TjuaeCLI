@@ -10,7 +10,7 @@
 use tjuae_config::compact::CompactConfig;
 
 /// User-facing message shown when the emergency limit is hit.
-pub const EMERGENCY_USER_MESSAGE: &str = "Context window nearly full. Please use /compact or start a new conversation.";
+pub const EMERGENCY_USER_MESSAGE: &str = "上下文窗口即将用尽。请使用 /compact 或开始新对话。";
 
 /// Check whether the best-known context token count has reached the
 /// emergency blocking limit.

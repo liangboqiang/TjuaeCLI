@@ -11,7 +11,7 @@ impl SlashCommand for HelpCommand {
     }
 
     fn description(&self) -> &str {
-        "List available commands"
+        "列出可用命令"
     }
 
     async fn execute(&self, ctx: &mut CommandContext<'_>, _args: &str) -> anyhow::Result<CommandResult> {
@@ -23,7 +23,7 @@ impl SlashCommand for HelpCommand {
             .collect();
         entries.sort_by_key(|(name, _)| *name);
 
-        let mut output = String::from("Available commands:\n");
+        let mut output = String::from("可用命令：\n");
         for (name, desc) in entries {
             output.push_str(&format!("  /{} — {}\n", name, desc));
         }

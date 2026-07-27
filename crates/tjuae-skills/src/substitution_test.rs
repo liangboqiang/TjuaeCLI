@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn test_fallback_append_when_no_placeholder() {
         let result = substitute_arguments("hello world", Some("my-arg"), &[], None, None);
-        assert_eq!(result, "hello world\n\nARGUMENTS: my-arg");
+        assert_eq!(result, "hello world\n\n参数：my-arg");
     }
 
     #[test]
@@ -343,7 +343,7 @@ mod supplemental_tests {
     #[test]
     fn tc_8_1_no_placeholder_appends_arguments() {
         let r = substitute_arguments("Do the task.", Some("my argument"), &[], None, None);
-        assert_eq!(r, "Do the task.\n\nARGUMENTS: my argument");
+        assert_eq!(r, "Do the task.\n\n参数：my argument");
     }
 
     #[test]
@@ -356,7 +356,7 @@ mod supplemental_tests {
     fn tc_8_3_with_placeholder_no_append() {
         let r = substitute_arguments("Run $ARGUMENTS", Some("x"), &[], None, None);
         assert_eq!(r, "Run x");
-        assert!(!r.contains("ARGUMENTS:"));
+        assert!(!r.contains("参数："));
     }
 
     #[test]
@@ -385,7 +385,7 @@ mod supplemental_tests {
     #[test]
     fn tc_9_2_empty_content_with_args_appends() {
         let r = substitute_arguments("", Some("foo"), &[], None, None);
-        assert_eq!(r, "\n\nARGUMENTS: foo");
+        assert_eq!(r, "\n\n参数：foo");
     }
 
     #[test]

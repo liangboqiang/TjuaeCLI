@@ -142,7 +142,7 @@ pub async fn extract_bundled_skill_files(skill_name: &str, files: &[(&str, &str)
         Ok(()) => Some(dir),
         Err(e) => {
             // Non-fatal: log and degrade gracefully (skill runs without skill_root)
-            tracing::warn!(target: "tjuae_skills", skill = %skill_name, path = %dir.display(), error = %e, "failed to extract bundled skill");
+            tracing::warn!(target: "tjuae_skills", skill = %skill_name, path = %dir.display(), error = %e, "解压内置技能失败");
             None
         }
     }
@@ -201,7 +201,7 @@ async fn write_skill_files(dir: &std::path::Path, files: &[(&str, &str)]) -> std
         let target = resolve_skill_file_path(dir, rel_path)?;
         let parent = target
             .parent()
-            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "path has no parent"))?
+            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "路径没有父目录"))?
             .to_owned();
         by_parent.entry(parent).or_default().push((target, content));
     }
@@ -280,7 +280,7 @@ fn resolve_skill_file_path(base_dir: &std::path::Path, rel_path: &str) -> std::i
     if normalized.is_absolute() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            format!("bundled skill file path must be relative: {rel_path}"),
+            format!("内置技能文件路径必须是相对路径：{rel_path}"),
         ));
     }
 
@@ -289,7 +289,7 @@ fn resolve_skill_file_path(base_dir: &std::path::Path, rel_path: &str) -> std::i
         if matches!(component, Component::ParentDir) {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("bundled skill file path escapes skill dir: {rel_path}"),
+                format!("内置技能文件路径超出技能目录：{rel_path}"),
             ));
         }
     }

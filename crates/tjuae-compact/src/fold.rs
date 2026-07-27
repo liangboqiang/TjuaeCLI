@@ -35,9 +35,9 @@ pub fn fold_repeated_lines(text: &str) -> String {
             result.push(lines[i].to_string());
             let identical = (i + 1..j).all(|k| lines[k] == lines[i]);
             if identical {
-                result.push(format!("[... {folded} identical lines]"));
+                result.push(format!("[……{folded} 行相同内容]"));
             } else {
-                result.push(format!("[... {folded} similar lines]"));
+                result.push(format!("[……{folded} 行相似内容]"));
             }
             result.push(lines[j - 1].to_string());
         } else {

@@ -69,60 +69,52 @@ impl Default for SystemPromptCache {
 fn tool_usage_guidance(tool_policy: &ToolPolicy) -> String {
     if matches!(tool_policy, ToolPolicy::Unrestricted) {
         return "\
-# Using your tools
- - Do NOT use ExecCommand when a dedicated tool is available. Using dedicated tools \
-allows the user to better understand and review your work:
-   - File search: Glob (not find or ls)
-   - Content search: Grep (not grep or rg)
-   - Read files: Read (not cat, head, or tail)
-   - Edit files: Edit (not sed or awk)
-   - Write files: Write (not echo redirection or cat with heredoc)
- - You can call multiple tools in a single response. If there are no \
-dependencies between them, make all independent calls in parallel. \
-However, if one call depends on a previous result, run them sequentially.
- - Prefer Edit over Write for modifying existing files — Edit sends only \
-the diff, which is easier to review.
- - Always Read a file before editing it.
- - Some tools are deferred — only their names are visible. Before calling \
-a deferred tool, use ToolSearch to load its full schema first."
+# 使用工具
+ - 有专用工具可用时，不要使用 ExecCommand。专用工具能让用户更容易理解和审核你的工作：
+   - 搜索文件：使用 Glob（不要使用 find 或 ls）
+   - 搜索内容：使用 Grep（不要使用 grep 或 rg）
+   - 读取文件：使用 Read（不要使用 cat、head 或 tail）
+   - 编辑文件：使用 Edit（不要使用 sed 或 awk）
+   - 写入文件：使用 Write（不要使用 echo 重定向或带 heredoc 的 cat）
+ - 你可以在一次响应中调用多个工具。如果工具之间没有依赖关系，请并行发起所有独立调用。\
+如果某个调用依赖前一个调用的结果，则按顺序执行。
+ - 修改现有文件时优先使用 Edit，而不是 Write。Edit 只发送差异，更便于审核。
+ - 编辑文件前始终先使用 Read。
+ - 有些工具会延迟加载，只显示名称。调用延迟加载工具前，先使用 ToolSearch 加载完整 schema。"
             .to_string();
     }
 
-    let mut guidance = vec!["# Using your tools".to_string()];
+    let mut guidance = vec!["# 使用工具".to_string()];
     let dedicated_tools = [
-        ("Glob", "File search: Glob"),
-        ("Grep", "Content search: Grep"),
-        ("Read", "Read files: Read"),
-        ("Edit", "Edit files: Edit"),
-        ("Write", "Write files: Write"),
+        ("Glob", "搜索文件：Glob"),
+        ("Grep", "搜索内容：Grep"),
+        ("Read", "读取文件：Read"),
+        ("Edit", "编辑文件：Edit"),
+        ("Write", "写入文件：Write"),
     ]
     .into_iter()
     .filter_map(|(name, text)| tool_policy.allows(name).then_some(text))
     .collect::<Vec<_>>();
 
     if !dedicated_tools.is_empty() {
-        guidance.push(" - Use the available dedicated workspace tools when they fit the task:".to_string());
+        guidance.push(" - 如果适合当前任务，请使用可用的工作区专用工具：".to_string());
         guidance.extend(dedicated_tools.into_iter().map(|tool| format!("   - {tool}")));
     }
 
     guidance.push(
-        " - You can call multiple tools in a single response. If there are no dependencies between them, make all independent calls in parallel. However, if one call depends on a previous result, run them sequentially."
+        " - 你可以在一次响应中调用多个工具。如果工具之间没有依赖关系，请并行发起所有独立调用；如果某个调用依赖前一个调用的结果，则按顺序执行。"
             .to_string(),
     );
 
     if tool_policy.allows("Edit") && tool_policy.allows("Write") {
-        guidance.push(
-            " - Prefer Edit over Write for modifying existing files — Edit sends only the diff, which is easier to review."
-                .to_string(),
-        );
+        guidance.push(" - 修改现有文件时优先使用 Edit，而不是 Write。Edit 只发送差异，更便于审核。".to_string());
     }
     if tool_policy.allows("Read") && tool_policy.allows("Edit") {
-        guidance.push(" - Always Read a file before editing it.".to_string());
+        guidance.push(" - 编辑文件前始终先使用 Read。".to_string());
     }
     if tool_policy.allows("ToolSearch") {
         guidance.push(
-            " - Some tools are deferred — only their names are visible. Before calling a deferred tool, use ToolSearch to load its full schema first."
-                .to_string(),
+            " - 有些工具会延迟加载，只显示名称。调用延迟加载工具前，先使用 ToolSearch 加载完整 schema。".to_string(),
         );
     }
 
@@ -241,12 +233,12 @@ pub(crate) fn build_system_prompt_with_shell_and_tool_policy(
     // Section: intro (session permanent)
     let intro = cache.sections.entry("intro").or_insert_with(|| {
         format!(
-            "You are an AI assistant that can use tools to help with tasks.\n\
-             You are powered by the model {model}.\n\
-             Working directory: {cwd}\n\
-             Current date: {}\n\
-             Operating system: {}\n\
-             Architecture: {}\n\
+            "你是一名可以使用工具协助完成任务的 AI 助手。\n\
+             当前使用的模型：{model}\n\
+             工作目录：{cwd}\n\
+             当前日期：{}\n\
+             操作系统：{}\n\
+             系统架构：{}\n\
              {}",
             chrono::Local::now().format("%Y-%m-%d"),
             std::env::consts::OS,
@@ -318,9 +310,7 @@ pub(crate) fn build_system_prompt_with_shell_and_tool_policy(
             if listing.is_empty() {
                 String::new()
             } else {
-                format!(
-                    "<system-reminder>\nThe following skills are available for use with the Skill tool:\n\n{listing}\n</system-reminder>"
-                )
+                format!("<system-reminder>\n以下技能可通过 Skill 工具使用：\n\n{listing}\n</system-reminder>")
             }
         });
         if !skills_section.is_empty() {
@@ -348,8 +338,7 @@ pub fn compact_messages(messages: &mut Vec<Message>, keep_tail: usize) {
     let summarized_count = tail_start - 1;
 
     let summary_text = format!(
-        "[Previous conversation summary: {} messages exchanged, \
-         including tool calls and results. Key context preserved in recent messages.]",
+        "[先前对话摘要：共交换 {} 条消息，包括工具调用及其结果。关键上下文已保留在最近的消息中。]",
         summarized_count
     );
 

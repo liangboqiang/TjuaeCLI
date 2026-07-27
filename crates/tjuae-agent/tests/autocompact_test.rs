@@ -184,7 +184,7 @@ fn tc_2_4_08_prompt_contains_all_sections() {
     for i in 1..=9 {
         assert!(prompt.contains(&format!("{i}.")), "Missing section {i}");
     }
-    assert!(prompt.contains("CRITICAL: Respond with TEXT ONLY"));
+    assert!(prompt.contains("重要：只能返回文本"));
 }
 
 // ── TC-2.4-09: Summary formatting (normal) ──────────────────────────────────
@@ -192,7 +192,7 @@ fn tc_2_4_08_prompt_contains_all_sections() {
 #[test]
 fn tc_2_4_09_format_strips_analysis_extracts_summary() {
     let raw = "<analysis>thinking</analysis>\n<summary>result</summary>";
-    assert_eq!(format_compact_summary(raw), "Summary:\nresult");
+    assert_eq!(format_compact_summary(raw), "总结：\nresult");
 }
 
 // ── TC-2.4-10: Summary formatting (no analysis) ────────────────────────────
@@ -200,7 +200,7 @@ fn tc_2_4_09_format_strips_analysis_extracts_summary() {
 #[test]
 fn tc_2_4_10_format_without_analysis() {
     let raw = "<summary>result</summary>";
-    assert_eq!(format_compact_summary(raw), "Summary:\nresult");
+    assert_eq!(format_compact_summary(raw), "总结：\nresult");
 }
 
 // ── TC-2.4-11: Summary formatting (no tags) ────────────────────────────────
@@ -239,7 +239,7 @@ async fn tc_2_4_12_post_compact_message_structure() {
     match &result.messages[1].content[0] {
         ContentBlock::Text { text } => {
             assert!(text.contains("Detailed summary here"));
-            assert!(text.contains("This session is being continued"));
+            assert!(text.contains("本会话从一个上下文已耗尽的先前对话继续"));
         }
         _ => panic!("expected Text block"),
     }
@@ -281,7 +281,7 @@ fn tc_2_4_14_disabled_config_skips() {
 #[test]
 fn tc_2_4_15_prompt_forbids_tool_calls() {
     let prompt = build_compact_prompt();
-    assert!(prompt.contains("Do NOT call any tools"));
+    assert!(prompt.contains("不要调用任何工具"));
 }
 
 // ── TC-2.4-16: Success resets failure counter ───────────────────────────────
@@ -483,13 +483,13 @@ async fn stream_error_fails() {
 
 #[test]
 fn summary_content_auto_has_continuation() {
-    let content = build_summary_content("Summary:\ntest", true);
-    assert!(content.contains("Continue the conversation"));
-    assert!(content.contains("as if the break never happened"));
+    let content = build_summary_content("总结：\ntest", true);
+    assert!(content.contains("从中断处直接继续对话"));
+    assert!(content.contains("像对话从未中断一样"));
 }
 
 #[test]
 fn summary_content_manual_no_continuation() {
-    let content = build_summary_content("Summary:\ntest", false);
-    assert!(!content.contains("Continue the conversation"));
+    let content = build_summary_content("总结：\ntest", false);
+    assert!(!content.contains("从中断处直接继续对话"));
 }

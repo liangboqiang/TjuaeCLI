@@ -36,7 +36,7 @@ mod tests {
         let lines: Vec<String> = (0..6).map(|i| format!("Compiling dep-{i} v0.1.0")).collect();
         let input = lines.join("\n");
         let result = compact_output(&input, CompactLevel::Full);
-        assert!(result.contains("[... 4 similar lines]"));
+        assert!(result.contains("[……4 行相似内容]"));
     }
 
     #[test]

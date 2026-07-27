@@ -39,13 +39,13 @@ impl ExecCommandTool {
 fn render_exit_result(exit_code: i32, stdout: &[u8], stderr: &[u8]) -> String {
     let stdout = String::from_utf8_lossy(stdout);
     let stderr = String::from_utf8_lossy(stderr);
-    format!("Exit code: {exit_code}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}")
+    format!("退出码：{exit_code}\n标准输出：\n{stdout}\n标准错误：\n{stderr}")
 }
 
 fn render_timeout_result(timeout_ms: u64, stdout: &[u8], stderr: &[u8]) -> String {
     let stdout = String::from_utf8_lossy(stdout);
     let stderr = String::from_utf8_lossy(stderr);
-    format!("Command timed out after {timeout_ms}ms\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}")
+    format!("命令在 {timeout_ms} 毫秒后超时\n标准输出：\n{stdout}\n标准错误：\n{stderr}")
 }
 
 #[async_trait]
@@ -55,21 +55,21 @@ impl Tool for ExecCommandTool {
     }
 
     fn description(&self) -> &str {
-        "Executes a shell command and returns its output.\n\n\
-         IMPORTANT: Do NOT use ExecCommand when a dedicated tool is available:\n\
-         - File search: use Glob (not find or ls)\n\
-         - Content search: use Grep (not grep or rg)\n\
-         - Read files: use Read (not cat, head, or tail)\n\
-         - Edit files: use Edit (not sed or awk)\n\
-         - Write files: use Write (not echo or cat with heredoc)\n\n\
-         # Instructions\n\
-         - Use absolute paths to avoid working directory confusion.\n\
-         - When issuing multiple independent commands, make parallel tool calls \
-         instead of chaining them. Use `&&` only when commands depend on each other.\n\
-         - You may specify an optional timeout in milliseconds (default 120000, max 600000).\n\n\
-         # Git safety\n\
-         - Never force push, reset --hard, or use --no-verify unless explicitly asked.\n\
-         - Prefer creating new commits over amending existing ones."
+        "执行 shell 命令并返回其输出。\n\n\
+         重要：如果已有专用工具，请不要使用 ExecCommand：\n\
+         - 搜索文件：使用 Glob（不要使用 find 或 ls）\n\
+         - 搜索内容：使用 Grep（不要使用 grep 或 rg）\n\
+         - 读取文件：使用 Read（不要使用 cat、head 或 tail）\n\
+         - 编辑文件：使用 Edit（不要使用 sed 或 awk）\n\
+         - 写入文件：使用 Write（不要使用 echo 或带 heredoc 的 cat）\n\n\
+         # 使用说明\n\
+         - 使用绝对路径，避免混淆工作目录。\n\
+         - 执行多个相互独立的命令时，应并行调用工具，不要把命令串联起来。\
+         只有命令相互依赖时才使用 `&&`。\n\
+         - 可指定以毫秒为单位的超时时间（默认 120000，最大 600000）。\n\n\
+         # Git 安全\n\
+         - 除非用户明确要求，否则绝不强制推送、执行 reset --hard 或使用 --no-verify。\n\
+         - 优先创建新提交，不要修改已有提交。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -78,15 +78,15 @@ impl Tool for ExecCommandTool {
             "properties": {
                 "cmd": {
                     "type": "string",
-                    "description": "The command to execute"
+                    "description": "要执行的命令"
                 },
                 "shell": {
                     "type": "string",
-                    "description": "Optional shell override: auto, powershell, pwsh, cmd, bash, zsh, sh, or an executable path"
+                    "description": "可选的 shell 覆盖值：auto、powershell、pwsh、cmd、bash、zsh、sh 或可执行文件路径"
                 },
                 "timeout": {
                     "type": "integer",
-                    "description": "Timeout in milliseconds (default 120000, max 600000)"
+                    "description": "以毫秒为单位的超时时间（默认 120000，最大 600000）"
                 }
             },
             "required": ["cmd"]
@@ -100,7 +100,7 @@ impl Tool for ExecCommandTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(command) = input["cmd"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: cmd".to_string(),
+                content: "缺少必需参数：cmd".to_string(),
                 is_error: true,
             };
         };
@@ -109,7 +109,7 @@ impl Tool for ExecCommandTool {
             Ok(shell) => shell,
             Err(err) => {
                 return ToolResult {
-                    content: format!("Invalid shell: {}", err),
+                    content: format!("无效的 shell：{}", err),
                     is_error: true,
                 };
             }
@@ -119,7 +119,7 @@ impl Tool for ExecCommandTool {
             cwd = %self.cwd.display(),
             shell_kind = shell.kind.name(),
             shell_path = %shell.path.display(),
-            "ExecCommandTool executing"
+            "ExecCommandTool 正在执行"
         );
 
         let timeout_ms = input["timeout"]
@@ -148,7 +148,7 @@ impl Tool for ExecCommandTool {
                 }
             }
             Err(err) => ToolResult {
-                content: format!("Failed to execute command: {}", err),
+                content: format!("执行命令失败：{}", err),
                 is_error: true,
             },
         }
@@ -160,7 +160,7 @@ impl Tool for ExecCommandTool {
 
     fn describe(&self, input: &Value) -> String {
         let cmd = input.get("cmd").and_then(|v| v.as_str()).unwrap_or("");
-        format!("Execute: {}", crate::truncate_utf8(cmd, 80))
+        format!("执行：{}", crate::truncate_utf8(cmd, 80))
     }
 }
 

@@ -189,13 +189,10 @@ fn tc_3_5_08_system_prompt_includes_plan_mode_when_active() {
     // Simulate plan mode active: system prompt should contain plan instructions
     let active_prompt = format!("{}\n\n{}", base_prompt, instructions);
     assert!(
-        active_prompt.contains("Plan Mode"),
+        active_prompt.contains("计划模式"),
         "active prompt should contain plan mode instructions"
     );
-    assert!(
-        active_prompt.contains("MUST NOT"),
-        "should contain plan mode restrictions"
-    );
+    assert!(active_prompt.contains("严禁"), "should contain plan mode restrictions");
     assert!(active_prompt.contains(base_prompt), "should still contain base prompt");
 }
 
@@ -205,7 +202,7 @@ fn tc_3_5_08_system_prompt_excludes_plan_mode_when_inactive() {
 
     // Normal mode: system prompt is just the base
     assert!(
-        !base_prompt.contains("Plan Mode"),
+        !base_prompt.contains("# 计划模式"),
         "inactive prompt should NOT contain plan mode instructions"
     );
 }

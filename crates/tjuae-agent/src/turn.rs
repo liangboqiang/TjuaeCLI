@@ -43,16 +43,10 @@ pub(crate) enum FinalizationReason {
 impl FinalizationReason {
     pub(crate) fn fallback_prompt(self) -> &'static str {
         match self {
-            FinalizationReason::TurnBudget => {
-                "Stopped after reaching the turn budget before the model produced a final answer."
-            }
-            FinalizationReason::ToolFailure => {
-                "Tool execution repeatedly failed without making progress. Review the latest tool errors and try again after resolving the blocker."
-            }
-            FinalizationReason::MaxTokens => {
-                "The response was cut off by the token limit and could not be completed automatically."
-            }
-            FinalizationReason::EmptyFinal => "The model finished without visible answer text after one retry.",
+            FinalizationReason::TurnBudget => "模型尚未生成最终答案就已达到轮次上限，运行已停止。",
+            FinalizationReason::ToolFailure => "工具执行反复失败且没有进展。请查看最近的工具错误，解决阻塞问题后重试。",
+            FinalizationReason::MaxTokens => "响应因达到 token 上限而被截断，无法自动完成。",
+            FinalizationReason::EmptyFinal => "重试一次后，模型仍未生成可见的回答文本。",
         }
     }
 }
@@ -72,16 +66,16 @@ impl TurnKind {
         match self {
             Self::Normal => None,
             Self::Finalization(FinalizationReason::TurnBudget) => {
-                Some("Do not call any more tools. Use the tool results already provided and give the final answer now.")
+                Some("不要再调用任何工具。请使用已有的工具结果，立即给出最终答案。")
             }
             Self::Finalization(FinalizationReason::ToolFailure) => Some(
-                "Tool execution repeatedly failed without making progress. Do not call any more tools. Summarize what was completed, explain the concrete blocker using the latest tool results, and state what the user should change or provide next. Do not mention internal retry counters.",
+                "工具执行反复失败且没有进展。不要再调用任何工具。请总结已完成的工作，结合最近的工具结果说明具体阻塞原因，并指出用户下一步应修改或提供什么。不要提及内部重试计数。",
             ),
-            Self::Finalization(FinalizationReason::MaxTokens) => Some(
-                "The previous response was cut off by the token limit. Finish the answer now. Do not call any tools.",
-            ),
+            Self::Finalization(FinalizationReason::MaxTokens) => {
+                Some("上一次响应因达到 token 上限而被截断。现在请完成回答，不要调用任何工具。")
+            }
             Self::Finalization(FinalizationReason::EmptyFinal) => Some(
-                "The previous assistant response finished without visible answer text. Provide a concise visible answer now. Do not send reasoning only. Do not call any tools.",
+                "上一次助手响应结束时没有可见的回答文本。现在请给出简洁且可见的答案，不要只发送推理过程，也不要调用任何工具。",
             ),
         }
     }
@@ -157,17 +151,17 @@ impl ToolLoopWarning {
     pub(crate) fn guidance(self) -> String {
         match self {
             Self::ExactFailure { count, limit } => format!(
-                "[Tool recovery required: the same tool call has failed {count}/{limit} times. Do not repeat it unchanged. Inspect the latest error, change arguments or strategy, use another tool, or explain the blocker in the final answer.]"
+                "[需要恢复工具调用：同一个工具调用已失败 {count}/{limit} 次。不要原样重复。请检查最近的错误，修改参数或策略，改用其他工具，或在最终答案中说明阻塞原因。]"
             ),
             Self::AllErrorRounds { count, limit } => format!(
-                "[Tool recovery required: every tool call has failed for {count}/{limit} consecutive rounds. Stop retrying reflexively. Diagnose the latest errors, choose a materially different approach, or explain the blocker in the final answer.]"
+                "[需要恢复工具调用：所有工具调用已连续失败 {count}/{limit} 轮。不要机械重试。请诊断最近的错误，选择实质不同的方法，或在最终答案中说明阻塞原因。]"
             ),
             Self::Cycle {
                 period,
                 repetitions,
                 limit,
             } => format!(
-                "[Tool recovery required: a {period}-round tool-call cycle has repeated {repetitions}/{limit} times without progress. Break the cycle by changing strategy or explain the blocker in the final answer.]"
+                "[需要恢复工具调用：一个 {period} 轮的工具调用循环已重复 {repetitions}/{limit} 次且没有进展。请更改策略打破循环，或在最终答案中说明阻塞原因。]"
             ),
         }
     }
@@ -228,7 +222,7 @@ impl TurnGuards {
                 target: "tjuae_agent",
                 count = malformed_count,
                 limit = self.tool_call_malformed.limit(),
-                "stopping tool-call malformed loop"
+                "正在停止格式错误的工具调用循环"
             );
             return TurnGuardAction::Stop(AgentError::ToolCallMalformed {
                 count: malformed_count,
@@ -249,7 +243,7 @@ impl TurnGuards {
                 count = tool_call_failure_count,
                 limit = self.tool_call_failures.limit(),
                 loop_kind = "exact_failure",
-                "finalizing after repeated tool-call failures"
+                "工具调用反复失败，正在收尾"
             );
             return TurnGuardAction::Finalize(FinalizationReason::ToolFailure);
         }
@@ -263,7 +257,7 @@ impl TurnGuards {
                 repetitions,
                 limit = DEFAULT_MAX_TOOL_CALL_CYCLE_REPETITIONS,
                 loop_kind = "cycle",
-                "finalizing after repeated tool-call cycle"
+                "工具调用反复循环，正在收尾"
             );
             return TurnGuardAction::Finalize(FinalizationReason::ToolFailure);
         }
@@ -274,7 +268,7 @@ impl TurnGuards {
                 count = all_error_round_count,
                 limit = self.all_error_tool_rounds.limit(),
                 loop_kind = "all_error_rounds",
-                "finalizing after consecutive all-error tool rounds"
+                "工具轮次连续全部出错，正在收尾"
             );
             return TurnGuardAction::Finalize(FinalizationReason::ToolFailure);
         }

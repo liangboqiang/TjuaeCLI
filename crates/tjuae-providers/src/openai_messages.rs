@@ -52,7 +52,7 @@ pub(crate) fn build_messages(messages: &[Message], system: &str, compat: &Provid
                                     target: "tjuae_providers",
                                     tool_call_id = %tool_use_id,
                                     reason = "orphan_result",
-                                    "dropped orphan tool_result in outgoing request"
+                                    "已丢弃传出请求中孤立的 tool_result"
                                 );
                                 continue;
                             }
@@ -87,7 +87,7 @@ pub(crate) fn build_messages(messages: &[Message], system: &str, compat: &Provid
                                         tracing::warn!(
                                             target: "tjuae_providers",
                                             error = %error,
-                                            "skipping invalid image block in OpenAI projection"
+                                            "OpenAI 投影中的图片块无效，已跳过"
                                         );
                                         continue;
                                     }
@@ -179,7 +179,7 @@ pub(crate) fn build_messages(messages: &[Message], system: &str, compat: &Provid
                                 target: "tjuae_providers",
                                 tool_call_id = %id,
                                 reason = DroppedToolCallReason::EmptyName.log_reason(),
-                                "downgraded malformed tool_call to text in outgoing request"
+                                "已将传出请求中格式错误的 tool_call 降级为文本"
                             );
                             continue;
                         }
@@ -194,7 +194,7 @@ pub(crate) fn build_messages(messages: &[Message], system: &str, compat: &Provid
                                 target: "tjuae_providers",
                                 tool_call_id = %id,
                                 reason = DroppedToolCallReason::EmptyId.log_reason(),
-                                "downgraded malformed tool_call to text in outgoing request"
+                                "已将传出请求中格式错误的 tool_call 降级为文本"
                             );
                             continue;
                         }
@@ -269,7 +269,7 @@ pub(crate) fn build_messages(messages: &[Message], system: &str, compat: &Provid
                                 target: "tjuae_providers",
                                 tool_call_id = %tool_use_id,
                                 reason = "orphan_result",
-                                "dropped orphan tool_result in outgoing request"
+                                "已丢弃传出请求中孤立的 tool_result"
                             );
                             continue;
                         }

@@ -1,8 +1,9 @@
 [package]
 name = "tjuae-protocol"
-description = "JSON stream protocol (events, commands, approval manager) for TjuaeCLI host integration"
+description = "用于 TjuaeCLI 宿主集成的 JSON 流协议（事件、命令、审批管理器）"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
 repository.workspace = true
 

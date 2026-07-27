@@ -71,14 +71,14 @@ impl OutputSink for ProtocolSink {
         // This is a fallback for compatibility.
         let _ = self.writer.emit(&ProtocolEvent::Info {
             msg_id: String::new(),
-            message: format!("Tool call: {name}"),
+            message: format!("工具调用：{name}"),
         });
     }
 
     fn emit_tool_result(&self, _tool_use_id: &str, name: &str, is_error: bool, content: &str) {
         // In protocol mode, tool results are emitted via explicit ToolResult events
         // with call_id. This fallback emits an info event.
-        let status = if is_error { "error" } else { "success" };
+        let status = if is_error { "错误" } else { "成功" };
         let _ = self.writer.emit(&ProtocolEvent::Info {
             msg_id: String::new(),
             message: format!("[{name} {status}] {content}"),

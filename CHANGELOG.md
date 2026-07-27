@@ -1,13 +1,12 @@
-# Changelog
+# 更新日志
 
-All notable changes to TjuaeCLI will be documented in this file.
+TjuaeCLI 的所有重要变更都记录在此文件中。
 
-## Unreleased
+## 未发布
 
-### Changed
+### 变更
 
-- Established TjuaeCLI as the product identity and `tjuae-cli` as the binary.
-- Renamed the workspace crates, runtime directories, and environment variables
-  to the Tjuae namespace.
-- Removed the deprecated flat command loader; skills now use `SKILL.md` files.
-- Made OAuth client registration an explicit configuration requirement.
+- 将 TjuaeCLI 确立为产品标识，并将 `tjuae-cli` 作为命令行二进制名称。
+- 将工作区 crate、运行时目录和环境变量统一迁移到 Tjuae 命名空间。
+- 移除已弃用的扁平命令加载器；技能统一使用 `SKILL.md` 文件。
+- 将 OAuth 客户端注册设为显式配置要求。

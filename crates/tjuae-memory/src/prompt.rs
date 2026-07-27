@@ -13,7 +13,7 @@ use crate::paths::ENTRYPOINT_NAME;
 // Display name
 // ---------------------------------------------------------------------------
 
-const DISPLAY_NAME: &str = "auto memory";
+const DISPLAY_NAME: &str = "自动记忆";
 
 // ---------------------------------------------------------------------------
 // Directory existence guidance
@@ -21,75 +21,74 @@ const DISPLAY_NAME: &str = "auto memory";
 
 /// Guidance appended to the memory directory prompt line so the model
 /// doesn't waste turns on `ls` / `mkdir -p` before writing.
-const DIR_EXISTS_GUIDANCE: &str = "This directory already exists \u{2014} \
-    write to it directly with the Write tool \
-    (do not run mkdir or check for its existence).";
+const DIR_EXISTS_GUIDANCE: &str = "此目录已经存在——请直接使用 Write 工具写入，\
+    不要运行 mkdir，也不要检查目录是否存在。";
 
 // ---------------------------------------------------------------------------
 // Type taxonomy (individual-only, no team/private scope tags)
 // ---------------------------------------------------------------------------
 
 const TYPES_SECTION: &str = "\
-## Types of memory
+## 记忆类型
 
-There are several discrete types of memory that you can store in your memory system:
+记忆系统可以存储以下几种彼此独立的记忆：
 
 <types>
 <type>
     <name>user</name>
-    <description>Contain information about the user's role, goals, responsibilities, and knowledge. Great user memories help you tailor your future behavior to the user's preferences and perspective. Your goal in reading and writing these memories is to build up an understanding of who the user is and how you can be most helpful to them specifically. For example, you should collaborate with a senior software engineer differently than a student who is coding for the very first time. Keep in mind, that the aim here is to be helpful to the user. Avoid writing memories about the user that could be viewed as a negative judgement or that are not relevant to the work you're trying to accomplish together.</description>
-    <when_to_save>When you learn any details about the user's role, preferences, responsibilities, or knowledge</when_to_save>
-    <how_to_use>When your work should be informed by the user's profile or perspective. For example, if the user is asking you to explain a part of the code, you should answer that question in a way that is tailored to the specific details that they will find most valuable or that helps them build their mental model in relation to domain knowledge they already have.</how_to_use>
+    <description>记录用户的角色、目标、职责和知识背景。高质量的 user 记忆可以帮助你根据用户的偏好和视角调整未来行为。读写这些记忆的目标，是逐步理解用户是谁，以及怎样才能最有效地帮助对方。例如，与资深软件工程师协作的方式应不同于帮助第一次编程的学生。记住，目的始终是帮助用户；不要记录可能被视为负面评判，或与双方共同工作无关的内容。</description>
+    <when_to_save>当你了解到用户角色、偏好、职责或知识背景的任何细节时。</when_to_save>
+    <how_to_use>当工作方式需要结合用户画像或视角时使用。例如，用户要求解释代码时，应根据其最关注的细节和已有领域知识来组织回答，帮助对方建立合适的心智模型。</how_to_use>
     <examples>
-    user: I'm a data scientist investigating what logging we have in place
-    assistant: [saves user memory: user is a data scientist, currently focused on observability/logging]
+    user: 我是一名数据科学家，正在调查项目现有的日志能力
+    assistant: [保存 user 记忆：用户是数据科学家，目前关注可观测性和日志]
 
-    user: I've been writing Go for ten years but this is my first time touching the React side of this repo
-    assistant: [saves user memory: deep Go expertise, new to React and this project's frontend \u{2014} frame frontend explanations in terms of backend analogues]
+    user: 我写 Go 已经十年了，但这是第一次接触这个仓库的 React 部分
+    assistant: [保存 user 记忆：用户精通 Go，但刚接触 React 和本项目的前端——解释前端概念时可类比后端]
     </examples>
 </type>
 <type>
     <name>feedback</name>
-    <description>Guidance the user has given you about how to approach work \u{2014} both what to avoid and what to keep doing. These are a very important type of memory to read and write as they allow you to remain coherent and responsive to the way you should approach work in the project. Record from failure AND success: if you only save corrections, you will avoid past mistakes but drift away from approaches the user has already validated, and may grow overly cautious.</description>
-    <when_to_save>Any time the user corrects your approach (\"no not that\", \"don't\", \"stop doing X\") OR confirms a non-obvious approach worked (\"yes exactly\", \"perfect, keep doing that\", accepting an unusual choice without pushback). Corrections are easy to notice; confirmations are quieter \u{2014} watch for them. In both cases, save what is applicable to future conversations, especially if surprising or not obvious from the code. Include *why* so you can judge edge cases later.</when_to_save>
-    <how_to_use>Let these memories guide your behavior so that the user does not need to offer the same guidance twice.</how_to_use>
-    <body_structure>Lead with the rule itself, then a **Why:** line (the reason the user gave \u{2014} often a past incident or strong preference) and a **How to apply:** line (when/where this guidance kicks in). Knowing *why* lets you judge edge cases instead of blindly following the rule.</body_structure>
+    <description>记录用户对工作方式的指导，包括应避免什么以及应继续做什么。这类记忆非常重要，可以让你在项目中保持一致，并持续采用用户期望的工作方式。既要记录失败，也要记录成功：如果只保存纠正意见，你虽然能避免重复错误，却可能偏离用户已经认可的方法，并变得过度谨慎。</description>
+    <when_to_save>用户纠正你的方法（例如“不是这样”“不要”“停止做 X”），或确认一个并不显然的方法有效（例如“对，就是这样”“很好，继续这样做”，或没有反对一个特殊选择）时。纠正意见容易发现，肯定往往更隐晦，也要留意。两种情况都只保存适用于未来对话的信息，特别是那些出人意料或无法从代码中直接看出的内容，并写明原因，以便日后判断边界情况。</when_to_save>
+    <how_to_use>让这些记忆指导你的行为，避免用户重复给出同样的要求。</how_to_use>
+    <body_structure>先写规则本身，再写一行 **原因：**（用户给出的理由，通常是过往事件或强烈偏好）和一行 **应用方式：**（何时、何处适用）。了解原因可以帮助你判断边界情况，而不是机械执行规则。</body_structure>
     <examples>
-    user: don't mock the database in these tests \u{2014} we got burned last quarter when mocked tests passed but the prod migration failed
-    assistant: [saves feedback memory: integration tests must hit a real database, not mocks. Reason: prior incident where mock/prod divergence masked a broken migration]
+    user: 这些测试不要模拟数据库——上季度模拟测试都通过了，但生产迁移失败，给我们造成了损失
+    assistant: [保存 feedback 记忆：集成测试必须使用真实数据库，不能使用 mock。原因：此前 mock 与生产环境不一致，掩盖了损坏的迁移]
 
-    user: stop summarizing what you just did at the end of every response, I can read the diff
-    assistant: [saves feedback memory: this user wants terse responses with no trailing summaries]
+    user: 不要在每次响应结尾总结刚做过的事，我会看 diff
+    assistant: [保存 feedback 记忆：用户希望响应简洁，不要附加结尾总结]
 
-    user: yeah the single bundled PR was the right call here, splitting this one would've just been churn
-    assistant: [saves feedback memory: for refactors in this area, user prefers one bundled PR over many small ones. Confirmed after I chose this approach \u{2014} a validated judgment call, not a correction]
+    user: 对，这里合成一个 PR 是正确选择，拆开只会徒增工作
+    assistant: [保存 feedback 记忆：对此区域的重构，用户更偏好一个完整 PR，而不是多个小 PR。这是用户确认过的判断，并非纠正意见]
     </examples>
 </type>
 <type>
     <name>project</name>
-    <description>Information that you learn about ongoing work, goals, initiatives, bugs, or incidents within the project that is not otherwise derivable from the code or git history. Project memories help you understand the broader context and motivation behind the work the user is doing within this working directory.</description>
-    <when_to_save>When you learn who is doing what, why, or by when. These states change relatively quickly so try to keep your understanding of this up to date. Always convert relative dates in user messages to absolute dates when saving (e.g., \"Thursday\" \u{2192} \"2026-03-05\"), so the memory remains interpretable after time passes.</when_to_save>
-    <how_to_use>Use these memories to more fully understand the details and nuance behind the user's request and make better informed suggestions.</how_to_use>
-    <body_structure>Lead with the fact or decision, then a **Why:** line (the motivation \u{2014} often a constraint, deadline, or stakeholder ask) and a **How to apply:** line (how this should shape your suggestions). Project memories decay fast, so the why helps future-you judge whether the memory is still load-bearing.</body_structure>
+    <description>记录无法从代码或 Git 历史中推导出的项目进行中工作、目标、计划、缺陷或事故。project 记忆帮助你理解用户在当前工作目录中开展工作的更广泛背景和动机。</description>
+    <when_to_save>当你了解到谁在做什么、为什么做或何时完成时。此类状态变化较快，应尽量保持最新。保存时始终把用户消息中的相对日期转换为绝对日期（例如“周四”→“2026-03-05”），确保日后仍可理解。</when_to_save>
+    <how_to_use>使用这些记忆更完整地理解用户请求背后的细节和含义，从而提出更可靠的建议。</how_to_use>
+    <body_structure>先写事实或决定，再写一行 **原因：**（动机，通常是约束、截止日期或利益相关方要求）和一行 **应用方式：**（它应如何影响建议）。项目记忆过期较快，原因可以帮助未来的你判断这条记忆是否仍然重要。</body_structure>
     <examples>
-    user: we're freezing all non-critical merges after Thursday \u{2014} mobile team is cutting a release branch
-    assistant: [saves project memory: merge freeze begins 2026-03-05 for mobile release cut. Flag any non-critical PR work scheduled after that date]
+    user: 周四之后冻结所有非关键合并——移动团队要切发布分支
+    assistant: [保存 project 记忆：为切出移动端发布分支，合并冻结从 2026-03-05 开始。提醒所有计划在该日期之后进行的非关键 PR 工作]
 
-    user: the reason we're ripping out the old auth middleware is that legal flagged it for storing session tokens in a way that doesn't meet the new compliance requirements
-    assistant: [saves project memory: auth middleware rewrite is driven by legal/compliance requirements around session token storage, not tech-debt cleanup \u{2014} scope decisions should favor compliance over ergonomics]
+    user: 删除旧认证中间件是因为法务指出它存储会话 token 的方式不符合新的合规要求
+    assistant: [保存 project 记忆：认证中间件重写由会话 token 存储的法律与合规要求推动，而不是技术债清理——范围决策应优先满足合规，而非便利性]
     </examples>
 </type>
 <type>
     <name>reference</name>
-    <description>Stores pointers to where information can be found in external systems. These memories allow you to remember where to look to find up-to-date information outside of the project directory.</description>
-    <when_to_save>When you learn about resources in external systems and their purpose. For example, that bugs are tracked in a specific project in Linear or that feedback can be found in a specific Slack channel.</when_to_save>
-    <how_to_use>When the user references an external system or information that may be in an external system.</how_to_use>
+    <description>记录可以在外部系统中找到信息的位置。这类记忆让你知道应到哪里查找项目目录之外的最新信息。</description>
+    <when_to_save>当你了解到外部系统中的资源及其用途时。例如，缺陷记录在 Linear 的某个项目中，或反馈位于某个 Slack 频道。</when_to_save>
+    <how_to_use>当用户提到外部系统，或信息可能位于外部系统中时使用。</how_to_use>
     <examples>
-    user: check the Linear project \"INGEST\" if you want context on these tickets, that's where we track all pipeline bugs
-    assistant: [saves reference memory: pipeline bugs are tracked in Linear project \"INGEST\"]
+    user: 如果需要了解这些工单的背景，请查看 Linear 项目 \"INGEST\"，所有流水线缺陷都记录在那里
+    assistant: [保存 reference 记忆：流水线缺陷记录在 Linear 项目 \"INGEST\" 中]
 
-    user: the Grafana board at grafana.internal/d/api-latency is what oncall watches \u{2014} if you're touching request handling, that's the thing that'll page someone
-    assistant: [saves reference memory: grafana.internal/d/api-latency is the oncall latency dashboard \u{2014} check it when editing request-path code]
+    user: 值班人员关注的是 grafana.internal/d/api-latency 看板——修改请求处理逻辑时，它可能触发告警
+    assistant: [保存 reference 记忆：grafana.internal/d/api-latency 是值班延迟看板——编辑请求路径代码时应检查它]
     </examples>
 </type>
 </types>
@@ -100,15 +99,15 @@ There are several discrete types of memory that you can store in your memory sys
 // ---------------------------------------------------------------------------
 
 const WHAT_NOT_TO_SAVE: &str = "\
-## What NOT to save in memory
+## 不应保存到记忆中的内容
 
-- Code patterns, conventions, architecture, file paths, or project structure \u{2014} these can be derived by reading the current project state.
-- Git history, recent changes, or who-changed-what \u{2014} `git log` / `git blame` are authoritative.
-- Debugging solutions or fix recipes \u{2014} the fix is in the code; the commit message has the context.
-- Anything already documented in AGENTS.md files.
-- Ephemeral task details: in-progress work, temporary state, current conversation context.
+- 代码模式、约定、架构、文件路径或项目结构——这些可以通过读取项目当前状态获得。
+- Git 历史、最近变更或谁修改了什么——应以 `git log` 和 `git blame` 为准。
+- 调试方案或修复步骤——修复位于代码中，提交消息提供上下文。
+- AGENTS.md 中已经记录的任何内容。
+- 短期任务细节：进行中的工作、临时状态和当前对话上下文。
 
-These exclusions apply even when the user explicitly asks you to save. If they ask you to save a PR list or activity summary, ask what was *surprising* or *non-obvious* about it \u{2014} that is the part worth keeping.";
+即使用户明确要求保存，上述排除规则仍然适用。如果用户要求保存 PR 列表或活动摘要，请询问其中哪些内容是*出人意料*或*不明显*的——只有这部分值得长期保留。";
 
 // ---------------------------------------------------------------------------
 // How to save (two-step process with MEMORY.md index)
@@ -117,21 +116,21 @@ These exclusions apply even when the user explicitly asks you to save. If they a
 fn how_to_save_section() -> String {
     format!(
         "\
-## How to save memories
+## 如何保存记忆
 
-Saving a memory is a two-step process:
+保存记忆分为两个步骤：
 
-**Step 1** \u{2014} write the memory to its own file (e.g., `user_role.md`, `feedback_testing.md`) using this frontmatter format:
+**步骤 1**——使用以下 frontmatter 格式，把记忆写入独立文件（例如 `user_role.md`、`feedback_testing.md`）：
 
 {FRONTMATTER_EXAMPLE}
 
-**Step 2** \u{2014} add a pointer to that file in `{ep}`. `{ep}` is an index, not a memory \u{2014} each entry should be one line, under ~150 characters: `- [Title](file.md) \u{2014} one-line hook`. It has no frontmatter. Never write memory content directly into `{ep}`.
+**步骤 2**——在 `{ep}` 中添加指向该文件的链接。`{ep}` 是索引，不是记忆——每个条目只占一行且不超过约 150 个字符：`- [标题](file.md)——一句话提示`。它没有 frontmatter，绝不要把记忆正文直接写入 `{ep}`。
 
-- `{ep}` is always loaded into your conversation context \u{2014} lines after {max_lines} will be truncated, so keep the index concise
-- Keep the name, description, and type fields in memory files up-to-date with the content
-- Organize memory semantically by topic, not chronologically
-- Update or remove memories that turn out to be wrong or outdated
-- Do not write duplicate memories. First check if there is an existing memory you can update before writing a new one.",
+- `{ep}` 始终会载入对话上下文——超过 {max_lines} 行的内容会被截断，因此索引必须简洁
+- 保持记忆文件中的 name、description 和 type 字段与正文同步
+- 按主题语义组织记忆，不要按时间顺序组织
+- 更新或删除后来发现错误或过时的记忆
+- 不要写入重复记忆。新建前先检查能否更新已有记忆。",
         ep = ENTRYPOINT_NAME,
         max_lines = MAX_INDEX_LINES,
     )
@@ -144,12 +143,12 @@ Saving a memory is a two-step process:
 const FRONTMATTER_EXAMPLE: &str = "\
 ```markdown
 ---
-name: {{memory name}}
-description: {{one-line description \u{2014} used to decide relevance in future conversations, so be specific}}
+name: {{记忆名称}}
+description: {{单行说明——用于在未来对话中判断相关性，因此应具体明确}}
 type: {{user, feedback, project, reference}}
 ---
 
-{{memory content \u{2014} for feedback/project types, structure as: rule/fact, then **Why:** and **How to apply:** lines}}
+{{记忆正文——feedback/project 类型应按“规则或事实”，然后是 **原因：** 和 **应用方式：** 两行来组织}}
 ```";
 
 // ---------------------------------------------------------------------------
@@ -157,38 +156,38 @@ type: {{user, feedback, project, reference}}
 // ---------------------------------------------------------------------------
 
 const WHEN_TO_ACCESS: &str = "\
-## When to access memories
-- When memories seem relevant, or the user references prior-conversation work.
-- You MUST access memory when the user explicitly asks you to check, recall, or remember.
-- If the user says to *ignore* or *not use* memory: proceed as if MEMORY.md were empty. Do not apply remembered facts, cite, compare against, or mention memory content.
-- Memory records can become stale over time. Use memory as context for what was true at a given point in time. Before answering the user or building assumptions based solely on information in memory records, verify that the memory is still correct and up-to-date by reading the current state of the files or resources. If a recalled memory conflicts with current information, trust what you observe now \u{2014} and update or remove the stale memory rather than acting on it.";
+## 何时访问记忆
+- 当记忆可能相关，或用户提到先前对话中的工作时。
+- 用户明确要求检查、回忆或记住内容时，你必须访问记忆。
+- 如果用户要求*忽略*或*不使用*记忆：按 MEMORY.md 为空来处理。不要应用、引用、比较或提及记忆中的事实。
+- 记忆记录可能随时间过期。只能把它当作某一时刻真实情况的上下文。如果回答或假设完全依赖记忆，请先读取文件或资源的当前状态，确认记忆仍然正确且最新。记忆与当前信息冲突时，以当前观察为准，并更新或删除过时记忆，不要据其采取行动。";
 
 // ---------------------------------------------------------------------------
 // Before recommending from memory
 // ---------------------------------------------------------------------------
 
 const BEFORE_RECOMMENDING: &str = "\
-## Before recommending from memory
+## 根据记忆提出建议前
 
-A memory that names a specific function, file, or flag is a claim that it existed *when the memory was written*. It may have been renamed, removed, or never merged. Before recommending it:
+记忆中提到某个函数、文件或标志，只能证明它在*写入记忆时*存在。它可能已经重命名或删除，也可能从未合并。提出建议前：
 
-- If the memory names a file path: check the file exists.
-- If the memory names a function or flag: grep for it.
-- If the user is about to act on your recommendation (not just asking about history), verify first.
+- 如果记忆提到文件路径：检查文件是否存在。
+- 如果记忆提到函数或标志：搜索确认。
+- 如果用户即将按你的建议行动，而不只是询问历史：先验证。
 
-\"The memory says X exists\" is not the same as \"X exists now.\"
+“记忆中说 X 存在”不等于“X 现在存在”。
 
-A memory that summarizes repo state (activity logs, architecture snapshots) is frozen in time. If the user asks about *recent* or *current* state, prefer `git log` or reading the code over recalling the snapshot.";
+总结仓库状态的记忆（活动日志、架构快照）固定在过去某一时刻。用户询问*最近*或*当前*状态时，应优先查看 `git log` 或读取代码，而不是回忆快照。";
 
 // ---------------------------------------------------------------------------
 // Memory vs other persistence
 // ---------------------------------------------------------------------------
 
 const PERSISTENCE_SECTION: &str = "\
-## Memory and other forms of persistence
-Memory is one of several persistence mechanisms available to you as you assist the user in a given conversation. The distinction is often that memory can be recalled in future conversations and should not be used for persisting information that is only useful within the scope of the current conversation.
-- When to use or update a plan instead of memory: If you are about to start a non-trivial implementation task and would like to reach alignment with the user on your approach you should use a Plan rather than saving this information to memory. Similarly, if you already have a plan within the conversation and you have changed your approach persist that change by updating the plan rather than saving a memory.
-- When to use or update tasks instead of memory: When you need to break your work in current conversation into discrete steps or keep track of your progress use tasks instead of saving to memory. Tasks are great for persisting information about the work that needs to be done in the current conversation, but memory should be reserved for information that will be useful in future conversations.";
+## 记忆与其他持久化方式
+记忆是你在对话中协助用户时可用的多种持久化机制之一。其主要区别是记忆可以在未来对话中重新调用，因此不应保存只对当前对话有用的信息。
+- 何时使用或更新计划而不是记忆：准备开始非简单实施任务，并希望先与用户就方法达成一致时，应使用计划，不要把这些信息保存为记忆。如果对话中已有计划而方法发生变化，应更新计划来记录变化，不要保存为记忆。
+- 何时使用或更新任务而不是记忆：需要把当前对话中的工作拆分为独立步骤或跟踪进度时，应使用任务。任务适合记录当前对话中待完成的工作；记忆只应保留未来对话仍有用的信息。";
 
 // ---------------------------------------------------------------------------
 // Minimal memory prompt (lazy — saves ~2,500 tokens)
@@ -199,20 +198,16 @@ Memory is one of several persistence mechanisms available to you as you assist t
 /// read existing memories and know the system exists; the full instructions
 /// are injected on-demand when the LLM first writes to the memory directory.
 const MINIMAL_RULES: &str = "\
-You should build up this memory system over time so that future conversations \
-can have a complete picture of who the user is, how they'd like to collaborate \
-with you, what behaviors to avoid or repeat, and the context behind the work \
-the user gives you.
+随着时间推移逐步完善此记忆系统，使未来的对话能够完整了解用户是谁、用户希望如何与你协作、\
+哪些行为应避免或重复，以及用户交付工作的背景。
 
-If the user explicitly asks you to remember something, save it immediately. \
-If they ask you to forget something, find and remove the relevant entry.
+如果用户明确要求记住某件事，请立即保存。如果用户要求忘记某件事，请找到并删除相关条目。
 
-Memory types: user, feedback, project, reference. Each memory is a Markdown file \
-with YAML frontmatter (name, description, type). MEMORY.md is the index — one \
-line per entry, never write content directly into it.
+记忆类型包括 user、feedback、project 和 reference。每条记忆都是带 YAML frontmatter \
+（name、description、type）的 Markdown 文件。MEMORY.md 是索引，每个条目占一行，\
+绝不要直接把正文写入其中。
 
-Before saving, read existing memories to avoid duplicates. \
-Verify file/function names from memory still exist before recommending them.";
+保存前先读取已有记忆，避免重复。根据记忆提出建议前，验证其中的文件或函数名称是否仍然存在。";
 
 // ===========================================================================
 // Public API
@@ -228,7 +223,7 @@ pub fn build_memory_prompt_minimal(memory_dir: &Path) -> String {
         format!("# {DISPLAY_NAME}"),
         String::new(),
         format!(
-            "You have a persistent, file-based memory system at `{dir_display}`. \
+            "你在 `{dir_display}` 中拥有一个基于文件的持久记忆系统。\
              {DIR_EXISTS_GUIDANCE}"
         ),
         String::new(),
@@ -245,8 +240,7 @@ pub fn build_memory_prompt_minimal(memory_dir: &Path) -> String {
         parts.push(format!("## {ENTRYPOINT_NAME}"));
         parts.push(String::new());
         parts.push(format!(
-            "Your {ENTRYPOINT_NAME} is currently empty. \
-             When you save new memories, they will appear here."
+            "你的 {ENTRYPOINT_NAME} 当前为空。保存新记忆后，它们会显示在这里。"
         ));
     } else {
         let truncation = truncate_index(&raw);
@@ -274,8 +268,7 @@ pub fn build_memory_prompt(memory_dir: &Path) -> String {
         lines.push(format!("## {ENTRYPOINT_NAME}"));
         lines.push(String::new());
         lines.push(format!(
-            "Your {ENTRYPOINT_NAME} is currently empty. \
-             When you save new memories, they will appear here."
+            "你的 {ENTRYPOINT_NAME} 当前为空。保存新记忆后，它们会显示在这里。"
         ));
     } else {
         let truncation = truncate_index(&raw);
@@ -299,19 +292,16 @@ pub fn build_memory_instructions(memory_dir: &Path) -> Vec<String> {
         format!("# {DISPLAY_NAME}"),
         String::new(),
         format!(
-            "You have a persistent, file-based memory system at `{dir_display}`. \
+            "你在 `{dir_display}` 中拥有一个基于文件的持久记忆系统。\
              {DIR_EXISTS_GUIDANCE}"
         ),
         String::new(),
-        "You should build up this memory system over time so that future \
-         conversations can have a complete picture of who the user is, how \
-         they'd like to collaborate with you, what behaviors to avoid or \
-         repeat, and the context behind the work the user gives you."
+        "随着时间推移逐步完善此记忆系统，使未来的对话能够完整了解用户是谁、\
+         用户希望如何与你协作、哪些行为应避免或重复，以及用户交付工作的背景。"
             .to_owned(),
         String::new(),
-        "If the user explicitly asks you to remember something, save it \
-         immediately as whichever type fits best. If they ask you to forget \
-         something, find and remove the relevant entry."
+        "如果用户明确要求记住某件事，请立即以最合适的类型保存。\
+         如果用户要求忘记某件事，请找到并删除相关条目。"
             .to_owned(),
         String::new(),
         TYPES_SECTION.to_owned(),

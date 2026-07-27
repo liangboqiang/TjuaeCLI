@@ -26,8 +26,7 @@ impl Tool for ToolSearchTool {
     }
 
     fn description(&self) -> &str {
-        "Search for deferred tools and load their full schema. \
-         Use this before calling any deferred tool."
+        "搜索延迟加载的工具并载入其完整 schema。调用任何延迟加载工具前请先使用此工具。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -36,7 +35,7 @@ impl Tool for ToolSearchTool {
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Tool name or keyword to search for"
+                    "description": "要搜索的工具名称或关键词"
                 }
             },
             "required": ["query"]
@@ -51,7 +50,7 @@ impl Tool for ToolSearchTool {
         let query = input["query"].as_str().unwrap_or("");
         if query.is_empty() {
             return ToolResult {
-                content: "Error: query is required".to_string(),
+                content: "错误：query 为必需参数".to_string(),
                 is_error: true,
             };
         }
@@ -75,7 +74,7 @@ impl Tool for ToolSearchTool {
 
         if matches.is_empty() {
             return ToolResult {
-                content: format!("No deferred tools matching \"{}\" found.", query),
+                content: format!("未找到与“{}”匹配的延迟加载工具。", query),
                 is_error: false,
             };
         }

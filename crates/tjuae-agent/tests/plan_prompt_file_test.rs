@@ -32,10 +32,7 @@ fn tc_3_4_01_instructions_guide_code_reading() {
 fn tc_3_4_01_instructions_guide_plan_creation() {
     let text = plan_mode_instructions();
     // Should mention planning/design phases
-    assert!(
-        text.contains("plan") || text.contains("Plan"),
-        "instructions should guide plan creation"
-    );
+    assert!(text.contains("计划"), "instructions should guide plan creation");
 }
 
 #[test]
@@ -51,7 +48,7 @@ fn tc_3_4_01_instructions_mention_exit_tool() {
 fn tc_3_4_01_instructions_forbid_writes() {
     let text = plan_mode_instructions();
     assert!(
-        text.contains("MUST NOT") || text.contains("Forbidden"),
+        text.contains("严禁") || text.contains("禁止的操作"),
         "instructions should forbid write operations"
     );
 }
@@ -76,7 +73,7 @@ fn tc_3_4_03_system_prompt_includes_plan_instructions_when_active() {
 
     // Should contain plan mode instructions
     assert!(
-        result.contains("Plan Mode"),
+        result.contains("计划模式"),
         "active plan mode should inject plan mode instructions"
     );
     assert!(
@@ -84,7 +81,7 @@ fn tc_3_4_03_system_prompt_includes_plan_instructions_when_active() {
         "plan mode instructions should mention ExitPlanMode"
     );
     assert!(
-        result.contains("MUST NOT"),
+        result.contains("严禁"),
         "plan mode instructions should contain restrictions"
     );
 }
@@ -109,7 +106,7 @@ fn tc_3_4_04_system_prompt_excludes_plan_instructions_when_inactive() {
 
     // Should NOT contain plan mode instructions
     assert!(
-        !result.contains("# Plan Mode"),
+        !result.contains("# 计划模式"),
         "inactive plan mode should not inject plan mode heading"
     );
 }
@@ -227,9 +224,9 @@ fn plan_instructions_appear_after_memory_before_skills() {
         false,
     );
 
-    let memory_pos = result.find("auto memory").expect("memory section should be present");
+    let memory_pos = result.find("自动记忆").expect("memory section should be present");
     let plan_pos = result
-        .find("# Plan Mode")
+        .find("# 计划模式")
         .expect("plan mode instructions should be present");
 
     assert!(

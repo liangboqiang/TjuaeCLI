@@ -91,7 +91,7 @@ impl RuntimeDiscovery {
                             .unwrap_or(&current);
 
                         if is_path_gitignored(containing_dir, resolved_cwd).await {
-                            tracing::debug!(target: "tjuae_skills", path = %skill_dir.display(), "skipping gitignored skills directory");
+                            tracing::debug!(target: "tjuae_skills", path = %skill_dir.display(), "跳过已被 Git 忽略的技能目录");
                         } else {
                             new_dirs.push(skill_dir);
                         }
@@ -156,7 +156,7 @@ impl RuntimeDiscovery {
         let added = new_count.saturating_sub(previous_count);
 
         if added > 0 {
-            tracing::info!(target: "tjuae_skills", added, directories = dirs.len(), "dynamically discovered new skills");
+            tracing::info!(target: "tjuae_skills", added, directories = dirs.len(), "已动态发现新技能");
         }
 
         added

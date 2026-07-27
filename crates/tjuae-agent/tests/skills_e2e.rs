@@ -266,7 +266,7 @@ async fn e10_skill_not_found() {
     let result = tool.execute(json!({"skill": "nonexistent-skill"})).await;
     assert!(result.is_error, "E10 FAIL: should return error");
     assert!(
-        result.content.contains("not found"),
+        result.content.contains("未找到技能"),
         "E10 FAIL: got: {}",
         result.content
     );

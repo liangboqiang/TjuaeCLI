@@ -27,12 +27,12 @@ impl Tool for GlobTool {
     }
 
     fn description(&self) -> &str {
-        "Fast file pattern matching tool that works with any codebase size.\n\n\
-         - Supports glob patterns like \"**/*.rs\" or \"src/**/*.ts\".\n\
-         - Returns matching file paths sorted by modification time (newest first).\n\
-         - Returns at most 100 results. Only returns files, not directories.\n\
-         - The path parameter defaults to the current working directory.\n\
-         - Use this tool when you need to find files by name or extension patterns."
+        "适用于任意规模代码库的快速文件模式匹配工具。\n\n\
+         - 支持 \"**/*.rs\" 或 \"src/**/*.ts\" 等 glob 模式。\n\
+         - 返回按修改时间排序的匹配文件路径（最新优先）。\n\
+         - 最多返回 100 个结果，只返回文件，不返回目录。\n\
+         - path 参数默认为当前工作目录。\n\
+         - 需要按名称或扩展名模式查找文件时使用此工具。"
     }
 
     fn input_schema(&self) -> JsonSchema {
@@ -41,11 +41,11 @@ impl Tool for GlobTool {
             "properties": {
                 "pattern": {
                     "type": "string",
-                    "description": "Glob pattern, e.g. \"**/*.rs\""
+                    "description": "Glob 模式，例如 \"**/*.rs\""
                 },
                 "path": {
                     "type": "string",
-                    "description": "Root directory (default: cwd)"
+                    "description": "根目录（默认：当前工作目录）"
                 }
             },
             "required": ["pattern"]
@@ -59,7 +59,7 @@ impl Tool for GlobTool {
     async fn execute(&self, input: Value) -> ToolResult {
         let Some(pattern) = input["pattern"].as_str() else {
             return ToolResult {
-                content: "Missing required parameter: pattern".to_string(),
+                content: "缺少必需参数：pattern".to_string(),
                 is_error: true,
             };
         };
@@ -71,7 +71,7 @@ impl Tool for GlobTool {
             PathBuf::from(root)
         };
 
-        tracing::debug!(cwd = %self.cwd.display(), resolved_root = %root_path.display(), pattern = %pattern, "GlobTool scanning");
+        tracing::debug!(cwd = %self.cwd.display(), resolved_root = %root_path.display(), pattern = %pattern, "GlobTool 正在扫描");
 
         // Build full glob pattern
         let full_pattern = if pattern.starts_with('/') {
@@ -84,7 +84,7 @@ impl Tool for GlobTool {
             Ok(paths) => paths,
             Err(e) => {
                 return ToolResult {
-                    content: format!("Invalid glob pattern: {}", e),
+                    content: format!("无效的 glob 模式：{}", e),
                     is_error: true,
                 };
             }
@@ -120,7 +120,7 @@ impl Tool for GlobTool {
 
         if files.is_empty() {
             return ToolResult {
-                content: "No files matched the pattern".to_string(),
+                content: "没有文件匹配该模式".to_string(),
                 is_error: false,
             };
         }
@@ -138,7 +138,7 @@ impl Tool for GlobTool {
 
     fn describe(&self, input: &Value) -> String {
         let pattern = input.get("pattern").and_then(|v| v.as_str()).unwrap_or("*");
-        format!("Search for {}", pattern)
+        format!("搜索 {}", pattern)
     }
 }
 

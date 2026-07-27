@@ -19,6 +19,7 @@ members = [
 [workspace.package]
 version = "0.2.8"
 edition = "2024"
+authors = ["Tjuae"]
 license = "Apache-2.0"
 repository = "https://github.com/liangboqiang/TjuaeCLI"
 

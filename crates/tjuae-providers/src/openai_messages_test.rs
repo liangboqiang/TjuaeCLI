@@ -309,8 +309,8 @@ mod tests {
         let assistant = result.iter().find(|m| m["role"] == "assistant").unwrap();
         assert!(assistant.get("tool_calls").is_none());
         let content = assistant["content"].as_str().unwrap();
-        assert!(content.contains("[tool call skipped:"));
-        assert!(content.contains("empty tool call id"));
+        assert!(content.contains("[已跳过工具调用："));
+        assert!(content.contains("工具调用 ID 为空"));
         assert!(content.contains("arguments={\"command\":\"ls\"}"));
     }
 
@@ -484,7 +484,7 @@ mod tests {
             .map(|a| a.iter().any(|tc| tc["function"]["name"] == ""))
             .unwrap_or(false);
         assert!(!has_empty, "no empty-name tool_call in projection");
-        assert!(assistant["content"].as_str().unwrap().contains("[tool call skipped:"));
+        assert!(assistant["content"].as_str().unwrap().contains("[已跳过工具调用："));
         assert!(assistant["content"].as_str().unwrap().contains("writing"));
     }
 
@@ -550,7 +550,7 @@ mod tests {
         let assistant = result.iter().find(|m| m["role"] == "assistant").unwrap();
         assert!(assistant.get("tool_calls").is_none());
         let content = assistant["content"].as_str().unwrap();
-        assert!(content.contains("[tool call skipped:"));
+        assert!(content.contains("[已跳过工具调用："));
         assert!(content.contains("arguments={}"));
     }
 
@@ -566,7 +566,7 @@ mod tests {
         let result = build_messages(&messages, "", &openai_compat());
         let assistant = result.iter().find(|m| m["role"] == "assistant").unwrap();
         assert_eq!(assistant["content"], "");
-        assert!(!assistant["content"].as_str().unwrap().contains("malformed"));
+        assert!(!assistant["content"].as_str().unwrap().contains("格式错误"));
     }
 
     #[test]
@@ -593,7 +593,7 @@ mod tests {
         let result = build_messages(&messages, "", &openai_compat());
         assert!(result.iter().all(|m| m["role"] != "tool"));
         let assistant = result.iter().find(|m| m["role"] == "assistant").unwrap();
-        assert!(assistant["content"].as_str().unwrap().contains("[tool call skipped:"));
+        assert!(assistant["content"].as_str().unwrap().contains("[已跳过工具调用："));
     }
 
     #[test]
@@ -620,7 +620,7 @@ mod tests {
             .as_str()
             .unwrap()
             .to_string();
-        assert_eq!(content.matches("[tool call skipped:").count(), 2);
+        assert_eq!(content.matches("[已跳过工具调用：").count(), 2);
         assert!(content.contains("{\"x\":1}") && content.contains("{\"y\":2}"));
     }
 

@@ -1,9 +1,15 @@
-# Upstream Attribution
+# 上游来源说明
 
-TjuaeCLI is derived from the `aionrs` project by iOfficeAI:
+TjuaeCLI 基于 iOfficeAI 的 `aionrs` 项目演进而来：
 
-- Upstream repository: <https://github.com/iOfficeAI/aionrs>
-- Imported baseline: `4bd4f3254f6d875f122b648dd55116516c380d31`
+- 上游仓库：<https://github.com/iOfficeAI/aionrs>
+- 导入基线：`4bd4f3254f6d875f122b648dd55116516c380d31`
 
-The upstream work and this derivative are distributed under the Apache License
-2.0. See [LICENSE](LICENSE) for the full license text.
+上游作品与本衍生项目均依照 Apache License 2.0 分发。完整许可证文本见
+[LICENSE](LICENSE)。
+
+## 原源码声明
+
+```text
+Copyright 2026 iOfficeAI
+```

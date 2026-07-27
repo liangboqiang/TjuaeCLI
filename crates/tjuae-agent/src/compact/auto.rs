@@ -22,7 +22,7 @@ use super::state::CompactState;
 const MAX_PTL_RETRIES: u32 = 2;
 
 /// Content prefix for the compact boundary marker message.
-pub const BOUNDARY_PREFIX: &str = "[Conversation compacted]";
+pub const BOUNDARY_PREFIX: &str = "[对话已压缩]";
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -41,15 +41,15 @@ pub struct CompactResult {
 /// Errors specific to autocompact.
 #[derive(Debug, thiserror::Error)]
 pub enum CompactError {
-    #[error("LLM provider error: {0}")]
+    #[error("LLM 提供商错误：{0}")]
     Provider(#[from] ProviderError),
-    #[error("Prompt too long after {attempts} retries")]
+    #[error("重试 {attempts} 次后提示词仍然过长")]
     PromptTooLong { attempts: u32 },
-    #[error("Empty response from LLM")]
+    #[error("LLM 返回了空响应")]
     EmptyResponse,
-    #[error("Stream error: {0}")]
+    #[error("流错误：{0}")]
     StreamError(String),
-    #[error("Circuit breaker tripped after {failures} consecutive failures")]
+    #[error("连续失败 {failures} 次后熔断器已触发")]
     CircuitBroken { failures: u32 },
 }
 
@@ -232,7 +232,7 @@ fn truncate_for_retry(messages: &[Message]) -> Option<Vec<Message>> {
         result.push(Message::new(
             Role::User,
             vec![ContentBlock::Text {
-                text: "[earlier conversation truncated for compaction retry]".to_string(),
+                text: "[为重试压缩，已截断更早的对话]".to_string(),
             }],
         ));
     }
