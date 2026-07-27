@@ -9,6 +9,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPoli
 
 # 下方使用 `which()` 探测 `vx`；这是 just 的不稳定功能。
 set unstable
+set lists
 
 # 加载时使用 just 自带的跨平台 `which` 探测一次 `vx`，不依赖 shell 内置命令。
 # 如果存在，命令会通过它运行以固定工具版本；否则变量展开为空，直接运行命令。
