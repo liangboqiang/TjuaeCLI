@@ -93,7 +93,7 @@ jobs:
 
       - name: 安装 cross（Linux aarch64）
         if: matrix.use_cross == true
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: cargo install cross --git https://github.com/cross-rs/cross --rev 88f49ff79e777bef6d3564531636ee4d3cc2f8d2 --locked
 
       - name: 构建发布二进制文件
         shell: bash

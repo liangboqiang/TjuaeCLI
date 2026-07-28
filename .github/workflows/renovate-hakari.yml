@@ -42,14 +42,12 @@ jobs:
         run: git pull --ff-only origin main
 
       - name: 安装 Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.96.1
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
 
       - name: 安装 cargo-hakari
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hakari
+        run: cargo install cargo-hakari --version 0.9.38 --locked
 
       - name: 重新生成
         run: |
