@@ -15,7 +15,7 @@ mod tests {
     use tjuae_config::plan::PlanConfig;
     use tjuae_config::shell::ShellConfig;
 
-    use super::create_provider;
+    use super::{create_provider, create_provider_with_client};
 
     fn config_for(provider: ProviderType) -> Config {
         let (provider_label, api_key, base_url, model, prompt_caching, compat, bedrock, vertex) = match provider {
@@ -106,6 +106,21 @@ mod tests {
         ] {
             let config = config_for(provider_type);
             let provider = create_provider(&config);
+
+            assert_eq!(Arc::strong_count(&provider), 1);
+        }
+    }
+
+    #[test]
+    fn caller_owned_http_client_constructs_all_builtin_provider_variants() {
+        for provider_type in [
+            ProviderType::Anthropic,
+            ProviderType::OpenAI,
+            ProviderType::Bedrock,
+            ProviderType::Vertex,
+        ] {
+            let config = config_for(provider_type);
+            let provider = create_provider_with_client(&config, reqwest::Client::new());
 
             assert_eq!(Arc::strong_count(&provider), 1);
         }

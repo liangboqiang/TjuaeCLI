@@ -27,7 +27,18 @@ pub struct VertexProvider {
 
 impl VertexProvider {
     pub fn new(project_id: &str, region: &str, auth: GcpAuth, cache_enabled: bool, compat: ProviderCompat) -> Self {
-        let transport_state = VertexTransportState::new(project_id, region, auth, cache_enabled);
+        Self::new_with_client(reqwest::Client::new(), project_id, region, auth, cache_enabled, compat)
+    }
+
+    pub fn new_with_client(
+        client: reqwest::Client,
+        project_id: &str,
+        region: &str,
+        auth: GcpAuth,
+        cache_enabled: bool,
+        compat: ProviderCompat,
+    ) -> Self {
+        let transport_state = VertexTransportState::new_with_client(client, project_id, region, auth, cache_enabled);
         let transport = ProviderTransport::Vertex(VertexTransport {
             inner: transport_state.clone(),
         });
@@ -68,9 +79,20 @@ pub(crate) struct VertexTransportState {
 }
 
 impl VertexTransportState {
+    #[cfg(test)]
     pub(crate) fn new(project_id: &str, region: &str, auth: GcpAuth, cache_enabled: bool) -> Self {
+        Self::new_with_client(reqwest::Client::new(), project_id, region, auth, cache_enabled)
+    }
+
+    pub(crate) fn new_with_client(
+        client: reqwest::Client,
+        project_id: &str,
+        region: &str,
+        auth: GcpAuth,
+        cache_enabled: bool,
+    ) -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client,
             project_id: project_id.to_string(),
             region: region.to_string(),
             auth,

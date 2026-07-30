@@ -29,7 +29,17 @@ pub struct BedrockProvider {
 
 impl BedrockProvider {
     pub fn new(region: &str, credentials: AwsCredentials, cache_enabled: bool, compat: ProviderCompat) -> Self {
-        let transport_state = BedrockTransportState::new(region, credentials, cache_enabled);
+        Self::new_with_client(reqwest::Client::new(), region, credentials, cache_enabled, compat)
+    }
+
+    pub fn new_with_client(
+        client: reqwest::Client,
+        region: &str,
+        credentials: AwsCredentials,
+        cache_enabled: bool,
+        compat: ProviderCompat,
+    ) -> Self {
+        let transport_state = BedrockTransportState::new_with_client(client, region, credentials, cache_enabled);
         let transport = ProviderTransport::Bedrock(BedrockTransport {
             inner: transport_state.clone(),
         });
@@ -71,9 +81,19 @@ pub(crate) struct BedrockTransportState {
 }
 
 impl BedrockTransportState {
+    #[cfg(test)]
     pub(crate) fn new(region: &str, credentials: AwsCredentials, cache_enabled: bool) -> Self {
+        Self::new_with_client(reqwest::Client::new(), region, credentials, cache_enabled)
+    }
+
+    pub(crate) fn new_with_client(
+        client: reqwest::Client,
+        region: &str,
+        credentials: AwsCredentials,
+        cache_enabled: bool,
+    ) -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client,
             region: region.to_string(),
             credentials,
             cache_enabled,

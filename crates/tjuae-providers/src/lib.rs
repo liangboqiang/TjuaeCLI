@@ -22,4 +22,4 @@ pub(crate) mod transport;
 pub mod vertex;
 
 pub use error::ProviderError;
-pub use provider::{LlmProvider, create_provider};
+pub use provider::{LlmProvider, create_provider, create_provider_with_client};

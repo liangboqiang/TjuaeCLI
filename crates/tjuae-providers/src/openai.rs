@@ -20,7 +20,11 @@ pub struct OpenAIProvider {
 
 impl OpenAIProvider {
     pub fn new(api_key: &str, base_url: &str, compat: ProviderCompat) -> Self {
-        let transport = ProviderTransport::OpenAi(OpenAiTransport::new(api_key, base_url));
+        Self::new_with_client(reqwest::Client::new(), api_key, base_url, compat)
+    }
+
+    pub fn new_with_client(client: reqwest::Client, api_key: &str, base_url: &str, compat: ProviderCompat) -> Self {
+        let transport = ProviderTransport::OpenAi(OpenAiTransport::new_with_client(client, api_key, base_url));
         let inner = ComposedProvider::new(transport, compat.clone());
 
         Self { inner }

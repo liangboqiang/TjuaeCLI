@@ -70,9 +70,14 @@ pub(crate) struct ProjectedHttpRequest {
 }
 
 impl OpenAiTransport {
+    #[cfg(test)]
     pub(crate) fn new(api_key: &str, base_url: &str) -> Self {
+        Self::new_with_client(reqwest::Client::new(), api_key, base_url)
+    }
+
+    pub(crate) fn new_with_client(client: reqwest::Client, api_key: &str, base_url: &str) -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client,
             api_key: api_key.to_string(),
             base_url: normalize_openai_base_url(base_url),
         }
@@ -106,9 +111,14 @@ impl OpenAiTransport {
 }
 
 impl AnthropicTransport {
+    #[cfg(test)]
     pub(crate) fn new(api_key: &str, base_url: &str, cache_enabled: bool) -> Self {
+        Self::new_with_client(reqwest::Client::new(), api_key, base_url, cache_enabled)
+    }
+
+    pub(crate) fn new_with_client(client: reqwest::Client, api_key: &str, base_url: &str, cache_enabled: bool) -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client,
             api_key: api_key.to_string(),
             base_url: base_url.to_string(),
             cache_enabled,

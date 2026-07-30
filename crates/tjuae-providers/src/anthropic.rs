@@ -12,6 +12,7 @@ use tjuae_config::compat::ProviderCompat;
 
 pub struct AnthropicProvider {
     inner: ComposedProvider,
+    client: reqwest::Client,
     api_key: String,
     base_url: String,
     compat: ProviderCompat,
@@ -20,11 +21,16 @@ pub struct AnthropicProvider {
 
 impl AnthropicProvider {
     pub fn new(api_key: &str, base_url: &str, compat: ProviderCompat) -> Self {
+        Self::new_with_client(reqwest::Client::new(), api_key, base_url, compat)
+    }
+
+    pub fn new_with_client(client: reqwest::Client, api_key: &str, base_url: &str, compat: ProviderCompat) -> Self {
         let cache_enabled = true;
-        let inner = Self::build_inner(api_key, base_url, cache_enabled, &compat);
+        let inner = Self::build_inner(client.clone(), api_key, base_url, cache_enabled, &compat);
 
         Self {
             inner,
+            client,
             api_key: api_key.to_string(),
             base_url: base_url.to_string(),
             compat,
@@ -34,12 +40,29 @@ impl AnthropicProvider {
 
     pub fn with_cache(mut self, enabled: bool) -> Self {
         self.cache_enabled = enabled;
-        self.inner = Self::build_inner(&self.api_key, &self.base_url, self.cache_enabled, &self.compat);
+        self.inner = Self::build_inner(
+            self.client.clone(),
+            &self.api_key,
+            &self.base_url,
+            self.cache_enabled,
+            &self.compat,
+        );
         self
     }
 
-    fn build_inner(api_key: &str, base_url: &str, cache_enabled: bool, compat: &ProviderCompat) -> ComposedProvider {
-        let transport = ProviderTransport::Anthropic(AnthropicTransport::new(api_key, base_url, cache_enabled));
+    fn build_inner(
+        client: reqwest::Client,
+        api_key: &str,
+        base_url: &str,
+        cache_enabled: bool,
+        compat: &ProviderCompat,
+    ) -> ComposedProvider {
+        let transport = ProviderTransport::Anthropic(AnthropicTransport::new_with_client(
+            client,
+            api_key,
+            base_url,
+            cache_enabled,
+        ));
         ComposedProvider::new(transport, compat.clone())
     }
 
