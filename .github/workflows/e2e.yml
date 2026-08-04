@@ -1,0 +1,112 @@
+name: 端到端测试
+
+# 端到端测试会调用真实的 LLM API，运行场景如下：
+#   1. 通过 workflow_dispatch 在任意分支手动运行
+#   2. 推送到 main 时自动运行（需要配置 secrets）
+#   3. 针对 main 的 pull_request（fork 无法获取 secrets；缺少 API 密钥环境变量时，
+#      测试会安全跳过）
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "要测试的提供商（anthropic / openai / all）"
+        required: false
+        default: "all"
+        type: choice
+        options: [all, anthropic, openai]
+  push:
+    branches: [main]
+    paths:
+      - "crates/tjuae-providers/**"
+      - "crates/tjuae-agent/**"
+      - "crates/tjuae-config/**"
+      - "crates/tjuae-types/**"
+      - "crates/tjuae-skills/**"
+      - ".github/workflows/e2e.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/tjuae-providers/**"
+      - "crates/tjuae-agent/**"
+      - "crates/tjuae-config/**"
+      - "crates/tjuae-types/**"
+      - "crates/tjuae-skills/**"
+      - ".github/workflows/e2e.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: 端到端测试（${{ matrix.provider }}）
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: anthropic
+            secret_name: ANTHROPIC_API_KEY
+            filter: "test(anthropic)"
+          - provider: openai
+            secret_name: OPENAI_API_KEY
+            filter: "test(openai)"
+
+    steps:
+      - name: 检查提供商过滤器
+        id: filter
+        run: |
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]] || \
+             [[ "${{ github.event.inputs.provider }}" == "all" ]] || \
+             [[ "${{ github.event.inputs.provider }}" == "${{ matrix.provider }}" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.filter.outputs.run == 'true'
+
+      - name: 设置 vx（从 vx.toml 安装 Rust）
+        if: steps.filter.outputs.run == 'true'
+        uses: loonghao/vx@v0.9.26
+        with:
+          setup: 'true'
+          cache: 'true'
+
+      - name: 安装 cargo-nextest
+        if: steps.filter.outputs.run == 'true'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: 检查 API 密钥是否可用
+        if: steps.filter.outputs.run == 'true'
+        id: check_key
+        env:
+          API_KEY: ${{ secrets[matrix.secret_name] }}
+        run: |
+          if [ -z "$API_KEY" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::未设置 ${{ matrix.secret_name }}——跳过 ${{ matrix.provider }} 端到端测试"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 运行端到端测试——${{ matrix.provider }}
+        if: steps.check_key.outputs.available == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ matrix.provider == 'anthropic' && secrets.ANTHROPIC_API_KEY || '' }}
+          OPENAI_API_KEY:    ${{ matrix.provider == 'openai'    && secrets.OPENAI_API_KEY    || '' }}
+        run: |
+          vx cargo nextest run \
+            -p tjuae-agent \
+            --profile e2e \
+            --test e2e \
+            -E '${{ matrix.filter }}' \
+            --no-fail-fast
+

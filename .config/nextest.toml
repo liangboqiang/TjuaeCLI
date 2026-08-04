@@ -1,0 +1,47 @@
+[profile.default]
+# 本地开发：使用友好输出并立即显示失败
+failure-output = "immediate"
+success-output = "never"
+status-level = "pass"
+final-status-level = "flaky"
+# 本地对不稳定测试重试一次
+retries = 1
+# 单项测试超时时间
+slow-timeout = { period = "30s", terminate-after = 2 }
+test-threads = "num-cpus"
+
+[profile.default.junit]
+# Generate JUnit XML for local tooling if wanted
+path = "target/nextest/default/junit.xml"
+
+# ── CI 配置档 ─────────────────────────────────────────────────────────────
+[profile.ci]
+# 在 CI 中始终显示失败测试输出，并生成机器可读的 JUnit
+failure-output = "immediate-final"
+success-output = "never"
+status-level = "fail"
+final-status-level = "all"
+# CI 中对不稳定测试最多重试两次
+retries = 2
+slow-timeout = { period = "60s", terminate-after = 2 }
+test-threads = "num-cpus"
+
+[profile.ci.junit]
+path = "target/nextest/ci/junit.xml"
+
+# ── 端到端测试配置档 ───────────────────────────────────────────────────────
+# 运行命令：cargo nextest run --profile e2e --test e2e
+[profile.e2e]
+failure-output = "immediate"
+success-output = "immediate"
+status-level = "all"
+final-status-level = "all"
+# 端到端测试不重试，失败必须直接处理
+retries = 0
+# 端到端测试包含真实 API 调用，允许更长执行时间
+slow-timeout = { period = "120s", terminate-after = 2 }
+# 顺序执行，避免对 API 产生过高压力
+test-threads = 1
+
+[profile.e2e.junit]
+path = "target/nextest/e2e/junit.xml"

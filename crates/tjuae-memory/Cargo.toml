@@ -1,0 +1,22 @@
+[package]
+name = "tjuae-memory"
+description = "TjuaeCLI 长期记忆系统：跨会话存储用户偏好、反馈、项目上下文和外部引用"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+tjuae-config.workspace = true
+
+tracing.workspace    = true
+serde.workspace      = true
+serde_yaml.workspace = true
+chrono.workspace     = true
+thiserror.workspace  = true
+workspace-hack.workspace = true
+
+[dev-dependencies]
+tempfile.workspace    = true
+rstest.workspace      = true
+serial_test.workspace = true

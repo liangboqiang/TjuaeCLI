@@ -1,0 +1,56 @@
+[package]
+name = "tjuae-agent"
+description = "TjuaeCLI 的智能体引擎、会话管理、输出接收器和编排能力"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+tjuae-types.workspace     = true
+tjuae-protocol.workspace  = true
+tjuae-config.workspace    = true
+tjuae-providers.workspace = true
+tjuae-tools.workspace     = true
+tjuae-mcp.workspace       = true
+tjuae-skills.workspace    = true
+tjuae-memory.workspace    = true
+tjuae-compact.workspace   = true
+
+tracing.workspace     = true
+tokio.workspace       = true
+futures.workspace     = true
+serde.workspace       = true
+serde_json.workspace  = true
+async-trait.workspace = true
+anyhow.workspace      = true
+thiserror.workspace   = true
+glob.workspace        = true
+chrono.workspace      = true
+uuid.workspace        = true
+dirs.workspace        = true
+crossterm.workspace   = true
+is-terminal.workspace = true
+workspace-hack.workspace = true
+
+[dev-dependencies]
+tjuae-mcp = { path = "../tjuae-mcp", features = ["test-utils"] }
+wiremock.workspace    = true
+tokio-test.workspace  = true
+tempfile.workspace    = true
+mockall.workspace     = true
+rstest.workspace      = true
+serial_test.workspace = true
+base64.workspace    = true
+tracing-subscriber.workspace = true
+
+# ── Integration test binaries ──────────────────────────────────────────────
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+# E2E tests require real API keys; run via: cargo nextest run --profile e2e --test e2e
+
+[[test]]
+name = "acceptance"
+path = "tests/acceptance/mod.rs"
+# Acceptance tests for evolution features; run via: cargo nextest run --profile e2e --test acceptance

@@ -1,0 +1,40 @@
+[package]
+name = "tjuae-skills"
+description = "TjuaeCLI 技能系统：支持工具编排、权限、钩子和 MCP 集成的命名提示词片段"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+tjuae-types.workspace   = true
+tjuae-config.workspace  = true
+tjuae-mcp.workspace     = true
+tjuae-process.workspace = true
+
+tracing.workspace      = true
+serde.workspace        = true
+serde_json.workspace   = true
+serde_yaml.workspace   = true
+sha2.workspace         = true
+tokio.workspace        = true
+futures.workspace      = true
+async-trait.workspace  = true
+anyhow.workspace       = true
+thiserror.workspace    = true
+glob.workspace         = true
+dirs.workspace         = true
+regex.workspace        = true
+notify.workspace       = true
+unicode-width.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+workspace-hack.workspace = true
+
+[dev-dependencies]
+tjuae-mcp = { workspace = true, features = ["test-utils"] }
+tempfile.workspace   = true
+rstest.workspace     = true
+serial_test.workspace = true

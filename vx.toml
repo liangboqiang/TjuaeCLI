@@ -1,0 +1,30 @@
+[tools]
+just = "1.48.1"
+rust = "1.95.0"
+
+[settings]
+# 进入开发环境时自动安装缺失工具
+auto_install = true
+# 版本检查缓存时长
+cache_duration = "7d"
+
+[scripts]
+audit          = "just audit"
+build          = "just build"
+build-release  = "just build-release"
+check          = "cargo check --workspace"
+check-all      = "just check-all"
+clean          = "just clean"
+default        = "just default"
+doc            = "cargo doc --workspace"
+fmt            = "just fmt"
+fmt-check      = "just fmt-check"
+format         = "just fmt"
+hakari-generate = "just hakari-generate"
+hakari-verify  = "just hakari-verify"
+lint           = "just lint"
+nextest        = "cargo nextest"
+test           = "just test"
+test-ci        = "just test-ci"
+test-verbose   = "just test-verbose"
+version        = "just version"

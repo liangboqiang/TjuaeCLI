@@ -1,0 +1,32 @@
+[package]
+name = "tjuae-cli"
+description = "TjuaeCLI 命令行程序——支持多模型提供商与工具编排的 AI 智能体"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+keywords = ["ai", "agent", "cli", "llm", "anthropic"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "tjuae-cli"
+path = "src/main.rs"
+
+[dependencies]
+tjuae-agent.workspace    = true
+tjuae-compact.workspace  = true
+tjuae-config.workspace   = true
+tjuae-memory.workspace   = true
+tjuae-providers.workspace = true
+tjuae-tools.workspace    = true
+tjuae-mcp.workspace      = true
+tjuae-protocol.workspace = true
+tjuae-skills.workspace   = true
+tjuae-types.workspace    = true
+
+tokio.workspace              = true
+anyhow.workspace             = true
+clap.workspace               = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true
+workspace-hack.workspace = true

@@ -1,0 +1,27 @@
+[package]
+name = "tjuae-mcp"
+description = "TjuaeCLI 的 MCP（模型上下文协议）客户端实现"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+tjuae-types.workspace    = true
+tjuae-protocol.workspace = true
+tjuae-tools.workspace    = true
+tjuae-config.workspace   = true
+
+tracing.workspace     = true
+tokio.workspace       = true
+serde.workspace       = true
+serde_json.workspace  = true
+async-trait.workspace = true
+thiserror.workspace   = true
+anyhow.workspace      = true
+reqwest.workspace     = true
+futures.workspace     = true
+workspace-hack.workspace = true
+
+[features]
+test-utils = []

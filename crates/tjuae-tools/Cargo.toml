@@ -1,0 +1,28 @@
+[package]
+name = "tjuae-tools"
+description = "TjuaeCLI 的内置智能体工具（Read、Write、Edit、ExecCommand、Grep、Glob、Spawn）"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+tjuae-types.workspace    = true
+tjuae-protocol.workspace = true
+tjuae-config.workspace   = true
+tjuae-process.workspace  = true
+
+tracing.workspace     = true
+tokio.workspace       = true
+futures.workspace     = true
+serde.workspace       = true
+serde_json.workspace  = true
+async-trait.workspace = true
+anyhow.workspace      = true
+base64.workspace      = true
+glob.workspace        = true
+lru.workspace         = true
+workspace-hack.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

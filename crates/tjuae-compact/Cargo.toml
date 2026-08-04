@@ -1,0 +1,15 @@
+[package]
+name = "tjuae-compact"
+description = "TjuaeCLI 的输出压缩与 TOON 编码组件"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+tracing.workspace = true
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+workspace-hack.workspace = true
+
+[dev-dependencies]
