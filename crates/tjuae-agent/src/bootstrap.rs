@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, RwLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 use tjuae_config::config::{Config, McpServerConfig};
@@ -10,7 +11,7 @@ use tjuae_mcp::manager::McpManager;
 use tjuae_mcp::tool_proxy::register_mcp_tools;
 use tjuae_memory::paths::{ENTRYPOINT_NAME, auto_memory_dir};
 use tjuae_providers::{LlmProvider, create_provider};
-use tjuae_skills::loader::load_all_skills;
+use tjuae_skills::loader::load_all_skills_with_managed;
 use tjuae_skills::permissions::SkillPermissionChecker;
 use tjuae_skills::types::SkillMetadata;
 use tjuae_tools::edit::EditTool;
@@ -23,6 +24,9 @@ use tjuae_tools::registry::ToolRegistry;
 use tjuae_tools::tool_search::ToolSearchTool;
 use tjuae_tools::view_image::ViewImageTool;
 use tjuae_tools::write::WriteTool;
+use tjuae_types::runtime_asset::{
+    RuntimeAssetRef, RuntimeAssetSnapshot, RuntimeBoundaryPhase, RuntimeBoundaryRecord, RuntimeMcpRef, RuntimeSkillRef,
+};
 use tracing::info;
 
 use crate::context::{SystemPromptCache, build_system_prompt_with_shell_and_tool_policy};
@@ -36,6 +40,13 @@ use crate::spawn_tool::SpawnTool;
 use crate::spawner::AgentSpawner;
 use crate::tool_policy::ToolPolicy;
 
+fn runtime_now_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
+        .unwrap_or(0)
+}
+
 /// Result of bootstrapping an agent engine with all features initialized.
 pub struct BootstrapResult {
     // Fully initialized runtime.
@@ -47,7 +58,16 @@ pub struct BootstrapResult {
     // MCP runtime state discovered during bootstrap.
     pub mcp_managers: Vec<Arc<McpManager>>,
     pub has_mcp: bool,
+
+    // Exact managed asset definitions accepted by this bootstrap.
+    pub runtime_asset_snapshot: Option<RuntimeAssetSnapshot>,
 }
+
+/// Process-local callback for safe runtime-boundary records.
+///
+/// The callback receives a closed record type that cannot contain commands,
+/// paths, environment values, credentials, payloads, or free-form errors.
+pub type RuntimeBoundaryReporter = Arc<dyn Fn(RuntimeBoundaryRecord) + Send + Sync>;
 
 /// Builder for creating a fully-initialized `AgentEngine`.
 ///
@@ -63,6 +83,7 @@ pub struct AgentBootstrap {
     config: Config,
     workspace: PathBuf,
     extra_skill_dirs: Vec<PathBuf>,
+    managed_assets: Option<ManagedAssetsInput>,
 
     // Output integration.
     output: Arc<dyn OutputSink>,
@@ -72,6 +93,20 @@ pub struct AgentBootstrap {
     resume_session: Option<Session>,
     runtime_env: Vec<(String, String)>,
     tool_policy: ToolPolicy,
+    runtime_boundary_reporter: Option<RuntimeBoundaryReporter>,
+}
+
+struct ManagedAssetsInput {
+    runtime_snapshot_id: String,
+    core_assets: Vec<RuntimeAssetRef>,
+    runtime_assets: Vec<RuntimeAssetRef>,
+    skills: Vec<RuntimeSkillRef>,
+    mcps: Vec<RuntimeMcpRef>,
+}
+
+struct BootstrapSkills {
+    metadata: Vec<SkillMetadata>,
+    runtime_asset_snapshot: Option<RuntimeAssetSnapshot>,
 }
 
 struct BootstrapEnvironment {
@@ -90,6 +125,7 @@ struct McpBootstrap {
 
     // Managers retained by the caller for lifecycle ownership.
     managers: Vec<Arc<McpManager>>,
+    connected_server_names: HashSet<String>,
 }
 
 impl McpBootstrap {
@@ -104,11 +140,13 @@ impl AgentBootstrap {
             config,
             workspace: PathBuf::from(workspace.into()),
             extra_skill_dirs: Vec::new(),
+            managed_assets: None,
             output,
             provider: None,
             resume_session: None,
             runtime_env: Vec::new(),
             tool_policy: ToolPolicy::default(),
+            runtime_boundary_reporter: None,
         }
     }
 
@@ -136,9 +174,51 @@ impl AgentBootstrap {
         self
     }
 
+    /// Observe lifecycle boundaries at the operation that proves them.
+    /// Reporting is best-effort and cannot change bootstrap behavior.
+    pub fn runtime_boundary_reporter(mut self, reporter: RuntimeBoundaryReporter) -> Self {
+        self.runtime_boundary_reporter = Some(reporter);
+        self
+    }
+
     /// Add extra directories to scan for skills.
     pub fn extra_skill_dirs(mut self, dirs: Vec<PathBuf>) -> Self {
         self.extra_skill_dirs = dirs;
+        self
+    }
+
+    /// Load an exact set of Core-managed skills for one runtime snapshot.
+    ///
+    /// The supplied roots remain process-local and are not included in the
+    /// returned snapshot receipt.
+    pub fn managed_skills(mut self, runtime_snapshot_id: impl Into<String>, skills: Vec<RuntimeSkillRef>) -> Self {
+        self.managed_assets = Some(ManagedAssetsInput {
+            runtime_snapshot_id: runtime_snapshot_id.into(),
+            core_assets: Vec::new(),
+            runtime_assets: Vec::new(),
+            skills,
+            mcps: Vec::new(),
+        });
+        self
+    }
+
+    /// Require exact runtime receipts for runtime-owned assets, managed skills,
+    /// and MCP servers that completed initialization and tool discovery.
+    pub fn managed_runtime_assets(
+        mut self,
+        runtime_snapshot_id: impl Into<String>,
+        core_assets: Vec<RuntimeAssetRef>,
+        runtime_assets: Vec<RuntimeAssetRef>,
+        skills: Vec<RuntimeSkillRef>,
+        mcps: Vec<RuntimeMcpRef>,
+    ) -> Self {
+        self.managed_assets = Some(ManagedAssetsInput {
+            runtime_snapshot_id: runtime_snapshot_id.into(),
+            core_assets,
+            runtime_assets,
+            skills,
+            mcps,
+        });
         self
     }
 
@@ -155,12 +235,62 @@ impl AgentBootstrap {
         let mut registry = self.build_builtin_registry(&environment.workspace);
 
         let builtin_names = registry.tool_names();
-        let mcp = self.connect_mcp(&mut registry, &builtin_names).await;
+        let mcp = self.connect_mcp(&mut registry, &builtin_names).await?;
 
-        let skills = self.load_skills(&environment.workspace, mcp.manager.as_deref()).await;
-        let prompt_usage = self.configure_system_prompt(&environment, &skills);
+        let skills = self.load_skills(&environment.workspace, mcp.manager.as_deref()).await?;
+        let handshake_started_at = runtime_now_ms();
+        let runtime_asset_snapshot =
+            match self.runtime_asset_snapshot(skills.runtime_asset_snapshot, &mcp.connected_server_names) {
+                Ok(snapshot) => {
+                    let ended_at = runtime_now_ms();
+                    self.report_managed_assets(
+                        RuntimeBoundaryPhase::Handshake,
+                        handshake_started_at,
+                        ended_at,
+                        None,
+                        |input| &input.runtime_assets,
+                    );
+                    snapshot
+                }
+                Err(error) => {
+                    let ended_at = runtime_now_ms();
+                    self.report_managed_assets(
+                        RuntimeBoundaryPhase::Handshake,
+                        handshake_started_at,
+                        ended_at,
+                        Some("TJUAE_RUNTIME_ENGINE_HANDSHAKE_FAILED"),
+                        |input| &input.runtime_assets,
+                    );
+                    return Err(error);
+                }
+            };
+        let inject_started_at = runtime_now_ms();
+        if let Some(invalid) = self
+            .managed_assets
+            .as_ref()
+            .and_then(|input| input.core_assets.iter().find(|asset| asset.kind != "assistant"))
+        {
+            let ended_at = runtime_now_ms();
+            self.report_boundary(
+                RuntimeBoundaryPhase::Inject,
+                inject_started_at,
+                ended_at,
+                Some(invalid),
+                Some("TJUAE_RUNTIME_ASSISTANT_KIND_INVALID"),
+            );
+            anyhow::bail!("Core-managed runtime asset kind is unsupported for prompt injection");
+        }
+        let prompt_usage = self.configure_system_prompt(&environment, &skills.metadata);
+        let inject_ended_at = runtime_now_ms();
+        self.report_managed_assets(
+            RuntimeBoundaryPhase::Inject,
+            inject_started_at,
+            inject_ended_at,
+            None,
+            |input| &input.core_assets,
+        );
 
-        self.register_agent_tools(&mut registry, &provider, &environment.workspace, skills);
+        self.register_agent_tools(&mut registry, &provider, &environment.workspace, skills.metadata);
         let plan_active_flag = self.register_plan_tools(&mut registry);
         self.register_tool_search(&mut registry);
 
@@ -179,6 +309,7 @@ impl AgentBootstrap {
             provider,
             mcp_managers,
             has_mcp,
+            runtime_asset_snapshot,
         })
     }
 
@@ -229,26 +360,84 @@ impl AgentBootstrap {
             .then(|| Arc::new(RwLock::new(FileStateCache::new(&self.config.file_cache))))
     }
 
-    async fn connect_mcp(&self, registry: &mut ToolRegistry, builtin_names: &[String]) -> McpBootstrap {
+    async fn connect_mcp(&self, registry: &mut ToolRegistry, builtin_names: &[String]) -> Result<McpBootstrap> {
+        let started_at = runtime_now_ms();
         let server_configs = self.mcp_servers_with_runtime_env();
         if server_configs.is_empty() {
-            return McpBootstrap::default();
+            if self.managed_assets.as_ref().is_some_and(|input| !input.mcps.is_empty()) {
+                self.report_managed_mcps(
+                    RuntimeBoundaryPhase::Connect,
+                    started_at,
+                    runtime_now_ms(),
+                    Some("TJUAE_RUNTIME_MCP_CONFIGURATION_MISSING"),
+                );
+                anyhow::bail!("managed MCP assets were requested but no MCP server configuration is available");
+            }
+            return Ok(McpBootstrap::default());
         }
 
         let manager = match McpManager::connect_all(&server_configs).await {
             Ok(manager) => Arc::new(manager),
             Err(err) => {
                 self.output.emit_error(&format!("MCP 初始化错误：{err}"));
-                return McpBootstrap::default();
+                if self.managed_assets.as_ref().is_some_and(|input| !input.mcps.is_empty()) {
+                    self.report_managed_mcps(
+                        RuntimeBoundaryPhase::Connect,
+                        started_at,
+                        runtime_now_ms(),
+                        Some("TJUAE_RUNTIME_MCP_CONNECT_FAILED"),
+                    );
+                    return Err(err.into());
+                }
+                return Ok(McpBootstrap::default());
             }
         };
 
-        register_mcp_tools(registry, &manager, builtin_names, &server_configs);
+        let connected_server_names = manager.server_names().into_iter().collect::<HashSet<_>>();
+        if let Some(input) = self.managed_assets.as_ref() {
+            let mut expected_names = HashSet::new();
+            for mcp in &input.mcps {
+                if mcp.asset.kind != "mcp" || mcp.server_name.trim().is_empty() {
+                    self.report_boundary(
+                        RuntimeBoundaryPhase::Connect,
+                        started_at,
+                        runtime_now_ms(),
+                        Some(&mcp.asset),
+                        Some("TJUAE_RUNTIME_MCP_BINDING_INVALID"),
+                    );
+                    anyhow::bail!("managed MCP asset binding is invalid");
+                }
+                if !expected_names.insert(mcp.server_name.as_str()) {
+                    self.report_boundary(
+                        RuntimeBoundaryPhase::Connect,
+                        started_at,
+                        runtime_now_ms(),
+                        Some(&mcp.asset),
+                        Some("TJUAE_RUNTIME_MCP_BINDING_DUPLICATED"),
+                    );
+                    anyhow::bail!("managed MCP server binding is duplicated");
+                }
+                if !connected_server_names.contains(&mcp.server_name) {
+                    self.report_boundary(
+                        RuntimeBoundaryPhase::Connect,
+                        started_at,
+                        runtime_now_ms(),
+                        Some(&mcp.asset),
+                        Some("TJUAE_RUNTIME_MCP_NOT_CONNECTED"),
+                    );
+                    anyhow::bail!("managed MCP server did not complete initialization and tool discovery");
+                }
+            }
+        }
 
-        McpBootstrap {
+        register_mcp_tools(registry, &manager, builtin_names, &server_configs);
+        self.report_managed_mcps(RuntimeBoundaryPhase::Connect, started_at, runtime_now_ms(), None);
+
+        Ok(McpBootstrap {
             manager: Some(Arc::clone(&manager)),
             managers: vec![manager],
-        }
+            connected_server_names,
+        })
     }
 
     fn mcp_servers_with_runtime_env(&self) -> HashMap<String, McpServerConfig> {
@@ -268,8 +457,176 @@ impl AgentBootstrap {
         servers
     }
 
-    async fn load_skills(&self, workspace: &Path, mcp_manager: Option<&McpManager>) -> Vec<SkillMetadata> {
-        load_all_skills(workspace, &self.extra_skill_dirs, false, mcp_manager).await
+    async fn load_skills(&self, workspace: &Path, mcp_manager: Option<&McpManager>) -> Result<BootstrapSkills> {
+        let started_at = runtime_now_ms();
+        if self
+            .managed_assets
+            .as_ref()
+            .is_some_and(|input| input.runtime_snapshot_id.trim().is_empty())
+        {
+            self.report_managed_skills(
+                RuntimeBoundaryPhase::Inject,
+                started_at,
+                runtime_now_ms(),
+                Some("TJUAE_RUNTIME_SKILL_SNAPSHOT_INVALID"),
+            );
+            anyhow::bail!("runtime snapshot id must not be empty");
+        }
+        let managed_skills = self
+            .managed_assets
+            .as_ref()
+            .map(|input| input.skills.as_slice())
+            .unwrap_or_default();
+        let loaded =
+            match load_all_skills_with_managed(workspace, &self.extra_skill_dirs, false, mcp_manager, managed_skills)
+                .await
+            {
+                Ok(loaded) => loaded,
+                Err(error) => {
+                    self.report_managed_skills(
+                        RuntimeBoundaryPhase::Inject,
+                        started_at,
+                        runtime_now_ms(),
+                        Some("TJUAE_RUNTIME_SKILL_LOAD_FAILED"),
+                    );
+                    return Err(error.into());
+                }
+            };
+        if managed_skills.iter().any(|skill| {
+            !loaded.runtime_assets.iter().any(|asset| {
+                asset.kind == skill.asset.kind
+                    && asset.local_asset_id == skill.asset.local_asset_id
+                    && asset.local_definition_digest == skill.asset.local_definition_digest
+            })
+        }) {
+            self.report_managed_skills(
+                RuntimeBoundaryPhase::Inject,
+                started_at,
+                runtime_now_ms(),
+                Some("TJUAE_RUNTIME_SKILL_RECEIPT_INCOMPLETE"),
+            );
+            anyhow::bail!("managed skill loader receipt is incomplete");
+        }
+        let runtime_asset_snapshot = self
+            .managed_assets
+            .as_ref()
+            .filter(|input| !input.skills.is_empty())
+            .map(|input| RuntimeAssetSnapshot {
+                runtime_snapshot_id: input.runtime_snapshot_id.clone(),
+                assets: loaded.runtime_assets,
+            });
+        self.report_managed_skills(RuntimeBoundaryPhase::Inject, started_at, runtime_now_ms(), None);
+
+        Ok(BootstrapSkills {
+            metadata: loaded.skills,
+            runtime_asset_snapshot,
+        })
+    }
+
+    fn report_managed_skills(
+        &self,
+        phase: RuntimeBoundaryPhase,
+        started_at_ms: i64,
+        ended_at_ms: i64,
+        error_code: Option<&'static str>,
+    ) {
+        let Some(input) = self.managed_assets.as_ref() else {
+            return;
+        };
+        for skill in &input.skills {
+            self.report_boundary(phase, started_at_ms, ended_at_ms, Some(&skill.asset), error_code);
+        }
+    }
+
+    fn report_managed_mcps(
+        &self,
+        phase: RuntimeBoundaryPhase,
+        started_at_ms: i64,
+        ended_at_ms: i64,
+        error_code: Option<&'static str>,
+    ) {
+        let Some(input) = self.managed_assets.as_ref() else {
+            return;
+        };
+        for mcp in &input.mcps {
+            self.report_boundary(phase, started_at_ms, ended_at_ms, Some(&mcp.asset), error_code);
+        }
+    }
+
+    fn report_managed_assets<'a>(
+        &'a self,
+        phase: RuntimeBoundaryPhase,
+        started_at_ms: i64,
+        ended_at_ms: i64,
+        error_code: Option<&'static str>,
+        select: impl FnOnce(&'a ManagedAssetsInput) -> &'a [RuntimeAssetRef],
+    ) {
+        let Some(input) = self.managed_assets.as_ref() else {
+            return;
+        };
+        for asset in select(input) {
+            self.report_boundary(phase, started_at_ms, ended_at_ms, Some(asset), error_code);
+        }
+    }
+
+    fn report_boundary(
+        &self,
+        phase: RuntimeBoundaryPhase,
+        started_at_ms: i64,
+        ended_at_ms: i64,
+        asset: Option<&RuntimeAssetRef>,
+        error_code: Option<&'static str>,
+    ) {
+        let Some(reporter) = self.runtime_boundary_reporter.as_ref() else {
+            return;
+        };
+        let record = match error_code {
+            Some(code) => RuntimeBoundaryRecord::failed(phase, started_at_ms, ended_at_ms, asset, code),
+            None => RuntimeBoundaryRecord::succeeded(phase, started_at_ms, ended_at_ms, asset),
+        };
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| reporter(record)));
+    }
+
+    fn runtime_asset_snapshot(
+        &self,
+        skill_snapshot: Option<RuntimeAssetSnapshot>,
+        connected_server_names: &HashSet<String>,
+    ) -> Result<Option<RuntimeAssetSnapshot>> {
+        let Some(input) = self.managed_assets.as_ref() else {
+            if skill_snapshot.is_some() {
+                anyhow::bail!("runtime returned an unexpected managed skill receipt");
+            }
+            return Ok(None);
+        };
+        if input.runtime_assets.is_empty() && input.skills.is_empty() && input.mcps.is_empty() {
+            if skill_snapshot.is_some() {
+                anyhow::bail!("runtime returned an unexpected managed skill receipt");
+            }
+            return Ok(None);
+        }
+        let mut assets = input.runtime_assets.clone();
+        for asset in &assets {
+            if asset.kind != "engineAdapter" {
+                anyhow::bail!("runtime-owned asset receipt kind is unsupported");
+            }
+        }
+        if let Some(snapshot) = skill_snapshot {
+            if snapshot.runtime_snapshot_id != input.runtime_snapshot_id {
+                anyhow::bail!("managed skill receipt snapshot id does not match the request");
+            }
+            assets.extend(snapshot.assets);
+        }
+        for mcp in &input.mcps {
+            if !connected_server_names.contains(&mcp.server_name) {
+                anyhow::bail!("managed MCP server receipt is not backed by a live connection");
+            }
+            assets.push(mcp.asset.clone());
+        }
+        assets.sort_by(|left, right| (&left.kind, &left.local_asset_id).cmp(&(&right.kind, &right.local_asset_id)));
+        Ok(Some(RuntimeAssetSnapshot {
+            runtime_snapshot_id: input.runtime_snapshot_id.clone(),
+            assets,
+        }))
     }
 
     fn configure_system_prompt(&mut self, environment: &BootstrapEnvironment, skills: &[SkillMetadata]) -> PromptUsage {

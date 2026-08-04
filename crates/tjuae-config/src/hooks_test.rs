@@ -19,9 +19,9 @@ mod tests {
     fn slow_stdout_command(message: &str) -> String {
         match default_shell().kind {
             ShellKind::PowerShell => {
-                format!("Write-Output {message}; Start-Sleep -Seconds 5")
+                format!("Write-Output {message}; Start-Sleep -Seconds 15")
             }
-            ShellKind::Cmd => format!("echo {message} & ping -n 6 127.0.0.1 > nul"),
+            ShellKind::Cmd => format!("echo {message} & ping -n 16 127.0.0.1 > nul"),
             ShellKind::Bash | ShellKind::Zsh | ShellKind::Sh => {
                 format!("printf '{message}\\n'; sleep 5")
             }
@@ -188,7 +188,10 @@ mod tests {
     #[tokio::test]
     async fn test_hook_timeout_preserves_stdout_emitted_before_timeout() {
         let command = slow_stdout_command("hook_stdout_before_timeout");
-        let timeout_ms = if cfg!(windows) { 1500 } else { 100 };
+        // A saturated Windows CI worker can take over a second just to start
+        // PowerShell. Keep the assertion about buffered output, not scheduler
+        // speed, while still timing out well before the 15-second command ends.
+        let timeout_ms = if cfg!(windows) { 5000 } else { 100 };
 
         let result = run_hook_command(&command, &HashMap::new(), timeout_ms, &std::env::temp_dir()).await;
 

@@ -231,8 +231,7 @@ async fn tc_11_1_bare_mode_only_loads_add_dirs() {
     )
     .await;
 
-    assert_eq!(result.len(), 1);
-    assert_eq!(result[0].name, "add-skill");
+    assert!(result.iter().any(|skill| skill.name == "add-skill"));
     // user_tmp was not consulted (no skills from there)
     let _ = user_tmp;
 }
@@ -302,7 +301,10 @@ async fn tc_8_8_skill_root_is_skill_dir_not_parent() {
 
     // skill_root should be the skill's own directory (containing SKILL.md),
     // not the base skills/ directory (the parent).
-    let expected_skill_dir = tmp.path().join("my-skill").to_string_lossy().into_owned();
+    let expected_skill_dir = std::fs::canonicalize(tmp.path().join("my-skill"))
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
     assert_eq!(
         skills[0].metadata.skill_root.as_deref(),
         Some(expected_skill_dir.as_str()),

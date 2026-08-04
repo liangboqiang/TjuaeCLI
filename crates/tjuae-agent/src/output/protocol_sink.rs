@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use tjuae_config::compat::ProviderCompat;
 use tjuae_protocol::events::{Capabilities, ErrorInfo, ProtocolEvent, Usage};
+use tjuae_protocol::version::JSON_STREAM_PROTOCOL_VERSION;
 use tjuae_protocol::writer::{ProtocolEmitter, ProtocolWriter};
 
 use super::OutputSink;
@@ -19,7 +20,7 @@ impl ProtocolSink {
     /// Emit the ready event at session start
     pub fn emit_ready(&self, compat: &ProviderCompat, has_mcp: bool, session_id: Option<String>, current_mode: &str) {
         let _ = self.writer.emit(&ProtocolEvent::Ready {
-            version: env!("CARGO_PKG_VERSION").to_string(),
+            version: JSON_STREAM_PROTOCOL_VERSION.to_string(),
             session_id,
             capabilities: Self::build_capabilities(compat, has_mcp, current_mode),
         });

@@ -1,4 +1,3 @@
-pub mod bundled;
 pub mod conditional;
 pub mod context_modifier;
 pub mod discovery;
@@ -22,10 +21,6 @@ mod permissions_supplemental_test;
 #[cfg(test)]
 #[path = "integration_test.rs"]
 mod integration_test;
-
-#[cfg(test)]
-#[path = "bundled_supplemental_test.rs"]
-mod bundled_supplemental_test;
 
 #[cfg(test)]
 #[path = "watcher_integration_test.rs"]

@@ -219,9 +219,7 @@ async fn execute_single(
     // Run post-tool-use hooks
     if let Some(hook_engine) = hooks {
         let messages = hook_engine.run_post_tool_use(name, input, &result.content).await;
-        for msg in messages {
-            tracing::info!(target: "tjuae_agent", hook_message = %msg, "工具使用后 hook 输出");
-        }
+        crate::hook_output::log_hook_output_summary("post_tool_use", messages.len());
     }
 
     let duration_ms = start.elapsed().as_millis() as u64;

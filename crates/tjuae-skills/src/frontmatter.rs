@@ -2,6 +2,16 @@ use super::types::{
     BoolOrString, EffortLevel, ExecutionContext, FrontmatterData, LoadedFrom, ParsedMarkdown, SkillMetadata,
     SkillSource, StringOrNumber, StringOrVec,
 };
+use thiserror::Error;
+
+/// Strict skill frontmatter validation failure.
+#[derive(Debug, Error)]
+pub enum FrontmatterError {
+    #[error("frontmatter is missing its closing delimiter")]
+    Unterminated,
+    #[error("frontmatter YAML is invalid: {0}")]
+    InvalidYaml(#[source] serde_yaml::Error),
+}
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -25,6 +35,25 @@ pub fn parse_frontmatter(input: &str) -> ParsedMarkdown {
             frontmatter: FrontmatterData::default(),
             content: input.to_owned(),
         },
+    }
+}
+
+/// Parse frontmatter without silently accepting malformed or unknown fields.
+///
+/// Plain Markdown without a frontmatter block remains valid. Once an opening
+/// delimiter is present, both the closing delimiter and the YAML schema are
+/// mandatory.
+pub(crate) fn parse_frontmatter_strict(input: &str) -> Result<ParsedMarkdown, FrontmatterError> {
+    match extract_frontmatter_bounds(input) {
+        Some((yaml_text, content)) => Ok(ParsedMarkdown {
+            frontmatter: parse_yaml_with_fallback_strict(yaml_text)?,
+            content: content.to_owned(),
+        }),
+        None if input.starts_with("---\n") || input.starts_with("---\r\n") => Err(FrontmatterError::Unterminated),
+        None => Ok(ParsedMarkdown {
+            frontmatter: FrontmatterData::default(),
+            content: input.to_owned(),
+        }),
     }
 }
 
@@ -151,23 +180,28 @@ fn extract_frontmatter_bounds(input: &str) -> Option<(&str, &str)> {
 // ---------------------------------------------------------------------------
 
 fn parse_yaml_with_fallback(yaml_text: &str) -> FrontmatterData {
-    // First pass: parse as-is
-    match serde_yaml::from_str::<FrontmatterData>(yaml_text) {
-        Ok(data) => return data,
-        Err(e) => {
-            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter 首轮解析失败");
+    match parse_yaml_with_fallback_strict(yaml_text) {
+        Ok(data) => data,
+        Err(error) => {
+            tracing::warn!(
+                target: "tjuae_skills",
+                error = %error,
+                "frontmatter 解析失败，将返回空结果"
+            );
+            FrontmatterData::default()
         }
+    }
+}
+
+fn parse_yaml_with_fallback_strict(yaml_text: &str) -> Result<FrontmatterData, FrontmatterError> {
+    // First pass: parse as-is
+    if let Ok(data) = serde_yaml::from_str::<FrontmatterData>(yaml_text) {
+        return Ok(data);
     }
 
     // Second pass: auto-quote top-level scalar values containing YAML special chars
     let fixed = quote_problematic_values(yaml_text);
-    match serde_yaml::from_str::<FrontmatterData>(&fixed) {
-        Ok(data) => data,
-        Err(e) => {
-            tracing::warn!(target: "tjuae_skills", error = %e, "frontmatter 第二轮解析失败，将返回空结果");
-            FrontmatterData::default()
-        }
-    }
+    serde_yaml::from_str::<FrontmatterData>(&fixed).map_err(FrontmatterError::InvalidYaml)
 }
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# AGENTS.md
+# TjuaeCLI 智能体协作规范
 
 本文件规定参与 TjuaeCLI 开发的 AI 助手与贡献者必须遵循的规则和约定。
 
@@ -10,7 +10,7 @@ LLM 提供商（Anthropic、OpenAI、AWS Bedrock、Google Vertex AI），编排�
 钩子和长期记忆。项目还提供 JSON 流协议，供宿主应用集成，例如基于 Electron 的
 TjuaeUI。
 
-技术栈：Rust 2024 edition、stable 工具链，以及位于 `crates/` 下的 Cargo 工作区。
+技术栈：Rust 2024 版本、稳定版工具链，以及位于 `crates/` 下的 Cargo 工作区。
 
 ## Crate 结构
 
@@ -20,12 +20,12 @@ TjuaeUI。
 |------|-------|------|
 | 底层 | `tjuae-types` | 提供商无关的共享数据类型（LLM、消息、工具），不依赖其他内部 crate |
 | 底层 | `tjuae-compact` | 上下文压缩算法（折叠、清理、分词） |
-| 中层 | `tjuae-config` | 配置、ProviderCompat、认证、钩子、日志（`create_file_layer`）及**跨平台 shell 辅助函数** |
+| 中层 | `tjuae-config` | 配置、ProviderCompat、认证、钩子、日志（`create_file_layer`）及**跨平台命令解释器辅助函数** |
 | 中层 | `tjuae-protocol` | 面向宿主集成的 JSON 流协议（事件、命令、审批管理器） |
 | 中层 | `tjuae-providers` | LLM 提供商实现（Anthropic、OpenAI、Bedrock、Vertex） |
 | 中层 | `tjuae-tools` | 内置智能体工具（Read、Write、Edit、ExecCommand、Grep、Glob、Spawn） |
 | 中层 | `tjuae-mcp` | MCP（Model Context Protocol）客户端 |
-| 中层 | `tjuae-skills` | 技能系统（提示词片段、钩子、权限、shell 展开） |
+| 中层 | `tjuae-skills` | 技能系统（提示词片段、钩子、权限、命令解释器展开） |
 | 中层 | `tjuae-memory` | 跨会话长期记忆（用户偏好、反馈、项目上下文） |
 | 顶层 | `tjuae-agent` | 智能体引擎、会话管理和编排 |
 | 顶层 | `tjuae-cli` | 命令行二进制入口 |
@@ -43,7 +43,7 @@ cargo fmt --all        # 格式化（CI 强制执行）
 ```
 
 **推送代码必须使用 `just push`，不得直接执行 `git push`。**
-该命令会在推送前依次运行 fmt、clippy 和 test，以减少 CI 失败。它接受与
+该命令会在推送前依次运行格式化、静态检查和测试，以减少 CI 失败。它接受与
 `git push` 相同的参数，例如 `just push -u origin branch`。
 
 ## 代码规范
@@ -73,7 +73,7 @@ cargo fmt --all        # 格式化（CI 强制执行）
 - 公共接口必须具有明确调用方、稳定性预期和边界语义。若导出仅用于测试、临时
   接线或绕过模块边界，应重新设计或提供更窄的入口。
 
-### Rust
+### Rust 规范
 
 - 不得在 `mod.rs` 或 `lib.rs` 中编写业务逻辑；这些文件仅用于声明模块可见性和
   重新导出。
@@ -151,7 +151,7 @@ body[field] = json!(request.max_tokens);
 
 ### 集中处理平台差异
 
-所有平台特定行为（路径、权限、shell 命令、换行符等）都必须封装在一个集中的
+所有平台特定行为（路径、权限、命令解释器命令、换行符等）都必须封装在一个集中的
 函数中。所有调用方统一使用该函数，不得在多个 crate 或模块中散布原始平台检测。
 具体规则见[跨平台](#跨平台)。
 
@@ -176,9 +176,9 @@ CI 会在 macOS、Linux 和 **Windows** 上运行。本地开发只能测试当�
 - 检查路径深度时使用 `std::path::Component::Normal`，不得使用字节长度，因为
   各平台的前缀和根组件不同。
 
-### Shell 执行
+### 命令解释器执行
 
-- 所有 shell 调用必须通过 `tjuae_config::shell` 模块中的 `shell_command()` 或
+- 所有命令解释器调用必须通过 `tjuae_config::shell` 模块中的 `shell_command()` 或
   `shell_command_builder()`。
 - 不得直接调用 `Command::new("sh")`、`Command::new("bash")` 或
   `Command::new("cmd")`，这些命令具有平台差异。
@@ -207,7 +207,7 @@ CI 会在 macOS、Linux 和 **Windows** 上运行。本地开发只能测试当�
 | [getting-started.md](docs/getting-started.md) | 安装、CLI 用法、配置格式和级联优先级 |
 | [providers.md](docs/providers.md) | 提供商配置、认证、ProviderCompat、自定义别名和配置档 |
 | [tools.md](docs/tools.md) | 内置工具参考和执行流程 |
-| [skills.md](docs/skills.md) | 编写技能、front matter、shell 展开和条件激活 |
+| [skills.md](docs/skills.md) | 编写技能、YAML 前置元数据、命令解释器展开和条件激活 |
 | [mcp.md](docs/mcp.md) | MCP 服务器集成、传输类型和延迟加载 |
 | [advanced.md](docs/advanced.md) | 子智能体、钩子、日志、记忆、规划模式和上下文压缩 |
 | [json-stream-protocol.md](docs/json-stream-protocol.md) | 面向宿主集成（如 TjuaeUI）的 JSON Lines 协议规范 |

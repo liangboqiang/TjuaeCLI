@@ -9,7 +9,7 @@ mod tests {
         name: &str,
         description: &str,
         when_to_use: Option<&str>,
-        bundled: bool,
+        managed: bool,
         hidden: bool,
     ) -> SkillMetadata {
         SkillMetadata {
@@ -31,13 +31,13 @@ mod tests {
             shell: None,
             paths: vec![],
             hooks_raw: None,
-            source: if bundled {
-                SkillSource::Bundled
+            source: if managed {
+                SkillSource::Managed
             } else {
                 SkillSource::User
             },
-            loaded_from: if bundled {
-                LoadedFrom::Bundled
+            loaded_from: if managed {
+                LoadedFrom::Managed
             } else {
                 LoadedFrom::Skills
             },
@@ -208,62 +208,41 @@ mod tests {
     #[test]
     fn test_format_skills_within_budget_truncated_mode() {
         // budget = 10_000 * 4 * 0.01 = 400 chars
-        // 1 bundled skill (short), 5 non-bundled each with 200-char description
-        // bundled ~60 chars, remaining ~340 / 5 = 68 chars per non-bundled (>= MIN_DESC_LENGTH=20)
-        let bundled = make_skill("bundled", "Bundled description here", None, true, false);
-        let non_bundled: Vec<SkillMetadata> = (0..5)
-            .map(|i| make_skill(&format!("nb-{i}"), &"z".repeat(200), None, false, false))
+        // Six skills with 200-character descriptions must share the budget.
+        let skills: Vec<SkillMetadata> = (0..6)
+            .map(|i| make_skill(&format!("regular-{i}"), &"z".repeat(200), None, false, false))
             .collect();
-
-        let mut skills = vec![bundled];
-        skills.extend(non_bundled);
 
         let result = format_skills_within_budget(&skills, Some(10_000));
 
-        // bundled skill should be complete (no ellipsis in its description)
-        assert!(
-            result.contains("Bundled description here"),
-            "bundled skill description should be intact"
-        );
-        // at least some non-bundled should be truncated
         assert!(
             result.contains('\u{2026}'),
-            "non-bundled descriptions should be truncated in truncated mode"
+            "descriptions should be truncated in truncated mode"
         );
     }
 
     #[test]
     fn test_format_skills_within_budget_minimal_mode() {
         // budget = 50 * 4 * 0.01 = 2 chars — far below MIN_DESC_LENGTH=20
-        // non-bundled should show names only
-        let bundled = make_skill("bundled", "Bundled full desc", None, true, false);
-        let nb_skills: Vec<SkillMetadata> = vec![
-            make_skill("nb-alpha", &"x".repeat(100), None, false, false),
-            make_skill("nb-beta", &"y".repeat(100), None, false, false),
+        // All skills should show names only.
+        let skills: Vec<SkillMetadata> = vec![
+            make_skill("regular-alpha", &"x".repeat(100), None, false, false),
+            make_skill("regular-beta", &"y".repeat(100), None, false, false),
         ];
-
-        let mut skills = vec![bundled];
-        skills.extend(nb_skills);
 
         let result = format_skills_within_budget(&skills, Some(50));
 
-        // bundled still full
         assert!(
-            result.contains("Bundled full desc"),
-            "bundled skill should remain full in minimal mode"
-        );
-        // non-bundled: names only, no ': '
-        assert!(
-            result.contains("- nb-alpha\n") || result.ends_with("- nb-alpha"),
-            "nb-alpha should appear as name only"
+            result.contains("- regular-alpha\n") || result.ends_with("- regular-alpha"),
+            "regular-alpha should appear as name only"
         );
         assert!(
-            result.contains("- nb-beta\n") || result.ends_with("- nb-beta"),
-            "nb-beta should appear as name only"
+            result.contains("- regular-beta\n") || result.ends_with("- regular-beta"),
+            "regular-beta should appear as name only"
         );
         assert!(
-            !result.contains("- nb-alpha: "),
-            "non-bundled should not have description in minimal mode"
+            !result.contains("- regular-alpha: "),
+            "regular skill should not have a description in minimal mode"
         );
     }
 
@@ -292,17 +271,18 @@ mod tests {
     }
 
     #[test]
-    fn test_format_skills_within_budget_only_bundled_skills() {
-        // All bundled: even if over budget, all are shown full (no non-bundled to degrade)
+    fn test_format_skills_within_budget_managed_skills_respect_budget() {
+        // Managed is a loading provenance, not an exemption from prompt budgeting.
         let skills: Vec<SkillMetadata> = (0..3)
-            .map(|i| make_skill(&format!("bundled-{i}"), &format!("Desc {i}"), None, true, false))
+            .map(|i| make_skill(&format!("managed-{i}"), &format!("Desc {i}"), None, true, false))
             .collect();
         let result = format_skills_within_budget(&skills, Some(1)); // tiny budget
         for i in 0..3 {
             assert!(
-                result.contains(&format!("- bundled-{i}: Desc {i}")),
-                "bundled skill {i} should be intact"
+                result.contains(&format!("- managed-{i}")),
+                "managed skill {i} should remain discoverable"
             );
+            assert!(!result.contains(&format!("- managed-{i}: Desc {i}")));
         }
     }
 
@@ -348,13 +328,9 @@ mod tests {
     fn test_format_skills_within_budget_truncated_mode_cjk_no_panic() {
         // TC-34: truncated mode with CJK descriptions must not panic
         // budget = 10_000 * 4 * 0.01 = 400 chars; each CJK desc is 200 chars → triggers truncation
-        let bundled = make_skill("bundled", "Bundled desc", None, true, false);
-        let non_bundled: Vec<SkillMetadata> = (0..3)
-            .map(|i| make_skill(&format!("nb-{i}"), &"中文描述".repeat(50), None, false, false))
+        let skills: Vec<SkillMetadata> = (0..4)
+            .map(|i| make_skill(&format!("regular-{i}"), &"中文描述".repeat(50), None, false, false))
             .collect();
-
-        let mut skills = vec![bundled];
-        skills.extend(non_bundled);
 
         // should not panic
         let result = format_skills_within_budget(&skills, Some(10_000));
@@ -362,6 +338,6 @@ mod tests {
             result.contains('…') || !result.is_empty(),
             "result should be non-empty and handle CJK without panic"
         );
-        assert!(result.contains("bundled"), "bundled skill must appear in result");
+        assert!(result.contains("regular-0"), "skills must appear in result");
     }
 }

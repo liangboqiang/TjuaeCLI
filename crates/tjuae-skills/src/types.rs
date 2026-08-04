@@ -5,7 +5,7 @@ pub use tjuae_types::skill_types::EffortLevel;
 
 /// Raw fields from skill frontmatter (YAML deserialization target).
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct FrontmatterData {
     pub name: Option<String>,
     pub description: Option<String>,
@@ -84,8 +84,6 @@ pub enum SkillSource {
     Project,
     /// .tjuae/.managed/skills/
     Managed,
-    /// Built-in bundled skills
-    Bundled,
     /// Loaded via MCP protocol
     Mcp,
 }
@@ -95,7 +93,6 @@ pub enum SkillSource {
 pub enum LoadedFrom {
     Skills,
     Managed,
-    Bundled,
     Mcp,
 }
 

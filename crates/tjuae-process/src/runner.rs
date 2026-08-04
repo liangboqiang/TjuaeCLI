@@ -79,13 +79,13 @@ impl CommandRunner {
             }
             Err(_) => {
                 containment.terminate(&mut child, child_id)?;
-                if let Ok(status) = tokio::time::timeout(self.post_process_drain, child.wait()).await {
-                    status?;
-                }
-                tokio::join!(
-                    drain_reader(stdout_reader, self.post_process_drain),
-                    drain_reader(stderr_reader, self.post_process_drain)
-                );
+                child.wait().await?;
+                // Terminating the containment closes every writer, so these readers must reach
+                // EOF. A bounded drain can discard output held by Tokio's Windows pipe reader.
+                let (stdout_result, stderr_result) =
+                    tokio::join!(finish_reader(stdout_reader), finish_reader(stderr_reader));
+                stdout_result?;
+                stderr_result?;
 
                 Ok(CommandResult {
                     exit_code: None,
@@ -127,8 +127,14 @@ where
     })
 }
 
-async fn drain_reader(reader: Option<JoinHandle<Result<()>>>, drain: Duration) {
-    let _reader_result = drain_reader_with_result(reader, drain).await;
+async fn finish_reader(reader: Option<JoinHandle<Result<()>>>) -> Result<()> {
+    if let Some(reader) = reader {
+        reader
+            .await
+            .map_err(|error| Error::other(format!("读取进程输出失败：{error}")))?
+    } else {
+        Ok(())
+    }
 }
 
 async fn drain_reader_with_result(reader: Option<JoinHandle<Result<()>>>, drain: Duration) -> Result<()> {

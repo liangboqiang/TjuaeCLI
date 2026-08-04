@@ -3010,7 +3010,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tjuae-agent"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3040,6 +3040,7 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+ "tracing-subscriber",
  "uuid",
  "wiremock",
  "workspace-hack",
@@ -3047,7 +3048,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-cli"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -3069,7 +3070,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-compact"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "regex",
  "serde",
@@ -3080,7 +3081,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-config"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3107,7 +3108,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-mcp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3127,7 +3128,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-memory"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "rstest",
@@ -3143,7 +3144,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-process"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "libc",
  "tokio",
@@ -3153,7 +3154,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-protocol"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "rstest",
  "serde",
@@ -3166,7 +3167,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-providers"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3198,7 +3199,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-skills"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3213,6 +3214,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "serial_test",
+ "sha2 0.10.9",
  "tempfile",
  "thiserror",
  "tjuae-config",
@@ -3227,7 +3229,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-tools"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3249,7 +3251,7 @@ dependencies = [
 
 [[package]]
 name = "tjuae-types"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "base64",

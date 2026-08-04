@@ -63,19 +63,19 @@ mod tests {
     async fn execute_timeout_preserves_stdout_emitted_before_timeout() {
         let tool = ExecCommandTool::new(std::env::temp_dir());
         #[cfg(windows)]
-        let cmd = "Write-Output tjuae_stdout_before_timeout; Start-Sleep -Seconds 5";
+        let cmd = "Write-Output tjuae_stdout_before_timeout; Start-Sleep -Seconds 10";
         #[cfg(not(windows))]
-        let cmd = "printf 'tjuae_stdout_before_timeout\\n'; sleep 5";
+        let cmd = "printf 'tjuae_stdout_before_timeout\\n'; sleep 10";
         let input = json!({
             "cmd": cmd,
-            "timeout": 1500
+            "timeout": 3000
         });
 
         let result = tool.execute(input).await;
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("命令在 1500 毫秒后超时"),
+            result.content.contains("命令在 3000 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );
@@ -90,19 +90,19 @@ mod tests {
     async fn execute_timeout_preserves_stderr_emitted_before_timeout() {
         let tool = ExecCommandTool::new(std::env::temp_dir());
         #[cfg(windows)]
-        let cmd = "[Console]::Error.WriteLine('tjuae_stderr_before_timeout'); Start-Sleep -Seconds 5";
+        let cmd = "[Console]::Error.WriteLine('tjuae_stderr_before_timeout'); Start-Sleep -Seconds 10";
         #[cfg(not(windows))]
-        let cmd = "printf 'tjuae_stderr_before_timeout\\n' >&2; sleep 5";
+        let cmd = "printf 'tjuae_stderr_before_timeout\\n' >&2; sleep 10";
         let input = json!({
             "cmd": cmd,
-            "timeout": 1500
+            "timeout": 3000
         });
 
         let result = tool.execute(input).await;
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("命令在 1500 毫秒后超时"),
+            result.content.contains("命令在 3000 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );
@@ -117,19 +117,19 @@ mod tests {
     async fn execute_timeout_omits_output_after_timeout() {
         let tool = ExecCommandTool::new(std::env::temp_dir());
         #[cfg(windows)]
-        let cmd = "Write-Output tjuae_before_timeout; Start-Sleep -Seconds 5; Write-Output tjuae_after_timeout";
+        let cmd = "Write-Output tjuae_before_timeout; Start-Sleep -Seconds 10; Write-Output tjuae_after_timeout";
         #[cfg(not(windows))]
-        let cmd = "printf 'tjuae_before_timeout\\n'; sleep 5; printf 'tjuae_after_timeout\\n'";
+        let cmd = "printf 'tjuae_before_timeout\\n'; sleep 10; printf 'tjuae_after_timeout\\n'";
         let input = json!({
             "cmd": cmd,
-            "timeout": 1500
+            "timeout": 3000
         });
 
         let result = tool.execute(input).await;
 
         assert!(result.is_error, "timeout should be an error: {}", result.content);
         assert!(
-            result.content.contains("命令在 1500 毫秒后超时"),
+            result.content.contains("命令在 3000 毫秒后超时"),
             "timeout message missing: {}",
             result.content
         );

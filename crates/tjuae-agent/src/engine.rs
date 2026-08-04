@@ -1520,9 +1520,7 @@ impl AgentEngine {
     pub async fn run_stop_hooks(&self) {
         if let Some(hook_engine) = &self.hooks {
             let messages = hook_engine.run_stop().await;
-            for msg in messages {
-                info!(target: "tjuae_agent", hook_message = %msg, "停止 hook 输出");
-            }
+            crate::hook_output::log_hook_output_summary("stop", messages.len());
         }
     }
 }

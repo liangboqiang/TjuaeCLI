@@ -166,7 +166,7 @@ mod tests {
 
     use tjuae_skills::types::{ExecutionContext, LoadedFrom, SkillMetadata, SkillSource};
 
-    fn make_test_skill(name: &str, description: &str, bundled: bool, hidden: bool) -> SkillMetadata {
+    fn make_test_skill(name: &str, description: &str, managed: bool, hidden: bool) -> SkillMetadata {
         SkillMetadata {
             name: name.to_string(),
             display_name: None,
@@ -186,13 +186,13 @@ mod tests {
             shell: None,
             paths: vec![],
             hooks_raw: None,
-            source: if bundled {
-                SkillSource::Bundled
+            source: if managed {
+                SkillSource::Managed
             } else {
                 SkillSource::User
             },
-            loaded_from: if bundled {
-                LoadedFrom::Bundled
+            loaded_from: if managed {
+                LoadedFrom::Managed
             } else {
                 LoadedFrom::Skills
             },
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn test_build_system_prompt_small_budget_triggers_minimal_mode() {
-        // context_window_tokens = 50 → budget = 2 chars, triggers minimal mode for non-bundled
+        // context_window_tokens = 50 → budget = 2 chars, triggers minimal mode for regular skills
         let skill = make_test_skill("nb-skill", &"x".repeat(100), false, false);
         let result = build_system_prompt(
             &mut SystemPromptCache::new(),
@@ -366,7 +366,7 @@ mod tests {
         );
         assert!(
             !result.contains("- nb-skill: "),
-            "non-bundled should not have description in minimal mode"
+            "regular skill should not have description in minimal mode"
         );
     }
 

@@ -188,12 +188,12 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // TC-11.16: Project/Managed/Bundled sources all parse successfully
+    // TC-11.16: Project and Managed sources both parse successfully
     // -----------------------------------------------------------------------
     #[test]
     fn tc_11_16_non_mcp_sources_parse_successfully() {
         let raw = json!({"PreToolUse": [{"hooks": [{"type": "command", "command": "echo x"}]}]});
-        for source in [SkillSource::Project, SkillSource::Managed, SkillSource::Bundled] {
+        for source in [SkillSource::Project, SkillSource::Managed] {
             let result = parse_skill_hooks(Some(&raw), "skill", source);
             assert!(result.is_some(), "TC-11.16: source {:?} should return Some", source);
         }

@@ -320,15 +320,16 @@ fn tc_e2e_6_context_modifier_overrides() {
 }
 
 // ---------------------------------------------------------------------------
-// TC-E2E-7: Bundled skills are protected from prompt budget truncation
-// AC-10: bundled skill appears in listing even when budget is very small
+// TC-E2E-7: Managed skills remain discoverable but respect prompt budgeting
+// AC-10: managed skill name appears when the description no longer fits
 // ---------------------------------------------------------------------------
 
 #[test]
-fn tc_e2e_7_bundled_skills_budget_protection() {
-    let mut bundled = make_skill("bundled-skill", "protected bundled content");
-    bundled.source = SkillSource::Bundled;
-    bundled.description = "Bundled skill description that is always preserved".to_string();
+fn tc_e2e_7_managed_skills_respect_prompt_budget() {
+    let mut managed = make_skill("managed-skill", "protected managed content");
+    managed.source = SkillSource::Managed;
+    managed.loaded_from = LoadedFrom::Managed;
+    managed.description = "Managed skill description that is always preserved".to_string();
 
     // Create many large regular skills to exceed budget
     let regular_skills: Vec<SkillMetadata> = (0..20)
@@ -339,7 +340,7 @@ fn tc_e2e_7_bundled_skills_budget_protection() {
         })
         .collect();
 
-    let mut all_skills = vec![bundled];
+    let mut all_skills = vec![managed];
     all_skills.extend(regular_skills);
 
     // Use a very small context window (100 tokens = 400 chars budget) to force truncation
@@ -347,8 +348,12 @@ fn tc_e2e_7_bundled_skills_budget_protection() {
 
     // AC-10 assertions
     assert!(
-        result.contains("bundled-skill"),
-        "bundled skill should appear in listing even with tight budget, got: {result}"
+        result.contains("managed-skill"),
+        "managed skill should appear in listing even with tight budget, got: {result}"
+    );
+    assert!(
+        !result.contains("Managed skill description that is always preserved"),
+        "managed descriptions must not bypass the shared prompt budget"
     );
 
     // At least some regular skills should be omitted (names only or truncated)
@@ -389,15 +394,16 @@ async fn tc_e2e_8_mcp_skill_shell_rejected() {
 }
 
 // ---------------------------------------------------------------------------
-// TC-E2E-9: Prompt budget truncation — bundled preserved, non-bundled truncated
-// AC-12: over-budget causes non-bundled truncation while bundled is kept
+// TC-E2E-9: Prompt budget truncation applies consistently across sources
+// AC-12: over-budget descriptions are truncated while skill names remain
 // ---------------------------------------------------------------------------
 
 #[test]
 fn tc_e2e_9_prompt_budget_truncation() {
-    let mut bundled = make_skill("my-bundled", "body");
-    bundled.source = SkillSource::Bundled;
-    bundled.description = "Always here".to_string();
+    let mut managed = make_skill("my-managed", "body");
+    managed.source = SkillSource::Managed;
+    managed.loaded_from = LoadedFrom::Managed;
+    managed.description = "Always here".to_string();
 
     // Create enough regular skills to exceed even DEFAULT_CHAR_BUDGET
     let n = 30;
@@ -409,14 +415,18 @@ fn tc_e2e_9_prompt_budget_truncation() {
         })
         .collect();
 
-    let mut skills = vec![bundled];
+    let mut skills = vec![managed];
     skills.extend(regular_skills);
 
     // Use 50 tokens → 200 chars budget — far below what 30 regular skills need
     let output = format_skills_within_budget(&skills, Some(50));
 
     // AC-12 assertions
-    assert!(output.contains("my-bundled"), "bundled skill must be preserved");
+    assert!(
+        output.contains("my-managed"),
+        "managed skill name must remain discoverable"
+    );
+    assert!(!output.contains("my-managed: Always here"));
 
     let full_reg_count = (0..n)
         .filter(|i| output.contains(&format!("Regular skill {i}: {}", "x".repeat(300))))
@@ -428,8 +438,7 @@ fn tc_e2e_9_prompt_budget_truncation() {
 
     // Verify total output length stays within a reasonable margin of budget
     // Budget = 50 tokens * 4 chars/token * 1% = 2 chars — that's extremely tight.
-    // With bundled protection, at minimum bundled entry is present.
-    // We just verify bundled is there and not all regular skills are full-expanded.
+    // We verify that names remain discoverable while full descriptions are constrained.
 }
 
 // ---------------------------------------------------------------------------
@@ -973,16 +982,20 @@ fn wb_8b_single_skill_within_budget() {
 }
 
 #[test]
-fn wb_8c_all_bundled_no_non_bundled() {
-    // When only bundled skills exist, they're all returned even under budget pressure
-    let mut b1 = make_skill("bundled-a", "body");
-    b1.source = SkillSource::Bundled;
-    b1.description = "Bundled A".to_string();
-    let mut b2 = make_skill("bundled-b", "body");
-    b2.source = SkillSource::Bundled;
-    b2.description = "Bundled B".to_string();
+fn wb_8c_all_managed_skills_remain_discoverable() {
+    // Managed skill names remain visible under budget pressure.
+    let mut managed_a = make_skill("managed-a", "body");
+    managed_a.source = SkillSource::Managed;
+    managed_a.loaded_from = LoadedFrom::Managed;
+    managed_a.description = "Managed A".to_string();
+    let mut managed_b = make_skill("managed-b", "body");
+    managed_b.source = SkillSource::Managed;
+    managed_b.loaded_from = LoadedFrom::Managed;
+    managed_b.description = "Managed B".to_string();
 
-    let result = format_skills_within_budget(&[b1, b2], Some(1)); // tiny budget
-    assert!(result.contains("bundled-a"), "bundled A should be present");
-    assert!(result.contains("bundled-b"), "bundled B should be present");
+    let result = format_skills_within_budget(&[managed_a, managed_b], Some(1)); // tiny budget
+    assert!(result.contains("managed-a"), "managed A should be present");
+    assert!(result.contains("managed-b"), "managed B should be present");
+    assert!(!result.contains("Managed A"));
+    assert!(!result.contains("Managed B"));
 }

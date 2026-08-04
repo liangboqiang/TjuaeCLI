@@ -92,6 +92,38 @@ Do the thing.
     }
 
     #[test]
+    fn strict_parser_rejects_malformed_yaml() {
+        let input = "---\n: {broken yaml\n---\ncontent";
+
+        let error = parse_frontmatter_strict(input).expect_err("malformed YAML must be rejected");
+
+        assert!(matches!(error, FrontmatterError::InvalidYaml(_)));
+    }
+
+    #[test]
+    fn strict_parser_rejects_unterminated_frontmatter() {
+        let input = "---\nname: incomplete\nbody";
+
+        let error = parse_frontmatter_strict(input).expect_err("unterminated frontmatter must be rejected");
+
+        assert!(matches!(error, FrontmatterError::Unterminated));
+    }
+
+    #[test]
+    fn strict_parser_rejects_unknown_permission_fields() {
+        for field in ["allowedTools", "permissions"] {
+            let input = format!("---\n{field}: []\n---\nbody");
+
+            let error = parse_frontmatter_strict(&input).expect_err("unknown permission field must be rejected");
+
+            assert!(
+                error.to_string().contains(field),
+                "error should identify the rejected field"
+            );
+        }
+    }
+
+    #[test]
     fn test_parse_frontmatter_special_chars_in_value() {
         // Description contains { } which would fail unquoted YAML
         let input = "---\ndescription: Use {arg} to specify the value\n---\nbody";

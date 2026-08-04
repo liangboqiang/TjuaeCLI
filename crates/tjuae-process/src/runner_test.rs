@@ -2,11 +2,38 @@ use super::*;
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
     use tokio::process::Command;
 
-    use super::CommandRunner;
+    use super::{CommandRunner, finish_reader};
+
+    #[tokio::test]
+    async fn finish_reader_waits_for_delayed_output_commit() {
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let reader_output = Arc::clone(&output);
+        let reader = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            reader_output
+                .lock()
+                .expect("test output mutex should not be poisoned")
+                .extend_from_slice(b"committed");
+            Ok(())
+        });
+
+        finish_reader(Some(reader))
+            .await
+            .expect("reader completion should succeed");
+
+        assert_eq!(
+            output
+                .lock()
+                .expect("test output mutex should not be poisoned")
+                .as_slice(),
+            b"committed"
+        );
+    }
 
     #[tokio::test]
     async fn runner_preserves_stdout_emitted_before_timeout() {

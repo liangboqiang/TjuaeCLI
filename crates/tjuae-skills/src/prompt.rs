@@ -1,6 +1,6 @@
 use unicode_width::UnicodeWidthStr;
 
-use crate::types::{SkillMetadata, SkillSource};
+use crate::types::SkillMetadata;
 
 // Skill listing gets 1% of the context window (in characters)
 pub const SKILL_BUDGET_CONTEXT_PERCENT: f64 = 0.01;
@@ -53,8 +53,8 @@ pub fn format_skill_entry(skill: &SkillMetadata) -> String {
 ///
 /// Levels:
 /// 1. Full mode: all skills with full descriptions
-/// 2. Truncated mode: bundled skills full, non-bundled descriptions trimmed
-/// 3. Minimal mode: bundled skills full, non-bundled names only
+/// 2. Truncated mode: descriptions are divided fairly across all skills
+/// 3. Minimal mode: all skills show names only
 pub fn format_skills_within_budget(skills: &[SkillMetadata], context_window_tokens: Option<usize>) -> String {
     if skills.is_empty() {
         return String::new();
@@ -77,67 +77,31 @@ pub fn format_skills_within_budget(skills: &[SkillMetadata], context_window_toke
         return full_entries.join("\n");
     }
 
-    // Partition into bundled and non-bundled
-    let mut bundled_indices: Vec<usize> = Vec::new();
-    let mut rest_indices: Vec<usize> = Vec::new();
-    for (i, skill) in skills.iter().enumerate() {
-        if skill.source == SkillSource::Bundled {
-            bundled_indices.push(i);
-        } else {
-            rest_indices.push(i);
-        }
-    }
-
-    // C-5: if no non-bundled skills, return all bundled full entries
-    if rest_indices.is_empty() {
-        return full_entries.join("\n");
-    }
-
-    // Compute space used by bundled skills (full descriptions, always preserved)
-    // +1 per bundled entry accounts for the trailing newline separator
-    let bundled_chars: usize = bundled_indices
-        .iter()
-        .map(|&i| UnicodeWidthStr::width(full_entries[i].as_str()) + 1)
-        .sum();
-
-    let remaining_budget = budget.saturating_sub(bundled_chars);
-
-    // name_overhead = Σ (name.len() + 4) for each non-bundled skill
+    // name_overhead = Σ (name.len() + 4) for each skill
     // where 4 = "- " (2) + ": " (2) prefix/suffix
-    // plus (rest_count - 1) newline separators between non-bundled entries
-    let rest_name_overhead: usize = rest_indices
+    // plus (skill_count - 1) newline separators between entries
+    let name_overhead: usize = skills
         .iter()
-        .map(|&i| UnicodeWidthStr::width(skills[i].name.as_str()) + 4)
+        .map(|skill| UnicodeWidthStr::width(skill.name.as_str()) + 4)
         .sum::<usize>()
-        + rest_indices.len().saturating_sub(1);
+        + skills.len().saturating_sub(1);
 
-    let available_for_descs = remaining_budget.saturating_sub(rest_name_overhead);
-    let per_desc_budget = available_for_descs / rest_indices.len();
+    let available_for_descs = budget.saturating_sub(name_overhead);
+    let per_desc_budget = available_for_descs / skills.len();
 
-    // Level 3: minimal mode — non-bundled show names only
+    // Level 3: minimal mode — all skills show names only.
     if per_desc_budget < MIN_DESC_LENGTH {
         return skills
             .iter()
-            .enumerate()
-            .map(|(i, skill)| {
-                if skill.source == SkillSource::Bundled {
-                    full_entries[i].clone()
-                } else {
-                    format!("- {}", skill.name)
-                }
-            })
+            .map(|skill| format!("- {}", skill.name))
             .collect::<Vec<_>>()
             .join("\n");
     }
 
-    // Level 2: truncated mode — non-bundled descriptions trimmed to per_desc_budget
+    // Level 2: truncated mode — all descriptions are trimmed to the same budget.
     skills
         .iter()
-        .enumerate()
-        .map(|(i, skill)| {
-            if skill.source == SkillSource::Bundled {
-                return full_entries[i].clone();
-            }
+        .map(|skill| {
             let desc = format_skill_description(skill);
             let trimmed = if UnicodeWidthStr::width(desc.as_str()) > per_desc_budget {
                 let mut s = String::new();

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::frontmatter::{parse_frontmatter, parse_skill_fields};
+use crate::frontmatter::{parse_frontmatter_strict, parse_skill_fields};
 use crate::loader::LoadedSkill;
 use crate::types::{LoadedFrom, SkillSource};
 use tjuae_mcp::manager::McpManager;
@@ -51,7 +51,18 @@ pub async fn load_mcp_skills(manager: &McpManager) -> Vec<LoadedSkill> {
             };
 
             let skill_name = uri_to_skill_name(&server_name, &resource.uri);
-            let parsed = parse_frontmatter(&text);
+            let parsed = match parse_frontmatter_strict(&text) {
+                Ok(parsed) => parsed,
+                Err(error) => {
+                    tracing::warn!(
+                        target: "tjuae_skills",
+                        server = %server_name,
+                        error = %error,
+                        "MCP 技能 frontmatter 无效，已跳过"
+                    );
+                    continue;
+                }
+            };
             let metadata = parse_skill_fields(
                 &parsed.frontmatter,
                 &parsed.content,

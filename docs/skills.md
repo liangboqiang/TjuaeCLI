@@ -67,16 +67,9 @@ paths:
 # 可选——技能运行时应用的上下文覆盖
 model: claude-sonnet-4-20250514  # 覆盖当前模型
 effort: high              # 推理强度：low | medium | high
-allowedTools:             # 限制技能可使用的工具
+allowed-tools:            # 限制技能可使用的工具
   - Read
   - Grep
-
-# 可选——权限规则
-permissions:
-  allow:
-    - "ExecCommand(git *)"
-  deny:
-    - "ExecCommand(rm *)"
 
 # 可选——技能激活时注册的钩子
 hooks:
@@ -100,12 +93,13 @@ hooks:
 | `paths` | string[] | Glob 模式；当前路径至少匹配一项时技能才会激活。 |
 | `model` | string | 在技能运行期间覆盖当前模型。 |
 | `effort` | string | 覆盖推理强度：`low`、`medium` 或 `high`。 |
-| `allowedTools` | string[] | 技能运行期间只能使用此列表中的工具。 |
-| `permissions.allow` | string[] | 始终允许的工具模式。 |
-| `permissions.deny` | string[] | 始终拒绝的工具模式，优先级最高。 |
+| `allowed-tools` | string[] | 技能运行期间只能使用此列表中的工具。 |
 | `hooks.PreToolUse` | string[] | 每次工具调用前运行的 shell 命令。 |
 | `hooks.PostToolUse` | string[] | 每次工具调用后运行的 shell 命令。 |
 | `hooks.Stop` | string[] | 会话结束时运行的 shell 命令。 |
+
+Front matter 使用严格字段校验。`allowedTools`、`permissions` 等未支持字段会导致技能
+被拒绝加载，而不会被静默忽略；全局技能授权规则应在 TjuaeCLI 配置中设置。
 
 ## 变量替换
 
