@@ -7,7 +7,7 @@
 - **多提供商支持**——Anthropic、OpenAI（以及 DeepSeek、Ollama、Gemini 等兼容服务）、AWS Bedrock、Google Vertex AI
 - **ProviderCompat 层**——通过配置适配提供商差异，不使用硬编码条件判断
 - **推理模型支持**——支持 OpenAI `o1`/`o3` 推理模型及 `reasoning_effort` 控制
-- **8 个内置工具**——Read、Write、Edit、ExecCommand、Grep、Glob、Spawn（子智能体）和 ToolSearch
+- **10 个常规内置工具**——Read、Write、Edit、ExecCommand、Grep、Glob、ViewImage、Skill、Spawn（子智能体）和 ToolSearch；启用计划模式时另注册 EnterPlanMode / ExitPlanMode
 - **MCP 客户端**——连接任意[模型上下文协议](https://modelcontextprotocol.io/)服务器（stdio / SSE / streamable-http）
 - **动态注入 MCP**——宿主客户端可通过 [JSON 流协议](docs/json-stream-protocol.md)在运行时注入 MCP 服务器
 - **技能系统**——支持变量替换、shell 展开、条件激活，以及按技能覆盖模型和权限的命名提示词片段（参见 [docs/skills.md](docs/skills.md)）
@@ -87,7 +87,7 @@ tjuae-cli --max-tool-call-failure-turns 2 "执行任务"
 │  （三级合并）     │  流式输出 + 工具      │  保存 / 恢复       │
 ├──────────────────┼───────────────────────┼───────────────────┤
 │  提供商           │  工具注册表           │  钩子执行器         │
-│  ├ Anthropic     │  ├ 内置工具（8）      │  ├ pre_tool_use   │
+│  ├ Anthropic     │  ├ 常规内置工具（10） │  ├ pre_tool_use   │
 │  ├ OpenAI        │  ├ MCP 工具（N）      │  ├ post_tool_use  │
 │  ├ Bedrock       │  └ 计划模式工具       │  └ stop           │
 │  └ Vertex AI     │                       │                   │
@@ -107,7 +107,7 @@ tjuae-cli --max-tool-call-failure-turns 2 "执行任务"
 | 文档 | 说明 |
 |----------|-------------|
 | [快速入门](docs/getting-started.md) | 安装、CLI 参考、配置和使用示例 |
-| [内置工具](docs/tools.md) | 8 个工具的详细参考 |
+| [内置工具](docs/tools.md) | 10 个常规工具、计划模式工具与动态 MCP 工具参考 |
 | [MCP 集成](docs/mcp.md) | 模型上下文协议客户端的设置与使用 |
 | [提供商与认证](docs/providers.md) | 多提供商配置、配置档、Bedrock、Vertex 和 OAuth |
 | [高级功能](docs/advanced.md) | 子智能体、钩子、提示词缓存、VCR 和 AGENTS.md |
