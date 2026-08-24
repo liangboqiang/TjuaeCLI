@@ -19,7 +19,7 @@ jobs:
         run: |
           git init .
           git remote remove origin 2>/dev/null || true
-          git remote add origin "http://60.28.24.166:3002/${{ gitea.repository }}.git"
+          git remote add origin "http://220.154.4.77:3002/${{ gitea.repository }}.git"
           git fetch --depth=1 origin "${{ gitea.sha }}"
           git checkout --detach FETCH_HEAD
 
