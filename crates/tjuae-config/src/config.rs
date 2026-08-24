@@ -1064,13 +1064,6 @@ max_sessions = 20              # 自动清理最旧会话
 # command = "npx"
 # args = ["-y", "@modelcontextprotocol/server-filesystem", "/Users/me/project"]
 
-# [mcp.servers.github]
-# transport = "stdio"
-# command = "npx"
-# args = ["-y", "@modelcontextprotocol/server-github"]
-# env = { GITHUB_TOKEN = "ghp_xxx" }
-# startup_timeout_ms = 30000
-
 # [mcp.servers.remote]
 # transport = "sse"
 # url = "http://localhost:3001/sse"

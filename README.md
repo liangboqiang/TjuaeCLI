@@ -154,7 +154,7 @@ TjuaeCLI 使用可审计的标签发布流程，不依赖自动发布 PR：
 3. 提交版本变更并用 `just push origin main` 更新主分支。
 4. 创建并推送 `v<版本>` 标签。
 5. `release.yml` 自动为 Linux、macOS、Windows 的 x64/arm64 目标构建六份归档，
-   生成 `tjuae-cli-checksums.txt`，并发布到对应的 GitHub Release。
+   生成 `tjuae-cli-checksums.txt`，并发布到对应的 Gitea Release。
 
 工作流也支持手动输入已有标签重新构建，用于恢复失败的发布；它不会修改版本或创建
 额外分支。

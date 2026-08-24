@@ -15,13 +15,6 @@ transport = "stdio"
 command = "npx"
 args = ["-y", "@modelcontextprotocol/server-filesystem", "/Users/me/project"]
 
-[mcp.servers.github]
-transport = "stdio"
-command = "npx"
-args = ["-y", "@modelcontextprotocol/server-github"]
-env = { GITHUB_TOKEN = "ghp_xxx" }
-startup_timeout_ms = 30000
-
 # SSE 传输：连接远程 SSE 服务器
 [mcp.servers.database]
 transport = "sse"

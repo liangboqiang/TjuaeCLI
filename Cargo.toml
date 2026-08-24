@@ -20,7 +20,7 @@ members = [
 version = "4.0.1"
 edition = "2024"
 authors = ["Tjuae"]
-repository = "https://github.com/liangboqiang/TjuaeCLI"
+repository = "gitea:self"
 
 [workspace.dependencies]
 # Internal crates

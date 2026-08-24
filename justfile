@@ -47,7 +47,7 @@ build-release:
 test:
     @just _run "{{ cargo }} nextest run --workspace --profile default"
 
-# 使用 nextest 运行单元测试和集成测试（CI profile——用于 GitHub Actions）
+# 使用 nextest 运行单元测试和集成测试（CI profile——用于 Gitea Actions）
 test-ci:
     @just _run "{{ cargo }} nextest run --workspace --profile ci"
 

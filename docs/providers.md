@@ -66,7 +66,7 @@ max_tokens = 16384
 [profiles.dev]
 extends = "base-anthropic"
 model = "claude-sonnet-4-20250514"
-mcp_servers = ["filesystem", "github"]
+mcp_servers = ["filesystem"]
 
 # 配置档名称由用户定义；这不是内置配置档。
 [profiles.my-weak-provider]
@@ -80,7 +80,7 @@ max_tool_call_failure_turns = 2
 ```bash
 tjuae-cli --profile claude-fast "快速回答这个问题"
 tjuae-cli --profile claude-deep "执行深入的安全审计"
-tjuae-cli --profile dev "创建一个 GitHub issue"
+tjuae-cli --profile dev "检查项目文件并给出改进建议"
 ```
 
 - 支持多级继承链。

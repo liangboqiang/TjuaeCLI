@@ -1,0 +1,39 @@
+name: TjuaeCLI CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: cli-ci-${{ gitea.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout from the self-hosted Gitea
+        shell: bash
+        run: |
+          git init .
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "http://60.28.24.166:3002/${{ gitea.repository }}.git"
+          git fetch --depth=1 origin "${{ gitea.sha }}"
+          git checkout --detach FETCH_HEAD
+
+      - name: Install Rust
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+          "$HOME/.cargo/bin/rustup" component add rustfmt clippy
+
+      - name: Verify formatting
+        run: $HOME/.cargo/bin/cargo fmt --all -- --check
+
+      - name: Lint
+        run: $HOME/.cargo/bin/cargo clippy --workspace -- -D warnings
+
+      - name: Test
+        run: $HOME/.cargo/bin/cargo test --workspace
