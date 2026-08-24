@@ -193,11 +193,13 @@ async fn tc_4_4_command_fail_no_output_returns_err() {
 // TC-4.4b: 命令失败但有输出 → Ok（D-3 偏离验证）
 #[tokio::test]
 async fn tc_4_4b_command_fail_with_output_returns_ok() {
-    // exits non-zero but still has stdout
-    let content = if cfg!(windows) {
-        "!`echo output & exit 1`"
-    } else {
-        "!`echo output; exit 1`"
+    use tjuae_config::shell::ShellKind;
+
+    // Exit non-zero while still producing stdout using the syntax of the resolved shell.
+    let content = match tjuae_config::shell::default_shell().kind {
+        ShellKind::PowerShell => "!`Write-Output output; exit 1`",
+        ShellKind::Cmd => "!`echo output & exit 1`",
+        ShellKind::Bash | ShellKind::Zsh | ShellKind::Sh => "!`echo output; exit 1`",
     };
     let result = run(content).await;
     assert!(
