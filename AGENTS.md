@@ -8,7 +8,7 @@ TjuaeCLI 是一个使用 Rust 编写的**多模型提供商 AI 智能体命令�
 LLM 提供商（Anthropic、OpenAI、AWS Bedrock、Google Vertex AI），编排内置工具
 （Read、Write、Edit、ExecCommand、Grep、Glob、Spawn），并支持 MCP 服务器、技能、
 钩子和长期记忆。项目还提供 JSON 流协议，供宿主应用集成，例如基于 Electron 的
-TjuaeUI。
+Tjuae Desktop。
 
 技术栈：Rust 2024 版本、稳定版工具链，以及位于 `crates/` 下的 Cargo 工作区。
 
@@ -210,5 +210,5 @@ CI 会在 macOS、Linux 和 **Windows** 上运行。本地开发只能测试当�
 | [skills.md](docs/skills.md) | 编写技能、YAML 前置元数据、命令解释器展开和条件激活 |
 | [mcp.md](docs/mcp.md) | MCP 服务器集成、传输类型和延迟加载 |
 | [advanced.md](docs/advanced.md) | 子智能体、钩子、日志、记忆、规划模式和上下文压缩 |
-| [json-stream-protocol.md](docs/json-stream-protocol.md) | 面向宿主集成（如 TjuaeUI）的 JSON Lines 协议规范 |
+| [json-stream-protocol.md](docs/json-stream-protocol.md) | 面向宿主集成（如 Tjuae Desktop）的 JSON Lines 协议规范 |
 | [troubleshooting.md](docs/troubleshooting.md) | 常见错误和解决方案 |

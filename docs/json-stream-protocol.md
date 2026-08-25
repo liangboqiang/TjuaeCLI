@@ -1,6 +1,6 @@
 # TjuaeCLI JSON 流协议规范
 
-> 本协议定义 TjuaeCLI（Rust CLI）与宿主客户端（例如 TjuaeUI Electron 应用）
+> 本协议定义 TjuaeCLI（Rust CLI）与宿主客户端（例如 Tjuae Desktop Electron 应用）
 > 之间通过 stdin/stdout JSON Lines 进行的通信。
 
 ## 概览
@@ -9,7 +9,7 @@
 ┌──────────────┐   stdin（JSON Lines）    ┌──────────────────┐
 │              │ ◄─────────────────────── │                  │
 │   TjuaeCLI   │                          │     宿主客户端     │
-│  （Rust CLI） │ ──────────────────────►  │ （TjuaeUI 等）     │
+│  （Rust CLI） │ ──────────────────────►  │ （Tjuae Desktop 等）     │
 │              │   stdout（JSON Lines）   │                  │
 └──────────────┘                          └──────────────────┘
      stderr → 诊断日志（不属于协议）
