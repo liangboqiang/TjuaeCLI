@@ -42,6 +42,18 @@ mod tests {
         }
     }
 
+    fn stdin_contains_command(expected: &str) -> String {
+        match default_shell().kind {
+            ShellKind::PowerShell => format!(
+                "$value = [Console]::In.ReadToEnd(); if ($value -like '*{expected}*') {{ exit 0 }} else {{ exit 2 }}"
+            ),
+            ShellKind::Cmd => format!(r#"findstr /C:"{expected}" > nul"#),
+            ShellKind::Bash | ShellKind::Zsh | ShellKind::Sh => {
+                format!(r#"grep -q '{expected}'"#)
+            }
+        }
+    }
+
     // --- Pure logic tests ---
 
     #[test]
@@ -119,6 +131,30 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_pre_hook_receives_codex_json_on_stdin() {
+        let config = HooksConfig {
+            pre_tool_use: vec![make_hook(
+                "codex-stdin",
+                vec!["Read"],
+                &stdin_contains_command("PreToolUse"),
+            )],
+            post_tool_use: vec![],
+            stop: vec![],
+        };
+        let engine = HookEngine::new_with_env(
+            config,
+            std::env::temp_dir(),
+            vec![("TJUAE_HOOK_SESSION_ID".to_string(), "session-real".to_string())],
+        );
+
+        let result = engine
+            .run_pre_tool_use("Read", &json!({"file_path": "notes.txt"}))
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
     async fn test_hook_vars_override_runtime_env() {
         let config = HooksConfig {
             pre_tool_use: vec![make_hook(
@@ -141,9 +177,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_pre_hook_blocks_on_nonzero_exit() {
+    async fn test_pre_hook_blocks_on_codex_exit_two() {
         let config = HooksConfig {
-            pre_tool_use: vec![make_hook("blocker", vec!["Read"], "exit 1")],
+            pre_tool_use: vec![make_hook("blocker", vec!["Read"], "exit 2")],
             post_tool_use: vec![],
             stop: vec![],
         };
@@ -151,6 +187,28 @@ mod tests {
         let result = engine.run_pre_tool_use("Read", &json!({})).await;
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), HookError::Blocked { .. }));
+    }
+
+    #[tokio::test]
+    async fn test_pre_hook_does_not_block_on_non_protocol_failure() {
+        let config = HooksConfig {
+            pre_tool_use: vec![make_hook("failure", vec!["Read"], "exit 1")],
+            post_tool_use: vec![],
+            stop: vec![],
+        };
+        let engine = HookEngine::new(config, std::env::temp_dir());
+
+        assert!(engine.run_pre_tool_use("Read", &json!({})).await.is_ok());
+    }
+
+    #[test]
+    fn test_structured_codex_output_can_block() {
+        assert!(hook_output_blocks(r#"{"decision":"deny"}"#));
+        assert!(hook_output_blocks(
+            r#"{"hookSpecificOutput":{"permissionDecision":"deny"}}"#
+        ));
+        assert!(hook_output_blocks(r#"{"continue":false}"#));
+        assert!(!hook_output_blocks(r#"{"decision":"allow"}"#));
     }
 
     #[tokio::test]
@@ -193,7 +251,14 @@ mod tests {
         // speed, while still timing out well before the 15-second command ends.
         let timeout_ms = if cfg!(windows) { 5000 } else { 100 };
 
-        let result = run_hook_command(&command, &HashMap::new(), timeout_ms, &std::env::temp_dir()).await;
+        let result = run_hook_command(
+            &command,
+            &HashMap::new(),
+            &serde_json::json!({"hook_event_name": "Stop"}),
+            timeout_ms,
+            &std::env::temp_dir(),
+        )
+        .await;
 
         let err = match result {
             Ok(_) => panic!("hook command should time out"),

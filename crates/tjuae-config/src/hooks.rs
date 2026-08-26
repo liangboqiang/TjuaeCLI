@@ -74,12 +74,20 @@ impl HookEngine {
 
         for hook in matching {
             let env = self.build_hook_env(tool_name, tool_input);
-            let result = run_hook_command(&hook.command, &env, hook.timeout_ms, &self.cwd).await?;
-            if !result.success {
+            let input = self.codex_tool_payload("PreToolUse", tool_name, tool_input, None);
+            let result = run_hook_command(&hook.command, &env, &input, hook.timeout_ms, &self.cwd).await?;
+            if result.exit_code == 2 || hook_output_blocks(&result.output) {
                 return Err(HookError::Blocked {
                     hook_name: hook.name.clone(),
                     output: result.output,
                 });
+            }
+            if result.exit_code != 0 {
+                tracing::warn!(
+                    hook = %hook.name,
+                    exit_code = result.exit_code,
+                    "PreToolUse hook failed without blocking the tool"
+                );
             }
         }
         Ok(())
@@ -103,8 +111,9 @@ impl HookEngine {
         for hook in matching {
             let mut env = self.build_hook_env(tool_name, tool_input);
             env.insert("TOOL_OUTPUT".to_string(), tool_output.to_string());
+            let input = self.codex_tool_payload("PostToolUse", tool_name, tool_input, Some(tool_output));
 
-            match run_hook_command(&hook.command, &env, hook.timeout_ms, &self.cwd).await {
+            match run_hook_command(&hook.command, &env, &input, hook.timeout_ms, &self.cwd).await {
                 Ok(result) => {
                     if !result.output.is_empty() {
                         messages.push(format!("[hook:{}] {}", hook.name, result.output.trim()));
@@ -122,7 +131,8 @@ impl HookEngine {
     pub async fn run_stop(&self) -> Vec<String> {
         let mut messages = Vec::new();
         for hook in &self.config.stop {
-            match run_hook_command(&hook.command, &self.runtime_env, hook.timeout_ms, &self.cwd).await {
+            let input = self.codex_base_payload("Stop");
+            match run_hook_command(&hook.command, &self.runtime_env, &input, hook.timeout_ms, &self.cwd).await {
                 Ok(result) => {
                     if !result.output.is_empty() {
                         messages.push(format!("[hook:{}] {}", hook.name, result.output.trim()));
@@ -153,6 +163,31 @@ impl HookEngine {
         let mut env = self.runtime_env.clone();
         env.extend(build_env_vars(tool_name, tool_input));
         env
+    }
+
+    fn codex_base_payload(&self, event: &str) -> serde_json::Value {
+        serde_json::json!({
+            "session_id": self.runtime_env.get("TJUAE_HOOK_SESSION_ID").cloned().unwrap_or_default(),
+            "transcript_path": self.runtime_env.get("TJUAE_HOOK_TRANSCRIPT_PATH").cloned().unwrap_or_default(),
+            "cwd": self.cwd,
+            "hook_event_name": event,
+        })
+    }
+
+    fn codex_tool_payload(
+        &self,
+        event: &str,
+        tool_name: &str,
+        tool_input: &serde_json::Value,
+        tool_response: Option<&str>,
+    ) -> serde_json::Value {
+        let mut payload = self.codex_base_payload(event);
+        payload["tool_name"] = serde_json::Value::String(tool_name.to_owned());
+        payload["tool_input"] = tool_input.clone();
+        if let Some(output) = tool_response {
+            payload["tool_response"] = serde_json::Value::String(output.to_owned());
+        }
+        payload
     }
 }
 
@@ -223,8 +258,20 @@ fn interpolate_command(command: &str, env_vars: &HashMap<String, String>) -> Str
 }
 
 struct HookResult {
-    success: bool,
+    exit_code: i32,
     output: String,
+}
+
+fn hook_output_blocks(output: &str) -> bool {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(output.trim()) else {
+        return false;
+    };
+    let decision = value.get("decision").and_then(serde_json::Value::as_str).or_else(|| {
+        value
+            .pointer("/hookSpecificOutput/permissionDecision")
+            .and_then(serde_json::Value::as_str)
+    });
+    matches!(decision, Some("deny" | "block")) || value.get("continue") == Some(&serde_json::Value::Bool(false))
 }
 
 fn combine_output(stdout: &[u8], stderr: &[u8]) -> String {
@@ -242,6 +289,7 @@ fn combine_output(stdout: &[u8], stderr: &[u8]) -> String {
 async fn run_hook_command(
     command: &str,
     env_vars: &HashMap<String, String>,
+    input: &serde_json::Value,
     timeout_ms: u64,
     cwd: &Path,
 ) -> Result<HookResult, HookError> {
@@ -260,7 +308,13 @@ async fn run_hook_command(
     let mut command_builder = shell_command_builder(&shell, &interpolated, false);
     command_builder.envs(env_vars).current_dir(cwd);
 
-    match CommandRunner::new(command_builder).timeout(timeout).run().await {
+    let stdin = serde_json::to_vec(input).map_err(|error| HookError::ExecutionFailed(error.to_string()))?;
+    match CommandRunner::new(command_builder)
+        .stdin_bytes(stdin)
+        .timeout(timeout)
+        .run()
+        .await
+    {
         Ok(result) if result.timed_out => Err(HookError::Timeout {
             timeout_ms,
             output: combine_output(&result.stdout, &result.stderr),
@@ -268,7 +322,7 @@ async fn run_hook_command(
         Ok(result) => {
             let exit_code = result.exit_code.unwrap_or(-1);
             Ok(HookResult {
-                success: exit_code == 0,
+                exit_code,
                 output: combine_output(&result.stdout, &result.stderr),
             })
         }

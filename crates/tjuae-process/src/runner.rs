@@ -3,7 +3,7 @@ use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tokio::io::{AsyncRead, AsyncReadExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
 use tokio::task::JoinHandle;
 
@@ -17,6 +17,7 @@ pub struct CommandRunner {
     command: Command,
     timeout: Duration,
     post_process_drain: Duration,
+    stdin: Option<Vec<u8>>,
 }
 
 impl CommandRunner {
@@ -25,6 +26,7 @@ impl CommandRunner {
             command,
             timeout: DEFAULT_TIMEOUT,
             post_process_drain: DEFAULT_POST_PROCESS_DRAIN,
+            stdin: None,
         }
     }
 
@@ -38,11 +40,21 @@ impl CommandRunner {
         self
     }
 
+    /// Write the supplied bytes to the child process standard input and then
+    /// close the pipe. This is used by protocol-driven commands such as Hooks.
+    pub fn stdin_bytes(mut self, stdin: impl Into<Vec<u8>>) -> Self {
+        self.stdin = Some(stdin.into());
+        self
+    }
+
     pub async fn run(mut self) -> Result<CommandResult> {
         self.command
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
+        if self.stdin.is_some() {
+            self.command.stdin(Stdio::piped());
+        }
         ChildContainment::configure(&mut self.command);
 
         let mut child = self.command.spawn()?;
@@ -59,6 +71,13 @@ impl CommandRunner {
             .stderr
             .take()
             .map(|reader| read_stream(reader, Arc::clone(&stderr)));
+
+        if let Some(stdin) = self.stdin
+            && let Some(mut child_stdin) = child.stdin.take()
+        {
+            child_stdin.write_all(&stdin).await?;
+            child_stdin.shutdown().await?;
+        }
 
         match tokio::time::timeout(self.timeout, child.wait()).await {
             Ok(status) => {

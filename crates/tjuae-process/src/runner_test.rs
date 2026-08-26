@@ -105,6 +105,27 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn runner_writes_bytes_to_child_stdin() {
+        #[cfg(windows)]
+        let script = "$value = [Console]::In.ReadToEnd(); Write-Output \"stdin:$value\"";
+        #[cfg(not(windows))]
+        let script = "value=$(cat); printf 'stdin:%s' \"$value\"";
+
+        let result = CommandRunner::new(shell_command(script))
+            .stdin_bytes(b"codex-hook-json".to_vec())
+            .run()
+            .await
+            .expect("runner should accept standard input");
+
+        assert_eq!(result.exit_code, Some(0));
+        assert!(
+            String::from_utf8_lossy(&result.stdout).contains("stdin:codex-hook-json"),
+            "stdout was: {}",
+            String::from_utf8_lossy(&result.stdout)
+        );
+    }
+
     #[cfg(not(windows))]
     #[tokio::test]
     async fn runner_does_not_hang_when_background_process_keeps_output_pipe_open() {

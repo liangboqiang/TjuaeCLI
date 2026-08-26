@@ -183,11 +183,11 @@ async fn test_tool_error_returns_error_result() {
     }
 }
 
-/// A pre-tool-use hook that exits with a non-zero status blocks tool execution
+/// A protocol-level pre-tool-use denial (exit code 2) blocks tool execution.
 #[tokio::test]
 async fn test_pre_hook_blocks_tool() {
     let hook_config = HooksConfig {
-        pre_tool_use: vec![make_pre_hook("blocker", "echo", "exit 1")],
+        pre_tool_use: vec![make_pre_hook("blocker", "echo", "exit 2")],
         post_tool_use: vec![],
         stop: vec![],
     };
